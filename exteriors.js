@@ -441,6 +441,14 @@ window.NWCCExteriors = function (THREE) {
       } else
       grp.add(pitchedRoof(o, H, roof, ex.pitch || 20, 0.6, roofMat(metal ? 'metal' : 'shingle', ex.roof_color), facadeMat(F, false)));
       topY = H + o.hy * Math.tan((ex.pitch || 20) * Math.PI / 180);
+    // BLDG-31 hip_parts >>>
+    } else if (roof === 'hip_parts' && ex.roof_partsEN) {   // overlapping full hips, one per wing (2026-10-09)
+      grp.add(cap(pts, H, colorMat('#6f6b66'))); let rise = 0;
+      for (const R of ex.roof_partsEN) { const oo = obb(cleanRing(R));
+        grp.add(pitchedRoof(oo, H, 'hip', ex.pitch || 24, 0.6, roofMat(ex.roof_mat || 'shingle', ex.roof_color), facadeMat(F, false)));
+        rise = Math.max(rise, (oo.hy + 0.6) * Math.tan((ex.pitch || 24) * Math.PI / 180)); }
+      topY = H + rise;
+    // <<< BLDG-31 hip_parts
     } else if (roof === 'perimeter_hip') {
       // ext.hip_inset (2026-10-09): per-building inset checked offline so the inner ring stays simple on narrow wings
       const inset = ex.hip_inset || Math.min(4.5, o.hy * 0.4), rise = inset * Math.tan((ex.pitch || 22) * Math.PI / 180);

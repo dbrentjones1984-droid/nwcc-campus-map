@@ -160,6 +160,7 @@ function buildScene() {
       if (q.paint) q.paint.forEach(it => { it.en = it.r.map(r => r.map(c => toEN(c[0], c[1]))); }); });   // BASEBALL-42 paint (2026-10-09)
     if (ex.pitches) ex.pitches.forEach(q => { if (q.frame) q.frameEN = q.frame.map(c => toEN(c[0], c[1])); });   // FOOTBALL-41 image frame (2026-10-09)
     if (ex.roof_ring) ex.roofEN = ex.roof_ring.map(c => toEN(c[0], c[1])); // simplified roof outline for perimeter hips (2026-10-09)
+    if (ex.roof_parts) ex.roof_partsEN = ex.roof_parts.map(r => r.map(c => toEN(c[0], c[1])));   // BLDG-31 hip sections (2026-10-09)
     const ring = f.geometry.coordinates[0].map(c => toEN(c[0], c[1]));
     ex.catColor = p.unnumbered ? null : (CATS[p.category] || {}).color;
     let g;

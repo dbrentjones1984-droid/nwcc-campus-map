@@ -201,6 +201,22 @@ window.NWCCExteriors = function (THREE) {
     return (texCache[id] = tex);
   }
 
+  // BASEBALL-42 paint >>>
+  // Field paint drawn in local metres over the ring's bounding box (q.paint: ordered fills / strokes; it.w = stroke width in m).
+  function paintTexture(q, bb, key) {
+    const id = 'paint:' + key; if (texCache[id]) return texCache[id];
+    const dx = bb[2] - bb[0], dy = bb[3] - bb[1], W = 2048, H = Math.max(256, Math.round(2048 * dy / dx));
+    const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d');
+    const sx = W / dx, sy = H / dy; g.lineJoin = 'round';
+    for (const it of q.paint) {
+      g.beginPath();
+      for (const r of it.en) { r.forEach((p, i) => { const x = (p[0] - bb[0]) * sx, y = (bb[3] - p[1]) * sy; i ? g.lineTo(x, y) : g.moveTo(x, y); }); if (!it.w) g.closePath(); }
+      if (it.w) { g.strokeStyle = it.c; g.lineWidth = Math.max(1.5, it.w * sx); g.stroke(); } else { g.fillStyle = it.c; g.fill('evenodd'); }
+    }
+    const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
+    return (texCache[id] = tex);
+  }
+  // <<< BASEBALL-42 paint
   // ---------- materials ----------
   const matCache = {};
   function lam(key, opts) { return matCache[key] || (matCache[key] = new THREE.MeshLambertMaterial(Object.assign({ side: THREE.DoubleSide }, opts))); }
@@ -363,11 +379,14 @@ window.NWCCExteriors = function (THREE) {
     const o = obb(pts), c = pip(centroid(pts), pts) ? centroid(pts) : o.c;
     const rect = Math.abs(signedArea(pts)) / (4 * o.hx * o.hy);
     if (ex.arch === 'field') {
-      const polys = (ex.pitches && ex.pitches.length) ? ex.pitches.map(q => ({ ring: q.ringEN, sport: q.sport, y: q.y, fence: q.fence })) : [{ ring: pts, sport: 'turf' }];
+      const polys = (ex.pitches && ex.pitches.length) ? ex.pitches.map(q => ({ ring: q.ringEN, sport: q.sport, y: q.y, fence: q.fence, paint: q.paint })) : [{ ring: pts, sport: 'turf' }];
       for (const q of polys) {
-        const R = cleanRing(q.ring), oo = obb(R), y0 = q.y || 0.12, m = cap(R, y0, lam('fld:' + q.sport, { map: fieldTexture(q.sport) }));
+        const R = cleanRing(q.ring), oo = obb(R), y0 = q.y || 0.12;
+        const bb = q.paint ? [Math.min(...R.map(p => p[0])), Math.min(...R.map(p => p[1])), Math.max(...R.map(p => p[0])), Math.max(...R.map(p => p[1]))] : null;   // BASEBALL-42
+        const m = cap(R, y0, bb ? lam('fld:paint:' + key, { map: paintTexture(q, bb, key) }) : lam('fld:' + q.sport, { map: fieldTexture(q.sport) }));
         const uv = m.geometry.attributes.uv, pos = m.geometry.attributes.position;
-        for (let i = 0; i < uv.count; i++) { const p = [pos.getX(i), -pos.getZ(i)], d = sub(p, oo.c); uv.setXY(i, (dot(d, oo.ux) + oo.hx) / (2 * oo.hx), (dot(d, oo.uy) + oo.hy) / (2 * oo.hy)); }
+        for (let i = 0; i < uv.count; i++) { const p = [pos.getX(i), -pos.getZ(i)], d = sub(p, oo.c);
+          if (bb) uv.setXY(i, (p[0] - bb[0]) / (bb[2] - bb[0]), (p[1] - bb[1]) / (bb[3] - bb[1])); else uv.setXY(i, (dot(d, oo.ux) + oo.hx) / (2 * oo.hx), (dot(d, oo.uy) + oo.hy) / (2 * oo.hy)); }
         grp.add(m); grp.add(solidRing(R, 0, y0, colorMat('#e9e6df')));
         if (q.fence === true || (q.sport === 'tennis' && q.fence !== false)) { const fr = offsetRing(R, 0.3); for (const p of fr) grp.add(cyl(0.05, 3, p[0], 0, -p[1], colorMat('#3b3f44'), 6)); grp.add(solidRing(fr, 2.6, 3, lam('fence', { color: '#2f3a36', transparent: true, opacity: 0.35 }))); }
       }

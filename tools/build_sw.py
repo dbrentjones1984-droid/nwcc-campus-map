@@ -6,7 +6,7 @@ FILES = ['./', 'index.html', 'app.js', 'pwa.js', 'exteriors.js', 'landmarks.js',
          'vendor/maplibre-gl.js', 'vendor/maplibre-gl.css', 'vendor/three.module.js',
          'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-192.png', 'icons/icon-maskable-512.png',
          'icons/apple-touch-icon.png', 'icons/favicon-32.png', 'assets/logo.png',
-         'assets/landmark-sign-panel.png', 'assets/landmark-seal-navy.png', 'assets/landmark-medallion.png', 'assets/landmark-herringbone.jpg']
+         'assets/landmark-sign-panel.png', 'assets/landmark-seal-navy.png', 'assets/landmark-medallion.png', 'assets/landmark-herringbone.jpg', 'assets/football-field.png']
 for d in sorted(os.listdir(os.path.join(ROOT, 'fonts'))):
     for f in sorted(os.listdir(os.path.join(ROOT, 'fonts', d))):
         FILES.append(f'fonts/{d}/{f}'.replace(' ', '%20'))

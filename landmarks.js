@@ -272,7 +272,62 @@ window.NWCCLandmarks = function (THREE, toEN, onTexture) {
     return g;
   }
   // <<< BASEBALL-42 build
-  root.add(buildSign()); root.add(buildPlaza()); if (L.nwdr) root.add(buildNwdr()); if (L.baseball) root.add(buildBaseball());
+  // FOOTBALL-41 build >>>
+  // Football stadium (#41): stepped grandstands (seat rows as steps, aisles, front wall + rail, elevated press box), scoreboard,
+  // blue jump/vault pads, star medallion + brick walk panels east of #47. Simple low 3D; deliberately NO projected ground shadows.
+  function buildFootball() {
+    const B = L.football, g = new THREE.Group(); g.name = 'football-stadium';
+    const M = (k, c, o) => lam('fb-' + k, Object.assign({ color: c, side: THREE.DoubleSide }, o || {}));
+    const conc = M('conc', '#d6d1c6'), dark = M('dark', '#3b4046'), metal = M('metal', '#2d3136'), white = M('white', '#f1f0eb'), glass = M('glass', '#2b4a66'), navy = M('navy', '#22336b');
+    const EN = c => toEN(c[0], c[1]);
+    for (const S of B.parts) {
+      const o = new THREE.Group(), [x, y] = EN(S.c); o.position.set(x, 0, -y); o.rotation.y = S.rot * Math.PI / 180; o.name = S.name;
+      const w = S.w, d = S.d;
+      if (S.t === 'grand') {   // front at local -z; rows rise toward +z
+        const n = S.rows, td = d / n, A = M('seat' + S.col, S.col), A2 = M('seat' + S.col2, S.col2), top = n * S.rise;
+        o.add(box(w, 0.9, 0.3, 0, 0, -d / 2 - 0.15, conc));                              // front wall
+        for (let i = 0; i < n; i++) o.add(box(w, 0.9 + (i + 1) * S.rise, td, 0, 0, -d / 2 + td * (i + 0.5), i % 2 ? A : A2));
+        for (const a of (S.aisles || [])) for (let i = 0; i < n; i++) o.add(box(1.3, 0.9 + (i + 1) * S.rise + 0.03, td, a, 0, -d / 2 + td * (i + 0.5), white));
+        o.add(box(w, top + 0.9, 0.35, 0, 0, d / 2 + 0.17, M('back', '#aab0b6')));          // back wall
+        for (const sx of [-1, 1]) for (let i = 0; i < n; i++) o.add(box(0.3, 0.9 + (i + 1) * S.rise + 0.5, td, sx * (w / 2 + 0.15), 0, -d / 2 + td * (i + 0.5), conc)); // stepped end walls
+        o.add(box(w, 0.06, 0.06, 0, 1.0 + 0.9, -d / 2 - 0.15, metal)); o.add(box(w, 0.06, 0.06, 0, top + 0.9 + 1.0, d / 2 + 0.17, metal));
+        if (S.press) { const p = S.press, z = d / 2 + p.d / 2 + 0.35, y0 = top + 0.9;
+          o.add(box(p.w, y0, p.d, p.off, 0, z, M('pbase', '#9aa0a6')));                   // support / stair core
+          o.add(box(p.w, p.h, p.d, p.off, y0, z, M('press', '#ebe8e0')));
+          o.add(box(p.w - 0.6, 1.1, 0.06, p.off, y0 + 1.1, z - p.d / 2 - 0.04, glass));
+          o.add(box(p.w + 0.8, 0.25, p.d + 1.2, p.off, y0 + p.h, z - 0.3, white)); }
+      } else if (S.t === 'block') {
+        o.add(box(w, S.h, d, 0, 0, 0, M('blk' + S.col, S.col))); o.add(box(w + 0.3, 0.2, d + 0.3, 0, S.h, 0, M('roof' + S.roofc, S.roofc)));
+      } else if (S.t === 'scoreboard') {
+        for (const sx of [-0.3, 0.3]) o.add(box(0.4, S.y0 + 0.2, 0.4, sx * w, 0, 0.2, metal));
+        o.add(box(w, S.h, 0.5, 0, S.y0, 0, navy));
+        const cv = document.createElement('canvas'); cv.width = 512; cv.height = 216; const c = cv.getContext('2d');
+        c.fillStyle = '#1c2b5c'; c.fillRect(0, 0, 512, 216); c.fillStyle = '#ffffff'; c.font = 'bold 34px sans-serif'; c.textAlign = 'center'; c.fillText('NORTHWEST RANGERS', 256, 44);
+        c.fillStyle = '#b3262e'; c.fillRect(0, 56, 512, 6); c.fillStyle = '#0b1230';
+        for (const xx of [70, 190, 322, 442]) c.fillRect(xx - 46, 82, 92, 64);
+        c.fillStyle = '#f0c040'; c.font = 'bold 18px sans-serif'; c.fillText('HOME', 70, 170); c.fillText('QTR', 190, 170); c.fillText('DOWN', 322, 170); c.fillText('GUEST', 442, 170);
+        const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace;
+        const face = new THREE.Mesh(new THREE.PlaneGeometry(w - 0.2, S.h - 0.2), lam('fb-sbface', { map: t, side: THREE.FrontSide }));
+        face.rotation.y = Math.PI; face.position.set(0, S.y0 + S.h / 2, -0.26); o.add(face);
+      } else if (S.t === 'pad3d') { o.add(box(w, S.h, d, 0, 0, 0, M('pad' + S.col, S.col))); }
+      g.add(o);
+    }
+    // flat: brick walk panels + star medallion
+    const flat = (pts, y, m) => { const sh = new THREE.Shape(pts.map(c => { const p = EN(c); return new THREE.Vector2(p[0], p[1]); }));
+      const ge = new THREE.ShapeGeometry(sh); ge.rotateX(-Math.PI / 2); ge.translate(0, y, 0); return new THREE.Mesh(ge, m); };
+    const bricks = lam('fb-brick', { map: brickTex(['#9c4632', '#a84e38', '#8f3f2d', '#b0573e']) });
+    for (const r of B.bricks) { const m = flat(r, 0.08, bricks); const uv = m.geometry.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) / 0.8, uv.getY(i) / 0.3); g.add(m); }
+    if (B.medallion) { const [mx, my] = EN(B.medallion.c), r = B.medallion.r;
+      const cv = document.createElement('canvas'); cv.width = cv.height = 256; const c = cv.getContext('2d');
+      c.fillStyle = '#d9d3c5'; c.beginPath(); c.arc(128, 128, 127, 0, 7); c.fill(); c.strokeStyle = '#a69f90'; c.lineWidth = 6; c.beginPath(); c.arc(128, 128, 118, 0, 7); c.stroke();
+      c.fillStyle = '#8f8a80'; c.beginPath(); for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, rr = k % 2 ? 40 : 100; c.lineTo(128 + rr * Math.cos(a), 128 + rr * Math.sin(a)); } c.closePath(); c.fill();
+      const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace;
+      const disc = new THREE.Mesh(new THREE.CircleGeometry(r, 48), lam('fb-medal', { map: t, transparent: true }));
+      disc.rotation.x = -Math.PI / 2; disc.rotation.z = Math.PI / 2; disc.position.set(mx, 0.09, -my); g.add(disc); }
+    return g;
+  }
+  // <<< FOOTBALL-41 build
+  root.add(buildSign()); root.add(buildPlaza()); if (L.nwdr) root.add(buildNwdr()); if (L.baseball) root.add(buildBaseball()); if (L.football) root.add(buildFootball());
   root.traverse(o => { o.frustumCulled = false; });
   return root;
 };
@@ -285,3 +340,7 @@ window.NWCC_LANDMARKS.nwdr = {"walls":[{"pts":[[-89.9738885,34.6275966],[-89.973
 // Jim Miles Field (#42) structures traced on Brent's aerial (2026-10-09). parts: c = centre [lng,lat], rot = deg CCW (local -z = front), w/d/h in m.
 window.NWCC_LANDMARKS.baseball = {"parts":[{"t":"dugout","c":[-89.9746112,34.624434],"rot":90.0,"w":19.4,"d":4.8,"h":2.6,"name":"1B dugout"},{"t":"dugout","c":[-89.9750173,34.624056],"rot":0.0,"w":19.6,"d":5.0,"h":2.6,"name":"3B dugout"},{"t":"block","c":[-89.9750206,34.6240198],"rot":0,"w":17.0,"d":3.0,"h":2.8,"col":"#b2463b","roofc":"#9c3b32","roof":"flat","name":"3B storage"},{"t":"stand","c":[-89.9745402,34.62424],"rot":90.0,"w":10.5,"d":8.2,"rows":8,"rise":0.42,"name":"1B bleachers"},{"t":"stand","c":[-89.9747859,34.6240252],"rot":0.0,"w":10.0,"d":9.0,"rows":8,"rise":0.42,"name":"home bleachers"},{"t":"stand","c":[-89.9745883,34.6240858],"rot":44.0,"w":13.4,"d":11.4,"rows":9,"rise":0.4,"roof":6.4,"press":true,"name":"covered grandstand + press box"},{"t":"stand","c":[-89.9759157,34.6244231],"rot":-90.0,"w":10.0,"d":3.0,"rows":3,"rise":0.4,"name":"LF bleacher"},{"t":"block","c":[-89.97449,34.6243544],"rot":0,"w":9.0,"d":13.0,"h":3.2,"col":"#dcd6ca","roofc":"#7f8489","roof":"hip","name":"gray hip-roof building"},{"t":"block","c":[-89.9759676,34.6251489],"rot":0,"w":17.5,"d":11.5,"h":4.0,"col":"#d8d3c8","roofc":"#80868c","roof":"gable","name":"NW gray building"},{"t":"block","c":[-89.9746931,34.6248708],"rot":0,"w":5.0,"d":2.0,"h":2.2,"col":"#cfcac0","roofc":"#6f9a6a","roof":"flat","name":"RF bullpen shelter"},{"t":"scoreboard","c":[-89.9757738,34.6249477],"rot":-131.6,"w":11.0,"h":4.4,"y0":3.0,"name":"scoreboard"},{"t":"cage","c":[-89.9757356,34.6240021],"rot":0,"w":20.0,"d":18.9,"h":4.2,"lanes":2,"name":"batting cage"},{"t":"bench","c":[-89.9754354,34.6239845],"rot":0,"w":5.0,"d":0.6,"h":0.5,"name":"3B bullpen bench"}],"pads":[{"c":"#3d7442","r":[[-89.9756308,34.6239194],[-89.9756308,34.6240849],[-89.9758404,34.6240849],[-89.9758404,34.6239194],[-89.9756308,34.6239194]]},{"c":"#c47a54","r":[[-89.9757924,34.6240433],[-89.9757924,34.6240822],[-89.9758338,34.6240822],[-89.9758338,34.6240433],[-89.9757924,34.6240433]]},{"c":"#c9a17a","r":[[-89.9754136,34.623989],[-89.9754136,34.6240424],[-89.9755118,34.6240424],[-89.9755118,34.623989],[-89.9754136,34.623989]]},{"c":"#c47a54","r":[[-89.9746658,34.6250019],[-89.9746658,34.6250381],[-89.9747204,34.6250381],[-89.9747204,34.6250019],[-89.9746658,34.6250019]]}],"fences":[{"k":"wall","h":2.4,"pts":[[-89.9746396,34.6245235],[-89.9746396,34.6246809],[-89.9746396,34.6248057],[-89.9746505,34.6248201],[-89.9746658,34.624831],[-89.9747378,34.6248654],[-89.9747378,34.6250842],[-89.9747466,34.6250915],[-89.9747815,34.6250924],[-89.9748295,34.6250887],[-89.9749278,34.6250815],[-89.9750588,34.6250734],[-89.9751898,34.6250634],[-89.9753208,34.6250544],[-89.9754518,34.6250453],[-89.9755173,34.625039],[-89.9755828,34.6250236],[-89.9756308,34.6250064],[-89.9756745,34.6249866],[-89.9757138,34.624963],[-89.9757509,34.6249359],[-89.9757749,34.6249124],[-89.9757989,34.6248889],[-89.9758186,34.6248654],[-89.9758382,34.6248346],[-89.9758513,34.6248075],[-89.9758644,34.6247713],[-89.975871,34.624717],[-89.9758731,34.6245],[-89.9758731,34.6242287],[-89.975871,34.6241003],[-89.9758513,34.6241057],[-89.9757793,34.6241093],[-89.9756308,34.6241111],[-89.975609,34.6241057],[-89.97555,34.6240731],[-89.9754889,34.624046],[-89.9754299,34.6240478],[-89.9753208,34.6240514],[-89.9751723,34.6240587],[-89.9751527,34.6240804],[-89.9751308,34.6240948]]},{"k":"rail","h":1.1,"pts":[[-89.9751308,34.6240948],[-89.9748841,34.6240948]]},{"k":"net","h":7.5,"pts":[[-89.9748841,34.6240948],[-89.9748404,34.624093],[-89.9747968,34.6240948],[-89.9747575,34.6241021],[-89.9747225,34.6241165],[-89.974692,34.6241383],[-89.974668,34.6241636],[-89.9746505,34.6241925],[-89.9746418,34.6242287],[-89.9746396,34.624283]]},{"k":"rail","h":1.1,"pts":[[-89.9746396,34.624283],[-89.9746396,34.6245235]]},{"k":"chain","h":2.4,"pts":[[-89.9747378,34.6250842],[-89.9746483,34.6250842],[-89.9746483,34.6248256]]}]};
 /* <<< BASEBALL-42 data */
+/* FOOTBALL-41 data >>> */
+// Football stadium (#41) structures traced on Brent's aerial (2026-10-09). parts: c = centre [lng,lat], rot = deg CCW (local -z = front), w/d/h in m.
+window.NWCC_LANDMARKS.football = {"parts":[{"t":"grand","c":[-89.9762726,34.624379],"rot":96.08,"w":53.0,"d":18.5,"rows":22,"rise":0.4,"col":"#c9ced3","col2":"#b7bdc3","aisles":[-19.6,-7.2,6.0,17.2],"press":{"off":-1.0,"w":17.5,"d":3.8,"h":3.0,"behind":true},"name":"main (east) grandstand + press box"},{"t":"grand","c":[-89.9774293,34.6242814],"rot":-83.92,"w":32.8,"d":12.5,"rows":14,"rise":0.36,"col":"#dfe2e4","col2":"#cfd3d6","aisles":[-8.0,8.0],"name":"west bleachers"},{"t":"block","c":[-89.9775124,34.6242573],"rot":-83.92,"w":5.9,"d":1.9,"h":6.0,"col":"#cfcac0","roofc":"#9aa0a6","name":"west bleachers rear booth"},{"t":"scoreboard","c":[-89.9766397,34.6237117],"rot":6.08,"w":10.0,"h":4.2,"y0":3.2,"name":"south scoreboard"},{"t":"pad3d","c":[-89.9772201,34.6248956],"rot":-26.92,"w":5.2,"d":4.6,"h":0.55,"col":"#4d86c9","name":"north curve vault/jump pad W"},{"t":"pad3d","c":[-89.9767448,34.6249557],"rot":39.08,"w":5.2,"d":4.6,"h":0.55,"col":"#4d86c9","name":"north curve vault/jump pad E"}],"bricks":[[[-89.976431,34.625079],[-89.976384,34.6250839],[-89.976384,34.625111],[-89.976431,34.6251062],[-89.976431,34.625079]],[[-89.9763709,34.6250852],[-89.9763207,34.6250904],[-89.9763207,34.6251175],[-89.9763709,34.6251123],[-89.9763709,34.6250852]],[[-89.9763054,34.625092],[-89.9762563,34.625097],[-89.9762563,34.6251241],[-89.9763054,34.6251191],[-89.9763054,34.625092]],[[-89.9762421,34.6250985],[-89.9761952,34.6251033],[-89.9761952,34.6251304],[-89.9762421,34.6251256],[-89.9762421,34.6250985]],[[-89.9761788,34.625105],[-89.9761297,34.62511],[-89.9761297,34.6251372],[-89.9761788,34.6251321],[-89.9761788,34.625105]],[[-89.9761133,34.6251117],[-89.9760675,34.6251164],[-89.9760675,34.6251436],[-89.9761133,34.6251388],[-89.9761133,34.6251117]]],"medallion":{"c":[-89.9764965,34.6250815],"r":4.4}};
+/* <<< FOOTBALL-41 data */

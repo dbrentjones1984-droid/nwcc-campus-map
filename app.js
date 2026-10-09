@@ -56,6 +56,14 @@ function basemapLayers(sat) {
   const casing = sat ? 'rgba(20,24,32,.55)' : '#a7aa9b';
   L.push({ id: 'bm-road-case', type: 'line', source: 'basemap', filter: lay('road'), layout: { 'line-cap': 'round', 'line-join': 'round' },
     paint: { 'line-color': casing, 'line-width': mw(0, byCls({ minor: 2.4, service: 1.6, _: 1 })), 'line-opacity': sat ? 0.6 : 1 } });
+  // NWDR-ENTRANCE layers (2026-10-09) >>>
+  // Paved areas traced curb-to-curb (Northwest Dr entrance boulevard, slip lanes, bulb-outs): a 0.8 m casing on the outline
+  // (same edge colour as the road lines), then the fill above every road casing so road lines inside it read as one surface.
+  if (!sat) {
+    L.push({ id: 'bm-roadarea-case', type: 'line', source: 'basemap', filter: lay('roadarea'), layout: { 'line-join': 'round' }, paint: { 'line-color': casing, 'line-width': mw(0, 0.6) } });
+    L.push({ id: 'bm-roadarea', type: 'fill', source: 'basemap', filter: lay('roadarea'), paint: { 'fill-color': '#e6e7de' } });
+  }
+  // <<< NWDR-ENTRANCE layers
   L.push({ id: 'bm-road', type: 'line', source: 'basemap', filter: lay('road'), layout: { 'line-cap': 'round', 'line-join': 'round' },
     paint: { 'line-color': sat ? '#ffffff' : '#e6e7de', 'line-width': mw(-1, byCls({ minor: 1.6, service: 1, _: 0.6 })), 'line-opacity': sat ? 0.45 : 1 } });
   L.push({ id: 'bm-conn-case', type: 'line', source: 'basemap', filter: lay('connector'), layout: { 'line-cap': 'butt', 'line-join': 'round' },
@@ -64,7 +72,18 @@ function basemapLayers(sat) {
     paint: { 'line-color': ['match', ['get', 'cls'], 'hwy51', '#f4c95d', '#f8db8a'], 'line-width': mw(-1.6, byCls({ hwy51: 6.6, _: 6 })) } });   // floor raised (was 3.2/3 px)
   if (!sat) {   // roundabout island + entrance islands (lawn) with the roundabout's mountable apron ring
     L.push({ id: 'bm-apron', type: 'fill', source: 'basemap', filter: lay('apron'), paint: { 'fill-color': '#d3d0c2', 'fill-outline-color': '#a7aa9b' } });
-    L.push({ id: 'bm-island', type: 'fill', source: 'basemap', filter: lay('island'), paint: { 'fill-color': LAWN, 'fill-outline-color': '#a7aa9b' } });
+    L.push({ id: 'bm-island', type: 'fill', source: 'basemap', filter: lay('island'), paint: { 'fill-color': ['match', ['get', 'kind'], 'planter', '#a65a42', 'brick', '#b5654c', 'hatch', '#d6d7cd', LAWN], 'fill-outline-color': '#a7aa9b' } });
+  // NWDR-ENTRANCE2 >>>
+    // raised curbs around medians / islands that carry `curb` (light concrete, true width w), and crosswalks (zebra = dashed bars)
+    L.push({ id: 'bm-island-curb', type: 'line', source: 'basemap', filter: ['all', lay('island'), ['==', ['get', 'curb'], true]], layout: { 'line-join': 'round' },
+      paint: { 'line-color': '#f4f2ea', 'line-width': mw(0, 0.5) } });
+    L.push({ id: 'bm-xwalk-band', type: 'line', source: 'basemap', filter: ['all', lay('xwalk'), ['==', ['get', 'kind'], 'band']], paint: { 'line-color': '#f6f5ef', 'line-width': mw(0, 1) } });
+    L.push({ id: 'bm-xwalk-bg', type: 'line', source: 'basemap', filter: ['all', lay('xwalk'), ['==', ['get', 'kind'], 'zebra']], paint: { 'line-color': '#c9cbbf', 'line-width': mw(0, 1) } });
+    L.push({ id: 'bm-xwalk', type: 'line', source: 'basemap', filter: ['all', lay('xwalk'), ['==', ['get', 'kind'], 'zebra']], paint: { 'line-color': '#ffffff', 'line-width': mw(-0.3, 1), 'line-dasharray': [0.25, 0.25] } });
+    // painted markings: stall / hatch lines (white) and the yellow centre line
+    L.push({ id: 'bm-mark', type: 'line', source: 'basemap', filter: ['all', lay('xwalk'), ['in', ['get', 'kind'], ['literal', ['mark', 'cline']]]], layout: { 'line-cap': 'butt' },
+      paint: { 'line-color': ['match', ['get', 'kind'], 'cline', '#e2b93b', '#ffffff'], 'line-width': mw(0, 0.6) } });
+  // <<< NWDR-ENTRANCE2
   }
   L.push({ id: 'bm-road-label', type: 'symbol', source: 'basemap', filter: ['all', lay('road'), ['!=', ['get', 'name'], '']], minzoom: 15.5,
     layout: { 'symbol-placement': 'line', 'text-field': ['get', 'name'], 'text-font': ['Noto Sans Regular'], 'text-size': 11, 'symbol-spacing': 320, 'text-max-angle': 35 },

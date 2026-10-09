@@ -306,14 +306,14 @@ const loadThree = () => location.protocol === 'file:' ? import(THREE_CDN)
   : import(new URL('vendor/three.module.js', location.href).href).catch(() => import(THREE_CDN));
 let threeReady = loadThree().then(mod => {
   THREE = mod; EXT = window.NWCCExteriors(THREE); buildScene(); refreshVisibility();
-}).catch(err => { console.error('Three.js failed to load; falling back to Phase 2 extrusions', err); document.getElementById('loading').textContent = '3D exteriors unavailable (Three.js failed to load). Showing Phase 2 extrusions.'; });
+}).catch(err => { console.error('Three.js failed to load; falling back to Phase 2 extrusions', err); document.getElementById('loadingMsg').textContent = '3D exteriors unavailable (Three.js failed to load). Showing Phase 2 extrusions.'; });
 
 let styleLoaded = false;
 map.on('style.load', () => { styleLoaded = true; addLayers(); refreshFilter(); applyLabels(); });
 Promise.all([threeReady, new Promise(r => map.once('load', r))]).then(() => {
   addLayers(); refreshFilter();
   ['p2-extrusion', 'p2-highlight'].forEach(id => map.getLayer(id) && map.setLayoutProperty(id, 'visibility', (compare || !THREE) ? 'visible' : 'none'));
-  if (THREE) document.getElementById('loading').remove();
+  hideSplash();
   if (!view) fitCampus(false);
   if (P.get('flat') === '1') document.getElementById('tTilt').click();
   if (P.get('clean') === '1') document.querySelectorAll('.hud,.tools,.maplibregl-ctrl-bottom-right,.maplibregl-ctrl-bottom-left').forEach(e => e.style.display = 'none');
@@ -323,6 +323,19 @@ Promise.all([threeReady, new Promise(r => map.once('load', r))]).then(() => {
   if (hash) { const k = decodeURIComponent(hash[1]).toLowerCase(); if (byKey[k]) select(k, P.get('nofly') !== '1'); }
   if (P.get('selftest') === '1') setTimeout(selftest, 1500);
 });
+
+// Splash hold: keep the icon on screen 1 s longer than the old instant removal, then fade (.4 s) and remove.
+// Map/3D are already live underneath; only the overlay waits. On Three.js failure it collapses to the bottom pill.
+const SPLASH_EXTRA_MS = 1000;
+function hideSplash() {
+  const el = document.getElementById('loading'); if (!el) return;
+  setTimeout(() => {
+    if (!THREE) { el.classList.add('fallback'); return; }
+    el.classList.add('hide');
+    let done = false; const rm = () => { if (!done) { done = true; el.remove(); } };
+    el.addEventListener('transitionend', rm, { once: true }); setTimeout(rm, 600);
+  }, SPLASH_EXTRA_MS);
+}
 
 map.on('click', e => {
   const k = pickAt(e.point.x, e.point.y);

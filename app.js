@@ -31,10 +31,13 @@ const OUTSIDE = '#e8eae3';
 const LAWN = '#b7d99c', FIELD = '#95b871', PAVE = '#dcded2';
 const lay = (k) => ['==', ['get', 'layer'], k];
 const cls = (...k) => ['match', ['get', 'cls'], k, true, false];
-const zw = (a, b) => ['interpolate', ['exponential', 1.6], ['zoom'], 14, a, 19, b];
-// zoom-interpolated width chosen per class: zc({ minor: [a, b], service: [a, b], _: [a, b] })
-const zc = (m) => { const k = Object.keys(m).filter(x => x !== '_'), at = i => ['match', ['get', 'cls'], ...k.flatMap(x => [x, m[x][i]]), m._[i]];
-  return ['interpolate', ['exponential', 1.6], ['zoom'], 14, at(0), 19, at(1)]; };
+// True ground width (2026-10-08): every road/connector/path feature carries its real width `w` in meters. MapLibre
+// (512 px tiles) at lat 34.62 draws 1 m = 0.25436 px at z14, doubling per zoom, so a base-2 exponential ramp holds the
+// ground width at every zoom; below z17 a small per-class pixel floor keeps thin lines visible when zoomed out.
+const PXM14 = 512 * 16384 / (40075016.686 * Math.cos(34.623 * Math.PI / 180));
+const mw = (d, floor) => { const g = (z) => ['*', ['max', 0.3, ['+', ['get', 'w'], d]], PXM14 * Math.pow(2, z - 14)];
+  return ['interpolate', ['exponential', 2], ['zoom'], 14, ['max', floor, g(14)], 16, ['max', floor, g(16)], 17, g(17), 22, g(22)]; };
+const byCls = (m) => ['match', ['get', 'cls'], ...Object.keys(m).filter(x => x !== '_').flatMap(x => [x, m[x]]), m._];
 function basemapLayers(sat) {
   const L = [];
   if (!sat) {
@@ -42,19 +45,25 @@ function basemapLayers(sat) {
     L.push({ id: 'bm-pitch', type: 'fill', source: 'basemap', filter: lay('pitch'), paint: { 'fill-color': FIELD, 'fill-outline-color': '#7c9f5c' } });
     L.push({ id: 'bm-parking', type: 'fill', source: 'basemap', filter: lay('parking'), paint: { 'fill-color': PAVE, 'fill-outline-color': '#b4b7a8' } });
     L.push({ id: 'bm-water', type: 'fill', source: 'basemap', filter: lay('water'), paint: { 'fill-color': '#a8cbe6' } });
-    L.push({ id: 'bm-path', type: 'line', source: 'basemap', filter: lay('path'), paint: { 'line-color': '#eeede4', 'line-width': zw(0.7, 2.8) } });
   } else {
     L.push({ id: 'bm-mask', type: 'fill', source: 'basemap', filter: lay('mask'), paint: { 'fill-color': '#1d2431', 'fill-opacity': 1 } });
   }
+  // sidewalks (2 m) in both styles: light walk on the lawn, translucent white over the imagery
+  L.push({ id: 'bm-path', type: 'line', source: 'basemap', filter: lay('path'), layout: { 'line-join': 'round' },
+    paint: { 'line-color': sat ? '#ffffff' : '#f3f2ea', 'line-width': mw(0, 0.7), 'line-opacity': sat ? 0.55 : 1 } });
   const casing = sat ? 'rgba(20,24,32,.55)' : '#a7aa9b';
   L.push({ id: 'bm-road-case', type: 'line', source: 'basemap', filter: lay('road'), layout: { 'line-cap': 'round', 'line-join': 'round' },
-    paint: { 'line-color': casing, 'line-width': zc({ minor: [2.4, 16], service: [1.6, 10], _: [1, 6.5] }), 'line-opacity': sat ? 0.6 : 1 } });
+    paint: { 'line-color': casing, 'line-width': mw(0, byCls({ minor: 2.4, service: 1.6, _: 1 })), 'line-opacity': sat ? 0.6 : 1 } });
   L.push({ id: 'bm-road', type: 'line', source: 'basemap', filter: lay('road'), layout: { 'line-cap': 'round', 'line-join': 'round' },
-    paint: { 'line-color': sat ? '#ffffff' : '#e6e7de', 'line-width': zc({ minor: [1.6, 13], service: [1, 8], _: [0.6, 5] }), 'line-opacity': sat ? 0.45 : 1 } });
+    paint: { 'line-color': sat ? '#ffffff' : '#e6e7de', 'line-width': mw(-1, byCls({ minor: 1.6, service: 1, _: 0.6 })), 'line-opacity': sat ? 0.45 : 1 } });
   L.push({ id: 'bm-conn-case', type: 'line', source: 'basemap', filter: lay('connector'), layout: { 'line-cap': 'butt', 'line-join': 'round' },
-    paint: { 'line-color': ['match', ['get', 'cls'], 'hwy51', '#b2852a', '#b8963e'], 'line-width': zc({ hwy51: [4.5, 30], _: [4.2, 27] }) } });
+    paint: { 'line-color': ['match', ['get', 'cls'], 'hwy51', '#b2852a', '#b8963e'], 'line-width': mw(0, byCls({ hwy51: 4.5, _: 4.2 })) } });
   L.push({ id: 'bm-conn', type: 'line', source: 'basemap', filter: lay('connector'), layout: { 'line-cap': 'butt', 'line-join': 'round' },
-    paint: { 'line-color': ['match', ['get', 'cls'], 'hwy51', '#f4c95d', '#f8db8a'], 'line-width': zc({ hwy51: [3.2, 26], _: [3, 23] }) } });
+    paint: { 'line-color': ['match', ['get', 'cls'], 'hwy51', '#f4c95d', '#f8db8a'], 'line-width': mw(-1.6, byCls({ hwy51: 3.2, _: 3 })) } });
+  if (!sat) {   // roundabout island + entrance islands (lawn) with the roundabout's mountable apron ring
+    L.push({ id: 'bm-apron', type: 'fill', source: 'basemap', filter: lay('apron'), paint: { 'fill-color': '#d3d0c2', 'fill-outline-color': '#a7aa9b' } });
+    L.push({ id: 'bm-island', type: 'fill', source: 'basemap', filter: lay('island'), paint: { 'fill-color': LAWN, 'fill-outline-color': '#a7aa9b' } });
+  }
   L.push({ id: 'bm-road-label', type: 'symbol', source: 'basemap', filter: ['all', lay('road'), ['!=', ['get', 'name'], '']], minzoom: 15.5,
     layout: { 'symbol-placement': 'line', 'text-field': ['get', 'name'], 'text-font': ['Noto Sans Regular'], 'text-size': 11, 'symbol-spacing': 320, 'text-max-angle': 35 },
     paint: { 'text-color': sat ? '#ffffff' : '#4d5843', 'text-halo-color': sat ? 'rgba(0,0,0,.75)' : '#ffffff', 'text-halo-width': 1.4 } });

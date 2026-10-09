@@ -662,7 +662,40 @@ window.NWCCLandmarks = function (THREE, toEN, onTexture) {
     return g;
   }
   // <<< LAMAR-11 build
-  root.add(buildSign()); root.add(buildPlaza()); if (L.nwdr) root.add(buildNwdr()); if (L.baseball) root.add(buildBaseball()); if (L.football) root.add(buildFootball()); if (L.softball) root.add(buildSoftball()); if (L.practice) root.add(buildPractice()); if (L.lamar) root.add(buildLamar());
+  // RAB-31 build >>>
+  // Thompson St / West St roundabout by #31 (2026-10-09): low 3D only -- shrub ring + light pole on the centre island,
+  // mountable-apron and splitter-island curb faces. Deliberately NO ground shadows.
+  function buildRab31() {
+    const B = L.rab31, g = new THREE.Group(); g.name = 'roundabout-31';
+    const EN = c => toEN(c[0], c[1]);
+    const [cx, cy] = EN(B.c);
+    const curb = lam('rab-curb', { color: '#ecebe4', emissive: '#2b2b28' });
+    // raised centre-island curb (inside the apron) and the low apron lip
+    const ringMesh = (r0, r1, h, y, m) => { const ge = new THREE.RingGeometry(r0, r1, 72); ge.rotateX(-Math.PI / 2); const o = new THREE.Mesh(ge, m); o.position.set(cx, y + h, -cy); return o; };
+    const wall = (r, h, m) => { const ge = new THREE.CylinderGeometry(r, r, h, 72, 1, true); const o = new THREE.Mesh(ge, m); o.position.set(cx, h / 2, -cy); return o; };
+    g.add(wall(B.r_isl, 0.18, curb)); g.add(ringMesh(B.r_isl - 0.25, B.r_isl, 0.0, 0.18, curb));
+    g.add(wall(B.r_apron, 0.07, curb));
+    // splitter-island curbs (raised 15 cm light concrete)
+    for (const tri of B.splitters) { const P = tri.map(EN);
+      const sh = new THREE.Shape(P.map(p => new THREE.Vector2(p[0], p[1]))); const ge = new THREE.ExtrudeGeometry(sh, { depth: 0.15, bevelEnabled: false }); ge.rotateX(-Math.PI / 2);
+      const o = new THREE.Mesh(ge, [lam('rab-spl-top', { color: '#d9d2bd', emissive: '#26231c', polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2 }), curb]); g.add(o); }
+    // shrub ring: dark clipped shrubs, a few with red blooms
+    const [sx, sy] = EN(B.shrub_c), dark = lam('rab-shrub', { color: '#2f4a2a', flatShading: true }), dark2 = lam('rab-shrub2', { color: '#3a5631', flatShading: true }), red = lam('rab-bloom', { color: '#b8343a', flatShading: true });
+    const geo = new THREE.IcosahedronGeometry(1, 1);
+    for (let i = 0; i < B.shrub_n; i++) { const a = 2 * Math.PI * i / B.shrub_n, r = B.shrub_r;
+      const o = new THREE.Mesh(geo, i % 7 === 3 ? red : (i % 2 ? dark : dark2)); const s = 0.5 + 0.08 * Math.sin(i * 2.3);
+      o.scale.set(s, s * 0.8, s); o.position.set(sx + r * Math.cos(a), 0.18 + s * 0.55, -(sy + r * Math.sin(a))); g.add(o); }
+    // light pole: gray steel, twin arms, LED heads
+    const [px, py] = EN(B.pole), pole = lam('rab-pole', { color: '#5a5f66' }), led = new THREE.MeshBasicMaterial({ color: '#f4f6ff' });
+    const o = new THREE.Group(); o.position.set(px, 0.18, -py); o.rotation.y = B.pole_rot || 0;
+    o.add(cyl(0.3, 0.3, 0.45, 0, 0, 0, lam('rab-pbase', { color: '#c9c5ba' }), 12)); o.add(cyl(0.13, 0.09, 9.0, 0, 0.45, 0, pole, 10));
+    for (const s of [-1, 1]) { o.add(box(1.5, 0.09, 0.09, s * 0.75, 9.25, 0, pole)); o.add(box(0.7, 0.14, 0.4, s * 1.55, 9.2, 0, pole));
+      const l = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.32), led); l.rotation.x = Math.PI / 2; l.position.set(s * 1.55, 9.19, 0); o.add(l); }
+    g.add(o);
+    return g;
+  }
+  // <<< RAB-31 build
+  root.add(buildSign()); root.add(buildPlaza()); if (L.nwdr) root.add(buildNwdr()); if (L.baseball) root.add(buildBaseball()); if (L.football) root.add(buildFootball()); if (L.softball) root.add(buildSoftball()); if (L.practice) root.add(buildPractice()); if (L.lamar) root.add(buildLamar()); if (L.rab31) root.add(buildRab31());
   root.traverse(o => { o.frustumCulled = false; });
   return root;
 };
@@ -691,3 +724,7 @@ window.NWCC_LANDMARKS.practice = {"main":[[-89.9784276,34.6221079],[-89.9779189,
 // #11 Lamar Hall + basketball court traced on Brent's aerial + street views (2026-10-09). Coordinates [lng,lat]; heights in m.
 window.NWCC_LANDMARKS.lamar = {"main":[[-89.9781951,34.6237806],[-89.9779784,34.6242517]],"nbay":[[-89.9781733,34.6242517],[-89.977992,34.6242811]],"porch":[[-89.9779784,34.6239809],[-89.9779484,34.6240718]],"eave":8.4,"pitch":24.0,"yard":[[-89.9781099,34.6237806],[-89.9781099,34.6237087],[-89.9782055,34.6237087],[-89.9782055,34.6237806]],"bins":[[-89.9780957,34.6236987],[-89.9780859,34.6236987],[-89.9780739,34.6236987]],"court":{"c":[-89.9783747,34.6240139],"L":28.5,"W":15.2,"surf":[[-89.9784789,34.6238706],[-89.9782791,34.6241627]]},"poles":[[-89.9780171,34.6236834],[-89.9784101,34.6236834],[-89.9782791,34.623498]]};
 /* <<< LAMAR-11 data */
+/* RAB-31 data >>> */
+// Thompson St / West St roundabout by #31 (2026-10-09). Coordinates [lng,lat]; radii m.
+window.NWCC_LANDMARKS.rab31 = {"c":[-89.9704313,34.6221007],"r_isl":8.7,"r_apron":11.6,"splitters":[[[-89.9704793,34.6222608],[-89.9704269,34.6222608],[-89.9704542,34.622315]],[[-89.9706179,34.6221224],[-89.9706147,34.6220609],[-89.9707195,34.6220908]],[[-89.9702533,34.622164],[-89.9700885,34.6221559],[-89.9700885,34.6221387],[-89.9702446,34.6220917]],[[-89.9704433,34.621947],[-89.9703691,34.6219488],[-89.9704094,34.6218674]]],"shrub_c":[-89.9704302,34.6221043],"shrub_r":4.9,"shrub_n":26,"pole":[-89.9704269,34.6220627],"pole_rot":-0.4363323129985824};
+/* <<< RAB-31 data */

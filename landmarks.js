@@ -327,7 +327,69 @@ window.NWCCLandmarks = function (THREE, toEN, onTexture) {
     return g;
   }
   // <<< FOOTBALL-41 build
-  root.add(buildSign()); root.add(buildPlaza()); if (L.nwdr) root.add(buildNwdr()); if (L.baseball) root.add(buildBaseball()); if (L.football) root.add(buildFootball());
+  // SOFTBALL-45 build >>>
+  // Ranger Field (softball, #45): outfield wall + foul poles, chain-link foul fences, backstop net, dugouts, bleachers, covered seating
+  // behind home, LF-line shelters, RF bullpen. Simple low 3D; deliberately NO projected ground shadows.
+  function buildSoftball() {
+    const B = L.softball, g = new THREE.Group(); g.name = 'ranger-field';
+    const M = (k, c, o) => lam('sb-' + k, Object.assign({ color: c, side: THREE.DoubleSide }, o || {}));
+    const conc = M('conc', '#d3cec3'), roofW = M('roofw', '#f4f3ee'), dark = M('dark', '#3b4046'), alu = M('alu', '#c9ced3'), alu2 = M('alu2', '#aeb4ba'),
+      metal = M('metal', '#2d3136'), redF = M('redf', '#a3372f'), wallM = M('wall', '#24452f'), wallTop = M('walltop', '#e2b23a'), bench = M('bench', '#6d5a43'),
+      net = M('net', '#20262a', { transparent: true, opacity: 0.22, depthWrite: false }), chain = M('chain', '#1f2a24', { transparent: true, opacity: 0.3, depthWrite: false }),
+      glass = M('glass', '#2b4a66'), pressM = M('press', '#ebe7dd'), yellow = M('yellow', '#f2c230');
+    const EN = c => toEN(c[0], c[1]);
+    const seg = (a, b, y0, h, t, m) => { const dx = b[0] - a[0], dy = b[1] - a[1], Ls = Math.hypot(dx, dy); if (Ls < 0.02) return null;
+      const o = new THREE.Mesh(new THREE.BoxGeometry(Ls, h, t), m); o.position.set((a[0] + b[0]) / 2, y0 + h / 2, -(a[1] + b[1]) / 2); o.rotation.y = Math.atan2(dy, dx); return o; };
+    const post = (p, h, r) => { const o = new THREE.Mesh(new THREE.CylinderGeometry(r || 0.06, r || 0.06, h, 6), metal); o.position.set(p[0], h / 2, -p[1]); return o; };
+    const along = (P, step, fn) => { fn(P[0]); for (let i = 0; i < P.length - 1; i++) { const a = P[i], b = P[i + 1], Ls = Math.hypot(b[0] - a[0], b[1] - a[1]), n = Math.max(1, Math.round(Ls / step));
+      for (let k = 1; k <= n; k++) fn([a[0] + (b[0] - a[0]) * k / n, a[1] + (b[1] - a[1]) * k / n]); } };
+    for (const F of B.fences) {
+      const P = F.pts.map(EN);
+      for (let i = 0; i < P.length - 1; i++) {
+        if (F.k === 'wall') { const s = seg(P[i], P[i + 1], 0, F.h, 0.25, wallM); if (s) { g.add(s); g.add(seg(P[i], P[i + 1], F.h, 0.12, 0.3, wallTop)); } }
+        else { const s = seg(P[i], P[i + 1], 0, F.h, 0.03, F.k === 'chain' ? chain : net); if (s) { s.renderOrder = 2; g.add(s); }
+          g.add(seg(P[i], P[i + 1], F.h - 0.06, 0.06, 0.06, metal));
+          if (F.k === 'net') g.add(seg(P[i], P[i + 1], 0, 1.2, 0.3, wallM)); }
+      }
+      if (F.k === 'wall') { for (let i = 1; i < P.length - 1; i++) g.add(cyl(0.13, 0.13, F.h + 0.12, P[i][0], 0, -P[i][1], wallM, 10)); }
+      else along(P, F.k === 'net' ? 4 : 3, p => g.add(post(p, F.h, F.k === 'net' ? 0.1 : 0.05)));
+    }
+    for (const c of (B.poles || [])) { const [x, y] = EN(c); g.add(cyl(0.12, 0.12, 9.0, x, 0, -y, yellow, 10)); }
+    for (const D of B.pads) { const sh = new THREE.Shape(D.r.map(c => { const p = EN(c); return new THREE.Vector2(p[0], p[1]); }));
+      const ge = new THREE.ShapeGeometry(sh); ge.rotateX(-Math.PI / 2); ge.translate(0, 0.07, 0); g.add(new THREE.Mesh(ge, M('pad' + D.c, D.c))); }
+    function roofGeo(w, d, y, rise) {   // hip roof over a w x d rectangle centred at the local origin, eaves at y
+      const a = w / 2, b = d / 2, r = Math.max(0, a - b), V = [], T = (p, q, s) => V.push(...p, ...q, ...s);
+      const A = [-a, y, -b], Bq = [a, y, -b], Cq = [a, y, b], D = [-a, y, b], R1 = [-r, y + rise, 0], R2 = [r, y + rise, 0];
+      T(A, Bq, R2); T(A, R2, R1); T(Cq, D, R1); T(Cq, R1, R2); T(Bq, Cq, R2); T(D, A, R1);
+      const ge = new THREE.BufferGeometry(); ge.setAttribute('position', new THREE.Float32BufferAttribute(V, 3)); ge.computeVertexNormals(); return ge;
+    }
+    for (const S of B.parts) {
+      const o = new THREE.Group(), [x, y] = EN(S.c); o.position.set(x, 0, -y); o.rotation.y = S.rot * Math.PI / 180; o.name = S.name;
+      const w = S.w, d = S.d;
+      if (S.t === 'dugout') {   // open front at local -z
+        o.add(box(w, S.h, 0.3, 0, 0, d / 2 - 0.15, conc));
+        for (const sx of [-1, 1]) o.add(box(0.3, S.h, d, sx * (w / 2 - 0.15), 0, 0, conc));
+        o.add(box(w - 0.6, 0.04, d - 0.4, 0, 0, 0, dark)); o.add(box(w - 1.2, 0.45, 0.5, 0, 0, d / 2 - 0.6, bench));
+        o.add(box(w + 0.5, 0.22, d + 0.5, 0, S.h, 0.1, roofW)); o.add(box(w, 0.08, 0.08, 0, 1.0, -d / 2 + 0.1, metal));
+      } else if (S.t === 'block') {
+        o.add(box(w, S.h, d, 0, 0, 0, M('blk' + S.col, S.col))); o.add(box(w + 0.3, 0.2, d + 0.3, 0, S.h, 0, M('roof' + S.roofc, S.roofc)));
+      } else if (S.t === 'stand') {   // seats rise toward local +z (back); red end frames; optional roof + press box
+        const n = S.rows, td = d / n;
+        for (let i = 0; i < n; i++) o.add(box(w - 0.3, (i + 1) * S.rise, td, 0, 0, -d / 2 + td * (i + 0.5), i % 2 ? alu : alu2));
+        const top = n * S.rise;
+        for (const sx of [-1, 1]) o.add(box(0.15, top + 0.9, d, sx * (w / 2 - 0.08), 0, 0, redF));
+        o.add(box(w, 0.08, 0.08, 0, top + 0.9, d / 2, metal));
+        if (S.roof) { for (const sx of [-1, 1]) for (const sz of [-1, 1]) o.add(box(0.25, S.roof, 0.25, sx * (w / 2 - 0.2), 0, sz * (d / 2 - 0.2), metal));
+          o.add(new THREE.Mesh(roofGeo(w + 1.0, d + 1.0, S.roof, 1.2), M('pavroof', '#33476b'))); }
+        if (S.press) { const pw = w * 0.6, pd = 2.2, ph = 2.2, pz = d / 2 - pd / 2;
+          o.add(box(pw, ph, pd, 0, top, pz, pressM)); o.add(box(pw - 0.6, 0.9, 0.05, 0, top + 1.0, pz - pd / 2 - 0.03, glass)); }
+      }
+      g.add(o);
+    }
+    return g;
+  }
+  // <<< SOFTBALL-45 build
+  root.add(buildSign()); root.add(buildPlaza()); if (L.nwdr) root.add(buildNwdr()); if (L.baseball) root.add(buildBaseball()); if (L.football) root.add(buildFootball()); if (L.softball) root.add(buildSoftball());
   root.traverse(o => { o.frustumCulled = false; });
   return root;
 };
@@ -344,3 +406,7 @@ window.NWCC_LANDMARKS.baseball = {"parts":[{"t":"dugout","c":[-89.9746112,34.624
 // Football stadium (#41) structures traced on Brent's aerial (2026-10-09). parts: c = centre [lng,lat], rot = deg CCW (local -z = front), w/d/h in m.
 window.NWCC_LANDMARKS.football = {"parts":[{"t":"grand","c":[-89.9762726,34.624379],"rot":96.08,"w":53.0,"d":18.5,"rows":22,"rise":0.4,"col":"#c9ced3","col2":"#b7bdc3","aisles":[-19.6,-7.2,6.0,17.2],"press":{"off":-1.0,"w":17.5,"d":3.8,"h":3.0,"behind":true},"name":"main (east) grandstand + press box"},{"t":"grand","c":[-89.9774293,34.6242814],"rot":-83.92,"w":32.8,"d":12.5,"rows":14,"rise":0.36,"col":"#dfe2e4","col2":"#cfd3d6","aisles":[-8.0,8.0],"name":"west bleachers"},{"t":"block","c":[-89.9775124,34.6242573],"rot":-83.92,"w":5.9,"d":1.9,"h":6.0,"col":"#cfcac0","roofc":"#9aa0a6","name":"west bleachers rear booth"},{"t":"scoreboard","c":[-89.9766397,34.6237117],"rot":6.08,"w":10.0,"h":4.2,"y0":3.2,"name":"south scoreboard"},{"t":"pad3d","c":[-89.9772201,34.6248956],"rot":-26.92,"w":5.2,"d":4.6,"h":0.55,"col":"#4d86c9","name":"north curve vault/jump pad W"},{"t":"pad3d","c":[-89.9767448,34.6249557],"rot":39.08,"w":5.2,"d":4.6,"h":0.55,"col":"#4d86c9","name":"north curve vault/jump pad E"}],"bricks":[[[-89.976431,34.625079],[-89.976384,34.6250839],[-89.976384,34.625111],[-89.976431,34.6251062],[-89.976431,34.625079]],[[-89.9763709,34.6250852],[-89.9763207,34.6250904],[-89.9763207,34.6251175],[-89.9763709,34.6251123],[-89.9763709,34.6250852]],[[-89.9763054,34.625092],[-89.9762563,34.625097],[-89.9762563,34.6251241],[-89.9763054,34.6251191],[-89.9763054,34.625092]],[[-89.9762421,34.6250985],[-89.9761952,34.6251033],[-89.9761952,34.6251304],[-89.9762421,34.6251256],[-89.9762421,34.6250985]],[[-89.9761788,34.625105],[-89.9761297,34.62511],[-89.9761297,34.6251372],[-89.9761788,34.6251321],[-89.9761788,34.625105]],[[-89.9761133,34.6251117],[-89.9760675,34.6251164],[-89.9760675,34.6251436],[-89.9761133,34.6251388],[-89.9761133,34.6251117]]],"medallion":{"c":[-89.9764965,34.6250815],"r":4.4}};
 /* <<< FOOTBALL-41 data */
+/* SOFTBALL-45 data >>> */
+// Ranger Field (softball, #45) structures traced on Brent's aerial (2026-10-09). parts: c = centre [lng,lat], rot = deg CCW (local -z = front), w/d/h in m.
+window.NWCC_LANDMARKS.softball = {"parts":[{"t":"dugout","c":[-89.9782639,34.6215156],"rot":90.0,"w":15.0,"d":3.6,"h":2.5,"name":"1B dugout"},{"t":"dugout","c":[-89.9785411,34.6213293],"rot":0.0,"w":14.0,"d":3.4,"h":2.5,"name":"3B dugout"},{"t":"stand","c":[-89.9782398,34.6213962],"rot":90.0,"w":10.5,"d":5.4,"rows":6,"rise":0.42,"name":"1B bleachers"},{"t":"stand","c":[-89.9783818,34.6213021],"rot":0.0,"w":8.5,"d":4.6,"rows":5,"rise":0.42,"name":"home bleachers"},{"t":"stand","c":[-89.9782933,34.621304],"rot":31.9,"w":9.0,"d":6.4,"rows":6,"rise":0.4,"roof":4.6,"press":true,"name":"covered seating behind home"},{"t":"block","c":[-89.9789887,34.6213763],"rot":0,"w":6.0,"d":4.2,"h":2.6,"col":"#8a3a3f","roofc":"#6e2a33","roof":"flat","name":"LF-line shelter W"},{"t":"block","c":[-89.9788577,34.6213736],"rot":0,"w":7.0,"d":4.4,"h":2.6,"col":"#8a3a3f","roofc":"#6e2a33","roof":"flat","name":"LF-line shelter E"},{"t":"block","c":[-89.9782606,34.6219008],"rot":0,"w":0.9,"d":4.6,"h":1.0,"col":"#e9e7e0","roofc":"#f4f3ee","roof":"flat","name":"RF bullpen bench"}],"pads":[{"c":"#c98458","r":[[-89.9782136,34.6217607],[-89.9782136,34.6219126],[-89.9782529,34.6219126],[-89.9782529,34.6217607],[-89.9782136,34.6217607]]}],"fences":[{"k":"wall","h":2.0,"pts":[[-89.9783436,34.6219424],[-89.9784866,34.6219506],[-89.9786481,34.6219569],[-89.9786721,34.6219506],[-89.9787005,34.6219424],[-89.9787442,34.6219225],[-89.9787813,34.6219008],[-89.9788228,34.6218773],[-89.9788643,34.6218484],[-89.9789057,34.6218113],[-89.9789407,34.6217787],[-89.9789789,34.6217399],[-89.9790105,34.6216983],[-89.9790236,34.6216784],[-89.9790258,34.6214224]]},{"k":"chain","h":2.4,"pts":[[-89.9783436,34.6219424],[-89.9782759,34.6219397],[-89.9782748,34.6215897]]},{"k":"rail","h":1.1,"pts":[[-89.9782944,34.6215843],[-89.9782944,34.6214432]]},{"k":"net","h":6.5,"pts":[[-89.9782944,34.6214432],[-89.9782944,34.6213844],[-89.9783425,34.6213483],[-89.9783828,34.6213437],[-89.9784538,34.6213446]]},{"k":"rail","h":1.1,"pts":[[-89.9784538,34.6213446],[-89.9786285,34.621351]]},{"k":"chain","h":2.4,"pts":[[-89.9786285,34.621351],[-89.9786885,34.6213564],[-89.9787846,34.6213591],[-89.9788162,34.6213989],[-89.9790258,34.6213998],[-89.9790258,34.6214224]]},{"k":"chain","h":2.4,"pts":[[-89.9782759,34.6219352],[-89.9782071,34.6219352],[-89.9782071,34.6217543],[-89.9782748,34.6217543]]}],"poles":[[-89.9783436,34.6219424],[-89.9790258,34.6214224]]};
+/* <<< SOFTBALL-45 data */

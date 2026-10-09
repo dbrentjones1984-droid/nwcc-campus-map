@@ -423,6 +423,11 @@ window.NWCCExteriors = function (THREE) {
     if (roof === 'hip' || roof === 'gable') {
       const metal = ex.roof_mat ? ex.roof_mat === 'metal' : ['shop', 'warehouse', 'athletic_hall'].includes(ex.arch);
       grp.add(cap(pts, H, colorMat('#6f6b66')));
+      if (ex.roof_split && roof === 'hip') {   // SOFTBALL-45 (2026-10-09): separate hip sections; split = fractions from the west end
+        const sg = o.ux[0] >= 0 ? 1 : -1, cuts = [-o.hx, ...ex.roof_split.map(f => sg * (f - 0.5) * 2 * o.hx).sort((a, b) => a - b), o.hx];
+        for (let i = 0; i < cuts.length - 1; i++) { const a = cuts[i], b = cuts[i + 1], so = Object.assign({}, o, { c: add(o.c, mul(o.ux, (a + b) / 2)), hx: (b - a) / 2 - 0.55 });
+          grp.add(pitchedRoof(so, H, roof, ex.pitch || 20, 0.6, roofMat(metal ? 'metal' : 'shingle', ex.roof_color), facadeMat(F, false))); }
+      } else
       grp.add(pitchedRoof(o, H, roof, ex.pitch || 20, 0.6, roofMat(metal ? 'metal' : 'shingle', ex.roof_color), facadeMat(F, false)));
       topY = H + o.hy * Math.tan((ex.pitch || 20) * Math.PI / 180);
     } else if (roof === 'perimeter_hip') {

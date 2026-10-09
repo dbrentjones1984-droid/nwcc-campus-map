@@ -389,7 +389,105 @@ window.NWCCLandmarks = function (THREE, toEN, onTexture) {
     return g;
   }
   // <<< SOFTBALL-45 build
-  root.add(buildSign()); root.add(buildPlaza()); if (L.nwdr) root.add(buildNwdr()); if (L.baseball) root.add(buildBaseball()); if (L.football) root.add(buildFootball()); if (L.softball) root.add(buildSoftball());
+  // PRACTICE-49 build >>>
+  // #49 covered practice facility: white portal-frame columns (navy base pads + blue up-lights), rafters, white fascia band + gable
+  // end panels, low-pitch white roof, brick knee wall + black fence on the open sides, enclosed annexes, light poles.
+  // The turf (with lines) is the #49 field cap from exteriors.js. Simple low 3D; deliberately NO projected ground shadows.
+  function buildPractice() {
+    const B = L.practice, g = new THREE.Group(); g.name = 'practice-facility';
+    const M = (k, c, o) => lam('pf-' + k, Object.assign({ color: c, side: THREE.DoubleSide }, o || {}));
+    const white = M('white', '#f3f3ef', { emissive: '#4a4a47' }), white2 = M('white2', '#e6e8e8', { emissive: '#222' }), under = M('under', '#b4b9bd', { emissive: '#4c5156', side: THREE.FrontSide }),
+      navy = M('navy', '#1f2b48'), blue = new THREE.MeshBasicMaterial({ color: '#4d8dff' }), metal = M('metal', '#2a2e33'), pole = M('pole', '#4a4f55'),
+      fence = M('fence', '#15181b', { transparent: true, opacity: 0.38, depthWrite: false }), glass = M('glass', '#2b4a66'), door = M('door', '#7d8288'), led = new THREE.MeshBasicMaterial({ color: '#f4f6ff' });
+    const bt = brickTex(['#9c4632', '#a84e38', '#8f3f2d', '#b0573e']), brick = M('brick', '#ffffff', { map: bt }), brickCap = M('brickcap', '#c9c2b4');
+    const ribCv = document.createElement('canvas'); ribCv.width = 64; ribCv.height = 8; const rc = ribCv.getContext('2d');
+    rc.fillStyle = '#eef0f0'; rc.fillRect(0, 0, 64, 8); rc.fillStyle = '#d4d8da'; rc.fillRect(0, 0, 6, 8); rc.fillStyle = '#fafbfb'; rc.fillRect(6, 0, 3, 8);
+    const ribT = new THREE.CanvasTexture(ribCv); ribT.wrapS = ribT.wrapT = THREE.RepeatWrapping; ribT.colorSpace = THREE.SRGBColorSpace;
+    const panel = M('panel', '#ffffff', { map: ribT, emissive: '#3c3c3a' });
+    const roofTop = M('rooftop', '#f5f5f1', { emissive: '#2a2a28', side: THREE.FrontSide, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -60 });
+    const EN = c => toEN(c[0], c[1]);
+    // box with UVs in metres / tile (su x sv): faces +x,-x,+y,-y,+z,-z
+    function boxT(w, h, d, x, y, z, m, su, sv) {
+      const ge = new THREE.BoxGeometry(w, h, d), uv = ge.attributes.uv, dims = [[d, h], [d, h], [w, d], [w, d], [w, h], [w, h]];
+      for (let f = 0; f < 6; f++) for (let k = 0; k < 4; k++) { const i = f * 4 + k; uv.setXY(i, uv.getX(i) * dims[f][0] / su, uv.getY(i) * dims[f][1] / sv); }
+      const o = new THREE.Mesh(ge, m); o.position.set(x, y + h / 2, z); return o;
+    }
+    const seg = (a, b, y0, h, t, m) => { const dx = b[0] - a[0], dy = b[1] - a[1], Ls = Math.hypot(dx, dy); if (Ls < 0.02) return null;
+      const o = new THREE.Mesh(new THREE.BoxGeometry(Ls, h, t), m); o.position.set((a[0] + b[0]) / 2, y0 + h / 2, -(a[1] + b[1]) / 2); o.rotation.y = Math.atan2(dy, dx); return o; };
+    const segT = (a, b, y0, h, t, m, su, sv) => { const dx = b[0] - a[0], dy = b[1] - a[1], Ls = Math.hypot(dx, dy);
+      const o = boxT(Ls, h, t, (a[0] + b[0]) / 2, y0, -(a[1] + b[1]) / 2, m, su, sv); o.rotation.y = Math.atan2(dy, dx); return o; };
+    const [sw, ne] = B.main.map(EN), cx = (sw[0] + ne[0]) / 2, cz = -(sw[1] + ne[1]) / 2, W = ne[0] - sw[0], Lz = ne[1] - sw[1];
+    const E = B.eave, BD = B.band, R = B.rise, hw = W / 2;
+    const colM = [white, white, new THREE.MeshBasicMaterial({ visible: false }), white, white, white];
+    // columns: 0.9 along the wall x 1.2 deep, haunch at the top, navy base pad, blue up-light on the outer face
+    for (const c of B.cols) {
+      const [x, y] = EN(c), s = c[2], alongX = (s === 'n' || s === 's'), o = new THREE.Group(); o.position.set(x, 0, -y);
+      const cw = alongX ? 0.8 : 1.1, cd = alongX ? 1.1 : 0.8;
+      o.add(box(cw, E + BD - 0.2, cd, 0, 0, 0, colM));
+      o.add(box(alongX ? 0.9 : 2.0, 1.6, alongX ? 2.0 : 0.9, alongX ? 0 : (s === 'e' ? -0.4 : 0.4), E - 1.6, alongX ? (s === 'n' ? 0.4 : -0.4) : 0, white));
+      o.add(box(cw + 0.2, 2.4, cd + 0.2, 0, 0, 0, navy));
+      if (s !== 'w') { const out = s === 'e' ? [1, 0] : s === 'n' ? [0, 1] : [0, -1];
+        const pl = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 1.5), blue); pl.position.set(out[0] * (cw / 2 + 0.02), 3.3, -out[1] * (cd / 2 + 0.02));
+        pl.rotation.y = Math.atan2(out[0], -out[1]) + Math.PI; o.add(pl); }
+      g.add(o);
+    }
+    // rafters on every long-side column line (+ ridge beam), purlins
+    // rafters / purlins are drawn as their undersides only (seen from the field / street): the 3D layer's depth slice is coarse, and from far above those faces bled through
+    const hid = new THREE.MeshBasicMaterial({ visible: false }), raftM = [hid, hid, hid, M('raft', '#e9ebeb', { emissive: '#55585a', side: THREE.FrontSide }), hid, hid], purlM = [hid, hid, hid, under, hid, hid];   // underside faces only
+    const yTop = E + BD - 1.1;   // rafters kept well under the roof slab (avoids depth fighting from far away)
+    for (const c of B.cols.filter(q => q[2] === 'e')) {
+      const z = -EN(c)[1];
+      for (const sx of [-1, 1]) { const len = Math.hypot(hw, R), m = new THREE.Mesh(new THREE.BoxGeometry(len, 0.9, 0.45), raftM);
+        m.position.set(cx + sx * hw / 2, yTop - 0.45 + R / 2, z); m.rotation.z = -sx * Math.atan2(R, hw); g.add(m); }
+    }
+    for (const t of [0.2, 0.45, 0.7, 0.95]) for (const sx of [-1, 1]) {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.25, Lz), purlM); m.position.set(cx + sx * hw * (1 - t), yTop - 0.95 + R * t, cz); g.add(m); }
+    // fascia band on the long sides; gable end panels (band + gable)
+    for (const sx of [-1, 1]) g.add(boxT(0.35, BD, Lz + 0.35, cx + sx * (hw + 0.0), E, cz, panel, 1.2, BD));
+    for (const sz of [-1, 1]) {
+      const sh = new THREE.Shape([new THREE.Vector2(-hw - 0.17, E), new THREE.Vector2(hw + 0.17, E), new THREE.Vector2(hw + 0.17, E + BD), new THREE.Vector2(0, E + BD + R), new THREE.Vector2(-hw - 0.17, E + BD)]);
+      const ge = new THREE.ExtrudeGeometry(sh, { depth: 0.35, bevelEnabled: false }); const uv = ge.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) / 1.2, uv.getY(i) / 3);
+      const m = new THREE.Mesh(ge, panel); m.position.set(cx, 0, cz + sz * Lz / 2 - 0.175); g.add(m);
+    }
+    // roof: two slabs, white top / gray underside
+    for (const sx of [-1, 1]) {
+      // top face pulled toward the camera (polygonOffset): the 3D layer's depth slice is coarse, rafters would bleed through from above
+      const len = Math.hypot(hw, R) + 0.4, wf = M('whitef', '#f3f3ef', { emissive: '#4a4a47', side: THREE.FrontSide }), mats = [wf, wf, roofTop, under, wf, wf];
+      const m = new THREE.Mesh(new THREE.BoxGeometry(len, 0.22, Lz + 0.7), mats.map(q => q));
+      m.position.set(cx + sx * (hw / 2 + 0.1), E + BD + R / 2 + 0.11, cz); m.rotation.z = -sx * Math.atan2(R, hw); g.add(m);
+    }
+    g.add(box(0.5, 0.18, Lz + 0.7, cx, E + BD + R + 0.08, cz, roofTop));   // ridge cap
+    // open sides: brick knee wall (0.9 m) + black fence to 3.0 m with top rail and posts
+    for (const s of B.open) { const P = s.map(EN);
+      for (let i = 0; i < P.length - 1; i++) { const a = P[i], b = P[i + 1];
+        g.add(segT(a, b, 0, 0.9, 0.35, brick, 0.8, 0.3)); g.add(seg(a, b, 0.9, 0.06, 0.42, brickCap));
+        const f = seg(a, b, 0.96, 2.04, 0.03, fence); f.renderOrder = 2; g.add(f); g.add(seg(a, b, 2.96, 0.06, 0.06, metal));
+        const Ls = Math.hypot(b[0] - a[0], b[1] - a[1]), n = Math.max(1, Math.round(Ls / 3));
+        for (let k = 0; k <= n; k++) { const px = a[0] + (b[0] - a[0]) * k / n, py = a[1] + (b[1] - a[1]) * k / n; g.add(cyl(0.04, 0.04, 2.1, px, 0.9, -py, metal, 6)); } } }
+    // enclosed annexes: brick base 1.2 m, ribbed white panels, flat white roof + parapet; windows / door on the low annex
+    for (const A of B.annex) {
+      const [a, b] = [EN(A.sw), EN(A.ne)], w = b[0] - a[0], d = b[1] - a[1], x = (a[0] + b[0]) / 2, z = -(a[1] + b[1]) / 2;
+      g.add(boxT(w + 0.1, 1.2, d + 0.1, x, 0, z, brick, 0.8, 0.3));
+      g.add(boxT(w, A.h - 1.2, d, x, 1.2, z, panel, 1.2, A.h));
+      g.add(box(w + 0.3, 0.12, d + 0.3, x, A.h, z, white)); g.add(box(w - 0.4, 0.04, d - 0.4, x, A.h + 0.12, z, M('roofw', '#f7f7f4')));
+      if (A.win) {
+        for (const ux of [-0.32, -0.12, 0.12]) g.add(box(2.0, 1.2, 0.06, x + ux * w, 2.2, z + d / 2 + 0.03, glass));
+        g.add(box(1.8, 2.3, 0.06, x + 0.33 * w, 0, z + d / 2 + 0.03, door));
+        for (const uz of [-0.25, 0.15]) g.add(box(0.06, 1.2, 2.0, x - w / 2 - 0.03, 2.2, z + uz * d, glass));
+      }
+    }
+    // light poles (parking: single LED head; street: longer arm over Holder Dr)
+    for (const P of B.poles) {
+      const [x, y] = EN(P.c), o = new THREE.Group(); o.position.set(x, 0, -y); o.rotation.y = P.a * Math.PI / 180;
+      o.add(cyl(0.3, 0.3, 0.5, 0, 0, 0, M('pbase', '#bdb8ad'), 10)); o.add(cyl(0.11, 0.09, P.h, 0, 0.5, 0, pole, 8));
+      const arm = P.street ? 2.4 : 1.2; o.add(box(0.1, 0.1, arm, 0, P.h + 0.3, -arm / 2, pole)); o.add(box(0.45, 0.14, 0.8, 0, P.h + 0.2, -arm, pole));
+      const l = new THREE.Mesh(new THREE.PlaneGeometry(0.35, 0.65), led); l.rotation.x = Math.PI / 2; l.position.set(0, P.h + 0.19, -arm); o.add(l);
+      g.add(o);
+    }
+    return g;
+  }
+  // <<< PRACTICE-49 build
+  root.add(buildSign()); root.add(buildPlaza()); if (L.nwdr) root.add(buildNwdr()); if (L.baseball) root.add(buildBaseball()); if (L.football) root.add(buildFootball()); if (L.softball) root.add(buildSoftball()); if (L.practice) root.add(buildPractice());
   root.traverse(o => { o.frustumCulled = false; });
   return root;
 };
@@ -410,3 +508,7 @@ window.NWCC_LANDMARKS.football = {"parts":[{"t":"grand","c":[-89.9762726,34.6243
 // Ranger Field (softball, #45) structures traced on Brent's aerial (2026-10-09). parts: c = centre [lng,lat], rot = deg CCW (local -z = front), w/d/h in m.
 window.NWCC_LANDMARKS.softball = {"parts":[{"t":"dugout","c":[-89.9782639,34.6215156],"rot":90.0,"w":15.0,"d":3.6,"h":2.5,"name":"1B dugout"},{"t":"dugout","c":[-89.9785411,34.6213293],"rot":0.0,"w":14.0,"d":3.4,"h":2.5,"name":"3B dugout"},{"t":"stand","c":[-89.9782398,34.6213962],"rot":90.0,"w":10.5,"d":5.4,"rows":6,"rise":0.42,"name":"1B bleachers"},{"t":"stand","c":[-89.9783818,34.6213021],"rot":0.0,"w":8.5,"d":4.6,"rows":5,"rise":0.42,"name":"home bleachers"},{"t":"stand","c":[-89.9782933,34.621304],"rot":31.9,"w":9.0,"d":6.4,"rows":6,"rise":0.4,"roof":4.6,"press":true,"name":"covered seating behind home"},{"t":"block","c":[-89.9789887,34.6213763],"rot":0,"w":6.0,"d":4.2,"h":2.6,"col":"#8a3a3f","roofc":"#6e2a33","roof":"flat","name":"LF-line shelter W"},{"t":"block","c":[-89.9788577,34.6213736],"rot":0,"w":7.0,"d":4.4,"h":2.6,"col":"#8a3a3f","roofc":"#6e2a33","roof":"flat","name":"LF-line shelter E"},{"t":"block","c":[-89.9782606,34.6219008],"rot":0,"w":0.9,"d":4.6,"h":1.0,"col":"#e9e7e0","roofc":"#f4f3ee","roof":"flat","name":"RF bullpen bench"}],"pads":[{"c":"#c98458","r":[[-89.9782136,34.6217607],[-89.9782136,34.6219126],[-89.9782529,34.6219126],[-89.9782529,34.6217607],[-89.9782136,34.6217607]]}],"fences":[{"k":"wall","h":2.0,"pts":[[-89.9783436,34.6219424],[-89.9784866,34.6219506],[-89.9786481,34.6219569],[-89.9786721,34.6219506],[-89.9787005,34.6219424],[-89.9787442,34.6219225],[-89.9787813,34.6219008],[-89.9788228,34.6218773],[-89.9788643,34.6218484],[-89.9789057,34.6218113],[-89.9789407,34.6217787],[-89.9789789,34.6217399],[-89.9790105,34.6216983],[-89.9790236,34.6216784],[-89.9790258,34.6214224]]},{"k":"chain","h":2.4,"pts":[[-89.9783436,34.6219424],[-89.9782759,34.6219397],[-89.9782748,34.6215897]]},{"k":"rail","h":1.1,"pts":[[-89.9782944,34.6215843],[-89.9782944,34.6214432]]},{"k":"net","h":6.5,"pts":[[-89.9782944,34.6214432],[-89.9782944,34.6213844],[-89.9783425,34.6213483],[-89.9783828,34.6213437],[-89.9784538,34.6213446]]},{"k":"rail","h":1.1,"pts":[[-89.9784538,34.6213446],[-89.9786285,34.621351]]},{"k":"chain","h":2.4,"pts":[[-89.9786285,34.621351],[-89.9786885,34.6213564],[-89.9787846,34.6213591],[-89.9788162,34.6213989],[-89.9790258,34.6213998],[-89.9790258,34.6214224]]},{"k":"chain","h":2.4,"pts":[[-89.9782759,34.6219352],[-89.9782071,34.6219352],[-89.9782071,34.6217543],[-89.9782748,34.6217543]]}],"poles":[[-89.9783436,34.6219424],[-89.9790258,34.6214224]]};
 /* <<< SOFTBALL-45 data */
+/* PRACTICE-49 data >>> */
+// #49 practice facility structures traced on Brent's aerial + street views (2026-10-09). Coordinates [lng,lat]; heights in m.
+window.NWCC_LANDMARKS.practice = {"main":[[-89.9784276,34.6221079],[-89.9779189,34.6226017]],"eave":10.5,"band":2.4,"rise":2.038,"cols":[[-89.9779254,34.6221134,"e"],[-89.9784211,34.6221134,"w"],[-89.9779254,34.6221737,"e"],[-89.9784211,34.6221737,"w"],[-89.9779254,34.6222341,"e"],[-89.9784211,34.6222341,"w"],[-89.9779254,34.6222945,"e"],[-89.9784211,34.6222945,"w"],[-89.9779254,34.6223548,"e"],[-89.9784211,34.6223548,"w"],[-89.9779254,34.6224152,"e"],[-89.9784211,34.6224152,"w"],[-89.9779254,34.6224756,"e"],[-89.9784211,34.6224756,"w"],[-89.9779254,34.6225359,"e"],[-89.9784211,34.6225359,"w"],[-89.9779254,34.6225963,"e"],[-89.9784211,34.6225963,"w"],[-89.9782972,34.6221134,"s"],[-89.9782972,34.6225963,"n"],[-89.9781733,34.6221134,"s"],[-89.9781733,34.6225963,"n"],[-89.9780494,34.6221134,"s"],[-89.9780494,34.6225963,"n"]],"open":[[[-89.9779189,34.6221079],[-89.9779189,34.6226017]],[[-89.9779189,34.6226017],[-89.9784276,34.6226017]],[[-89.9784276,34.6226017],[-89.9784276,34.6224959]],[[-89.9784276,34.6221079],[-89.9779189,34.6221079]]],"annex":[{"sw":[-89.9785018,34.6221079],"ne":[-89.9784276,34.6224959],"h":12.9,"win":0},{"sw":[-89.9786525,34.6221125],"ne":[-89.9785018,34.6223114],"h":5.8,"win":1}],"poles":[{"c":[-89.9784374,34.6220799],"h":9.0,"a":0,"street":false},{"c":[-89.9782497,34.6220799],"h":9.0,"a":0,"street":false},{"c":[-89.9780499,34.6220799],"h":9.0,"a":0,"street":false},{"c":[-89.9783446,34.6219868],"h":9.0,"a":180,"street":false},{"c":[-89.9781263,34.6219868],"h":9.0,"a":180,"street":false}]};
+/* <<< PRACTICE-49 data */

@@ -275,6 +275,7 @@ function showSelection(key) {
     const hg = new THREE.ShapeGeometry(halo); hg.rotateX(-Math.PI / 2); hg.translate(0, 0.08, 0);
     selGroup.add(new THREE.Mesh(hg, new THREE.MeshBasicMaterial({ color: 0xffd34d, transparent: true, opacity: 0.28, depthWrite: false })));
   } else if (g && g.userData.keys) { top = 2; }
+  { const ft = featByKey[key]; if (ft && ft.properties.ext && ft.properties.ext.pin_top) top = ft.properties.ext.pin_top; }   // PRACTICE-49 (2026-10-09)
   const pin = new THREE.Group(); pin.name = 'pin';
   const pm = new THREE.MeshLambertMaterial({ color: 0xffc928, emissive: 0x553a00 });
   const cone = new THREE.Mesh(new THREE.ConeGeometry(1.6, 4.2, 4), pm); cone.rotation.x = Math.PI; cone.position.y = 2.1; pin.add(cone);

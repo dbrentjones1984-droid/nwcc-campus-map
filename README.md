@@ -93,3 +93,11 @@ Open it from the home screen and it runs standalone (no browser bar). The first 
   1130670566, 1472863871) instead of placeholder boxes / a small parking-lot structure. Calhoun (#10) is L-shaped, so its
   marker sits at the most interior point of the footprint (its centroid falls just outside the building).
 - #3A DeSoto Hall A: marker centred on its footprint. All four now approx=false. #8D and #56 still awaiting confirmation.
+
+## Building fixes (2026-10-09, user-approved; script: /workspace/building-check/fix/apply_bfix.py)
+- #43 re-outlined on the real 49 × 19 m hip-roofed building (the OSM way under it was mis-tagged parking; that parking polygon is removed from the basemap).
+- #44: placeholder "courts building" box removed; the north #44 is now 4 basketball courts + sand volleyball, and the tennis complex is drawn as two fenced blocks of 4 courts.
+- #53 / #56 split (Tate Hall has its own dark pitched roof); the Union complex is split into #54 (big hip roof, 8.8 m), #62 (flat white) and #63 (pitched).
+- Pitched roofs on the listed academic and residence halls (`perimeter_hip` with per-building `hip_inset` / simplified `roof_ring`); roof colours via `ext.roof_color` (#20 green metal, #32 red metal, #25A teal); heights #51/#52/#54/#55 raised; apartment halls 1/3/8/9 set to 2 stories.
+- 13 unnumbered buildings (`properties.unnumbered`: drawn, not tappable, no label): stadium stands and field houses, Physical Plant north and west buildings, BSU, 3 cottages north of Thompson, softball building, tennis building, and the Marshall annex.
+- Markers moved inside their footprints: 1A, 1B, 3B, 3C, 3D, 8D, 9B, 9C, 43, 44 (tennis).

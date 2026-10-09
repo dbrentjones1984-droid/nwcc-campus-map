@@ -114,6 +114,7 @@ let labelsOn = true, satOn = false, selKey = null, compare = false, spin = false
 // ---------- Three.js custom layer ----------
 let THREE = null, EXT = null, renderer = null, scene = null, camera = null, campus = null, selGroup = null, raycaster = null;
 const groups = []; // building groups (pickable)
+const extras = []; // unnumbered buildings (2026-10-09): drawn, not pickable, follow their category's visibility
 const origin = maplibregl.MercatorCoordinate.fromLngLat(META.center, 0);
 const S = origin.meterInMercatorCoordinateUnits();
 function toEN(lng, lat) { const m = maplibregl.MercatorCoordinate.fromLngLat([lng, lat], 0); return [(m.x - origin.x) / S, -(m.y - origin.y) / S]; }
@@ -133,10 +134,12 @@ function buildScene() {
     const p = f.properties, ex = p.ext;
     if (ex.arch === 'shared') continue;
     if (ex.pitches) ex.pitches.forEach(q => { q.ringEN = q.ring.map(c => toEN(c[0], c[1])); });
+    if (ex.roof_ring) ex.roofEN = ex.roof_ring.map(c => toEN(c[0], c[1])); // simplified roof outline for perimeter hips (2026-10-09)
     const ring = f.geometry.coordinates[0].map(c => toEN(c[0], c[1]));
-    ex.catColor = (CATS[p.category] || {}).color;
+    ex.catColor = p.unnumbered ? null : (CATS[p.category] || {}).color;
     let g;
     try { g = EXT.build(ring, ex, p.key); } catch (err) { console.warn('build failed', p.key, err); continue; }
+    if (p.unnumbered) { g.userData.category = p.category; g.traverse(o => { o.frustumCulled = false; }); campus.add(g); extras.push(g); continue; }
     g.userData.keys = [p.key].concat(ex.shares || []);
     g.userData.category = p.category;
     g.traverse(o => { o.frustumCulled = false; o.userData.bkey = p.key; });
@@ -180,7 +183,7 @@ function buildTrees() {
   shadows.renderOrder = -1; scene.add(trees);
 }
 function refreshVisibility() {
-  groups.forEach(g => { g.visible = !!active[g.userData.category]; });
+  groups.concat(extras).forEach(g => { g.visible = !!active[g.userData.category]; });
   if (campus) campus.visible = !compare;
 }
 

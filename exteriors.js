@@ -144,17 +144,20 @@ window.NWCCExteriors = function (THREE) {
     tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
     return (texCache[id] = tex);
   }
-  function stripeTexture(kind) {
-    const id = 'roof:' + kind; if (texCache[id]) return texCache[id];
+  // Optional `color` (2026-10-09, building fixes): base colour for shingle / metal / membrane roofs (ext.roof_color),
+  // e.g. green standing-seam metal on #20, red metal on #32, teal membrane on #25A.
+  function stripeTexture(kind, color) {
+    const id = 'roof:' + kind + (color || ''); if (texCache[id]) return texCache[id];
     const cv = document.createElement('canvas'); cv.width = cv.height = 128; const g = cv.getContext('2d'); const rnd = rng(hash(kind));
+    const C = color ? new THREE.Color(color) : null, css = (c, f) => { const q = c.clone().multiplyScalar(f); return `rgb(${Math.min(255, q.r * 255) | 0},${Math.min(255, q.g * 255) | 0},${Math.min(255, q.b * 255) | 0})`; };
     if (kind === 'shingle') {
-      g.fillStyle = '#4a4744'; g.fillRect(0, 0, 128, 128);
-      for (let r = 0; r < 8; r++) for (let x = -16; x < 128; x += 16) { const k = 60 + rnd() * 25 | 0; g.fillStyle = `rgb(${k},${k - 3},${k - 6})`; g.fillRect(x + (r % 2) * 8 + 1, r * 16 + 1, 14, 14); }
+      g.fillStyle = C ? css(C, 1) : '#4a4744'; g.fillRect(0, 0, 128, 128);
+      for (let r = 0; r < 8; r++) for (let x = -16; x < 128; x += 16) { const k = 60 + rnd() * 25 | 0; g.fillStyle = C ? css(C, 0.85 + (k - 60) / 100) : `rgb(${k},${k - 3},${k - 6})`; g.fillRect(x + (r % 2) * 8 + 1, r * 16 + 1, 14, 14); }
     } else if (kind === 'metal') {
-      g.fillStyle = '#8f9aa3'; g.fillRect(0, 0, 128, 128);
-      for (let x = 0; x < 128; x += 16) { g.fillStyle = '#c3ccd3'; g.fillRect(x, 0, 3, 128); g.fillStyle = '#76818a'; g.fillRect(x + 3, 0, 2, 128); }
+      g.fillStyle = C ? css(C, 1) : '#8f9aa3'; g.fillRect(0, 0, 128, 128);
+      for (let x = 0; x < 128; x += 16) { g.fillStyle = C ? css(C, 1.3) : '#c3ccd3'; g.fillRect(x, 0, 3, 128); g.fillStyle = C ? css(C, 0.8) : '#76818a'; g.fillRect(x + 3, 0, 2, 128); }
     } else if (kind === 'membrane') {
-      g.fillStyle = '#c4c6c8'; g.fillRect(0, 0, 128, 128);
+      g.fillStyle = C ? css(C, 1) : '#c4c6c8'; g.fillRect(0, 0, 128, 128);
       for (let i = 0; i < 400; i++) { const k = 170 + rnd() * 50 | 0; g.fillStyle = `rgba(${k},${k},${k + 4},.35)`; g.fillRect(rnd() * 128, rnd() * 128, 2, 2); }
       g.fillStyle = 'rgba(255,255,255,.10)'; for (let y = 0; y < 128; y += 32) g.fillRect(0, y, 128, 2);
     } else if (kind === 'rollup') {
@@ -166,7 +169,7 @@ window.NWCCExteriors = function (THREE) {
   function fieldTexture(sport) {
     const id = 'field:' + sport; if (texCache[id]) return texCache[id];
     const W = 512, H = 256, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d');
-    const turf = sport === 'tennis' ? '#2f6e8e' : '#3f8a3a';
+    const turf = sport === 'tennis' ? '#2b5f8e' : sport === 'court' ? '#3d7fb2' : sport === 'basketball' ? '#7d8a86' : sport === 'sand' ? '#e6d8b8' : '#3f8a3a';
     g.fillStyle = turf; g.fillRect(0, 0, W, H);
     g.strokeStyle = '#ffffff'; g.lineWidth = 3;
     if (sport === 'american_football' || sport === 'soccer' || sport === 'turf') {
@@ -180,10 +183,19 @@ window.NWCCExteriors = function (THREE) {
       g.beginPath(); g.moveTo(W * .5, H * .95); g.lineTo(0, H * .95 - W * .5); g.moveTo(W * .5, H * .95); g.lineTo(W, H * .95 - W * .5); g.stroke();
       g.fillStyle = '#fff'; [[.5, .9], [.5 - .2 * H / W, .66], [.5, .46], [.5 + .2 * H / W, .66]].forEach(([x, y]) => g.fillRect(x * W - 4, y * H - 4, 8, 8));
     } else if (sport === 'tennis') {
-      g.fillStyle = '#3e8a5a'; g.fillRect(0, 0, W, H); g.fillStyle = turf; g.fillRect(40, 30, W - 80, H - 60);
+      g.fillStyle = '#3d7fb2'; g.fillRect(0, 0, W, H); g.fillStyle = turf; g.fillRect(40, 30, W - 80, H - 60);
       g.strokeRect(40, 30, W - 80, H - 60); g.strokeRect(40, 30 + (H - 60) * .125, W - 80, (H - 60) * .75);
       g.beginPath(); g.moveTo(W / 2, 22); g.lineTo(W / 2, H - 22); g.lineWidth = 4; g.strokeStyle = '#ddd'; g.stroke(); g.lineWidth = 3; g.strokeStyle = '#fff';
       g.beginPath(); g.moveTo(40 + (W - 80) * .23, H / 2); g.lineTo(40 + (W - 80) * .77, H / 2); g.moveTo(40 + (W - 80) * .23, 30 + (H - 60) * .125); g.lineTo(40 + (W - 80) * .23, 30 + (H - 60) * .875); g.moveTo(40 + (W - 80) * .77, 30 + (H - 60) * .125); g.lineTo(40 + (W - 80) * .77, 30 + (H - 60) * .875); g.stroke();
+    }
+    else if (sport === 'basketball') { // full court, long axis = u (2026-10-09)
+      const m = 14, cw = W - 2 * m, ch = H - 2 * m; g.strokeRect(m, m, cw, ch);
+      g.beginPath(); g.moveTo(W / 2, m); g.lineTo(W / 2, H - m); g.stroke(); g.beginPath(); g.arc(W / 2, H / 2, 26, 0, 7); g.stroke();
+      for (const sgn of [1, -1]) { const x0 = sgn > 0 ? m : W - m, kx = x0 + sgn * 0.2 * cw;
+        g.strokeRect(Math.min(x0, kx), H / 2 - 0.13 * ch, 0.2 * cw, 0.26 * ch);
+        g.beginPath(); g.arc(x0 + sgn * 0.06 * cw, H / 2, 0.42 * ch, sgn > 0 ? -1.35 : Math.PI - 1.35 + 0, sgn > 0 ? 1.35 : Math.PI + 1.35); g.stroke(); }
+    } else if (sport === 'sand') {
+      for (let i = 0; i < 900; i++) { g.fillStyle = `rgba(150,120,80,${0.08 + Math.random() * 0.1})`; g.fillRect(Math.random() * W, Math.random() * H, 3, 3); }
     }
     const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
     return (texCache[id] = tex);
@@ -194,7 +206,7 @@ window.NWCCExteriors = function (THREE) {
   function lam(key, opts) { return matCache[key] || (matCache[key] = new THREE.MeshLambertMaterial(Object.assign({ side: THREE.DoubleSide }, opts))); }
   const colorMat = c => lam('c:' + c, { color: c });
   const facadeMat = (name, w) => lam('f:' + name + w, { map: facadeTexture(name, w) });
-  const roofMat = kind => lam('r:' + kind, { map: stripeTexture(kind) });
+  const roofMat = (kind, color) => lam('r:' + kind + (color || ''), { map: stripeTexture(kind, color) });
   const glassMat = () => lam('glass', { color: '#2b4a66', transparent: true, opacity: 0.82 });
 
   // ---------- geometry builders ----------
@@ -351,13 +363,13 @@ window.NWCCExteriors = function (THREE) {
     const o = obb(pts), c = pip(centroid(pts), pts) ? centroid(pts) : o.c;
     const rect = Math.abs(signedArea(pts)) / (4 * o.hx * o.hy);
     if (ex.arch === 'field') {
-      const polys = (ex.pitches && ex.pitches.length) ? ex.pitches.map(q => ({ ring: q.ringEN, sport: q.sport })) : [{ ring: pts, sport: 'turf' }];
+      const polys = (ex.pitches && ex.pitches.length) ? ex.pitches.map(q => ({ ring: q.ringEN, sport: q.sport, y: q.y, fence: q.fence })) : [{ ring: pts, sport: 'turf' }];
       for (const q of polys) {
-        const R = cleanRing(q.ring), oo = obb(R), m = cap(R, 0.12, lam('fld:' + q.sport, { map: fieldTexture(q.sport) }));
+        const R = cleanRing(q.ring), oo = obb(R), y0 = q.y || 0.12, m = cap(R, y0, lam('fld:' + q.sport, { map: fieldTexture(q.sport) }));
         const uv = m.geometry.attributes.uv, pos = m.geometry.attributes.position;
         for (let i = 0; i < uv.count; i++) { const p = [pos.getX(i), -pos.getZ(i)], d = sub(p, oo.c); uv.setXY(i, (dot(d, oo.ux) + oo.hx) / (2 * oo.hx), (dot(d, oo.uy) + oo.hy) / (2 * oo.hy)); }
-        grp.add(m); grp.add(solidRing(R, 0, 0.12, colorMat('#e9e6df')));
-        if (q.sport === 'tennis') { const fr = offsetRing(R, 0.3); for (const p of fr) grp.add(cyl(0.05, 3, p[0], 0, -p[1], colorMat('#3b3f44'), 6)); grp.add(solidRing(fr, 2.6, 3, lam('fence', { color: '#2f3a36', transparent: true, opacity: 0.35 }))); }
+        grp.add(m); grp.add(solidRing(R, 0, y0, colorMat('#e9e6df')));
+        if (q.fence === true || (q.sport === 'tennis' && q.fence !== false)) { const fr = offsetRing(R, 0.3); for (const p of fr) grp.add(cyl(0.05, 3, p[0], 0, -p[1], colorMat('#3b3f44'), 6)); grp.add(solidRing(fr, 2.6, 3, lam('fence', { color: '#2f3a36', transparent: true, opacity: 0.35 }))); }
       }
       return grp;
     }
@@ -379,14 +391,15 @@ window.NWCCExteriors = function (THREE) {
     if ((roof === 'hip' || roof === 'gable') && rect < 0.7) roof = 'flat_parapet';
     let topY = H;
     if (roof === 'hip' || roof === 'gable') {
-      const metal = ['shop', 'warehouse', 'athletic_hall'].includes(ex.arch);
+      const metal = ex.roof_mat ? ex.roof_mat === 'metal' : ['shop', 'warehouse', 'athletic_hall'].includes(ex.arch);
       grp.add(cap(pts, H, colorMat('#6f6b66')));
-      grp.add(pitchedRoof(o, H, roof, ex.pitch || 20, 0.6, roofMat(metal ? 'metal' : 'shingle'), facadeMat(F, false)));
+      grp.add(pitchedRoof(o, H, roof, ex.pitch || 20, 0.6, roofMat(metal ? 'metal' : 'shingle', ex.roof_color), facadeMat(F, false)));
       topY = H + o.hy * Math.tan((ex.pitch || 20) * Math.PI / 180);
     } else if (roof === 'perimeter_hip') {
-      const inset = Math.min(4.5, o.hy * 0.4), rise = inset * Math.tan((ex.pitch || 22) * Math.PI / 180);
+      // ext.hip_inset (2026-10-09): per-building inset checked offline so the inner ring stays simple on narrow wings
+      const inset = ex.hip_inset || Math.min(4.5, o.hy * 0.4), rise = inset * Math.tan((ex.pitch || 22) * Math.PI / 180);
       grp.add(cap(pts, H, colorMat('#6f6b66')));
-      grp.add(perimeterHip(pts, H, inset, rise, 0.6, roofMat('shingle')));
+      grp.add(perimeterHip(ex.roofEN ? cleanRing(ex.roofEN) : pts, H, inset, rise, 0.6, roofMat(ex.roof_mat || 'shingle', ex.roof_color)));
       topY = H + rise;
     } else if (roof === 'dome') {
       grp.add(cap(pts, H, roofMat('membrane'), null, 6));
@@ -401,7 +414,7 @@ window.NWCCExteriors = function (THREE) {
       topY = H + (ex.dome_rise || 6);
     } else {
       const par = ex.parapet || 0.8, outer = offsetRing(pts, 0.18), inner = offsetRing(pts, -0.12);
-      grp.add(cap(pts, H, roofMat('membrane'), null, 6));
+      grp.add(cap(pts, H, roofMat('membrane', ex.roof_color), null, 6));
       grp.add(solidRing(outer, H - 0.35, H + par, trim));
       grp.add(solidRing(inner, H, H + par, colorMat('#bdb7ab')));
       grp.add(cap(outer, H + par, trim, inner));

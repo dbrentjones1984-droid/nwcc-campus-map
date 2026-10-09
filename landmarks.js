@@ -178,7 +178,7 @@ window.NWCCLandmarks = function (THREE, toEN, onTexture) {
       g.add(box(w, 0.45, d, cx, 0, cz, brick)); g.add(box(w - 0.4, 0.02, d - 0.4, cx, 0.45, cz, mulch));
       const sg = new THREE.IcosahedronGeometry(1, 1), n = Math.max(1, Math.round(d / 2.2));
       for (let k = 0; k < n; k++) { const s = new THREE.Mesh(sg, shrub), rr = Math.min(0.55, w / 2 - 0.35); s.scale.set(rr, rr * 0.8, rr); s.position.set(cx, 0.45 + rr * 0.6, cz - d / 2 + d * (k + 0.5) / n); g.add(s); } }
-    root.add(projectedShadow(g, new THREE.Vector3(-0.55, 1.0, 0.75)));
+    // (no ground shadow for the entrance walls: it read as dark smudges on the lawn)
     // light poles are added after the shadow pass (a 7 m pole would cast a long blob)
     for (const c of (N.lamps || [])) { const [x, y] = toEN(c[0], c[1]);   // twin-arm median light poles (arms over each carriageway, E-W)
       g.add(box(0.36, 0.5, 0.36, x, 0, -y, coping));

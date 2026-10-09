@@ -487,7 +487,182 @@ window.NWCCLandmarks = function (THREE, toEN, onTexture) {
     return g;
   }
   // <<< PRACTICE-49 build
-  root.add(buildSign()); root.add(buildPlaza()); if (L.nwdr) root.add(buildNwdr()); if (L.baseball) root.add(buildBaseball()); if (L.football) root.add(buildFootball()); if (L.softball) root.add(buildSoftball()); if (L.practice) root.add(buildPractice());
+  // LAMAR-11 build >>>
+  // #11 Lamar Hall (2-story red brick, tan band, cream frieze, gray shingle hip roof, east portico with 4 columns + LAMAR HALL
+  // pediment) and its outdoor basketball court. Facades are canvas textures (windows painted); deliberately NO ground shadows.
+  function buildLamar() {
+    const B = L.lamar, g = new THREE.Group(); g.name = 'lamar-hall';
+    const EN = c => toEN(c[0], c[1]);
+    const M = (k, o) => lam('lm-' + k, Object.assign({ side: THREE.FrontSide }, o));
+    const hid = new THREE.MeshBasicMaterial({ visible: false });
+    const cvs = (w, h) => { const c = document.createElement('canvas'); c.width = Math.max(4, Math.round(w)); c.height = Math.max(4, Math.round(h)); return c; };
+    const texOf = (c, rep) => { const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; if (rep) t.wrapS = t.wrapT = THREE.RepeatWrapping; return t; };
+    const cream = M('cream', { color: '#ece3cc', emissive: '#2e2b24' }), white = M('white', { color: '#f6f4ee', emissive: '#3a3935' }),
+      whiteD = lam('lm-whiteD', { color: '#f6f4ee', emissive: '#3a3935', side: THREE.DoubleSide }), conc = M('conc', { color: '#d8d4c9' });
+    // ---------- brick facade texture
+    const PX = 24, H = B.eave;
+    function facade(len, items, opt) {
+      const c = cvs(len * PX, H * PX), x = c.getContext('2d'), Y = h => (H - h) * PX, U = u => u * PX;
+      let s = 7; const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+      x.fillStyle = '#994a36'; x.fillRect(0, 0, c.width, c.height);
+      for (let r = 0, hh = 0; hh < H; r++, hh += 0.3) for (let u = (r % 2) * 0.3; u < len; u += 0.6) {
+        const t = rnd(); x.fillStyle = t < 0.3 ? '#8c4230' : t < 0.6 ? '#a3513b' : t < 0.8 ? '#9e4c37' : '#874031'; x.fillRect(U(u), Y(hh + 0.3) + 1, 0.58 * PX, 0.3 * PX - 1); }
+      x.fillStyle = 'rgba(70,40,30,0.25)'; for (let hh = 0; hh < H; hh += 0.3) x.fillRect(0, Y(hh), c.width, 1);
+      x.fillStyle = '#7f3d2d'; x.fillRect(0, Y(0.45), c.width, 0.45 * PX);                         // soldier course at the base
+      x.fillStyle = '#d6c29b'; x.fillRect(0, Y(4.05), c.width, 0.3 * PX);                          // tan band between floors
+      x.fillStyle = '#e9dfc6'; x.fillRect(0, Y(H), c.width, (H - 7.3) * PX);                       // cream frieze
+      x.fillStyle = '#cbbd9c'; x.fillRect(0, Y(7.3) - 2, c.width, 2); x.fillRect(0, Y(7.75), c.width, 1);
+      for (const it of items) {
+        if (it.k === 'win') {
+          x.fillStyle = '#d6c29b'; x.fillRect(U(it.u - 0.75), Y(it.z) , 1.5 * PX, 0.14 * PX);       // cast-stone sill
+          x.fillStyle = '#f3f1ea'; x.fillRect(U(it.u - 0.68), Y(it.z + it.h + 0.08), 1.36 * PX, (it.h + 0.08) * PX);
+          const gr = x.createLinearGradient(0, Y(it.z + it.h), 0, Y(it.z)); gr.addColorStop(0, '#87a197'); gr.addColorStop(1, '#4f655d');
+          x.fillStyle = gr; x.fillRect(U(it.u - 0.58), Y(it.z + it.h - 0.02), 1.16 * PX, (it.h - 0.1) * PX);
+          x.fillStyle = '#f3f1ea'; x.fillRect(U(it.u) - 1, Y(it.z + it.h), 2, it.h * PX);
+          for (const f of [1 / 3, 1 / 2, 2 / 3]) x.fillRect(U(it.u - 0.58), Y(it.z + it.h * f) - (f === 0.5 ? 2 : 1), 1.16 * PX, f === 0.5 ? 3 : 1);
+        } else if (it.k === 'glass') {
+          x.fillStyle = '#eceae3'; x.fillRect(U(it.u - 0.08), Y(it.z + it.h + 0.08), (it.w + 0.16) * PX, (it.h + 0.16) * PX);
+          const gr = x.createLinearGradient(0, Y(it.z + it.h), 0, Y(it.z)); gr.addColorStop(0, '#7f9ab0'); gr.addColorStop(1, '#3a4b5a');
+          x.fillStyle = gr; x.fillRect(U(it.u), Y(it.z + it.h), it.w * PX, it.h * PX);
+          x.fillStyle = '#e4e2da'; for (let k = 1; k < it.w / 0.7; k++) x.fillRect(U(it.u + k * it.w / Math.round(it.w / 0.7)) - 1, Y(it.z + it.h), 2, it.h * PX);
+          for (let hh = it.z + 1.2; hh < it.z + it.h; hh += 1.25) x.fillRect(U(it.u), Y(hh) - 1, it.w * PX, 2);
+          if (it.door) { x.fillStyle = '#2b3640'; x.fillRect(U(it.u + 0.1), Y(it.z + 2.3), (it.w - 0.2) * PX, 2.3 * PX); x.fillStyle = '#c9c7bf'; x.fillRect(U(it.u + it.w / 2) - 1, Y(it.z + 2.3), 2, 2.3 * PX); }
+        } else if (it.k === 'door') {
+          x.fillStyle = '#d6c29b'; x.fillRect(U(it.u - 0.1), Y(it.h + 0.12), (it.w + 0.2) * PX, (it.h + 0.12) * PX);
+          x.fillStyle = it.c || '#5e4a3a'; x.fillRect(U(it.u), Y(it.h), it.w * PX, it.h * PX);
+        } else if (it.k === 'lamp') { x.fillStyle = '#2b2b2b'; x.fillRect(U(it.u - 0.1), Y(it.z + 0.35), 0.2 * PX, 0.35 * PX); }
+      }
+      return M('fac' + (opt || '') + len.toFixed(1), { map: texOf(c), emissive: '#1c1410' });
+    }
+    const wins = (us, extra) => us.flatMap(u => [{ k: 'win', u, z: 0.9, h: 1.85 }, { k: 'win', u, z: 4.75, h: 1.85 }]).concat(extra || []);
+    const span = (a, b, n) => Array.from({ length: n }, (_, i) => a + (b - a) * i / (n - 1));
+    // ---------- main block
+    const [sw, ne] = B.main.map(EN), W = ne[0] - sw[0], D = ne[1] - sw[1], cx = (sw[0] + ne[0]) / 2, cz = -(sw[1] + ne[1]) / 2;
+    const [psw, pne] = B.porch.map(EN), pw0 = psw[1] - sw[1], pw1 = pne[1] - sw[1], pc = (pw0 + pw1) / 2;   // portico span along the east facade (u from the south)
+    const eastItems = wins(span(1.9, pw0 - 2.0, 6).concat(span(pw1 + 1.9, D - 1.9, 6)),
+      [{ k: 'glass', u: pc - 2.3, w: 1.5, z: 0.35, h: 6.8, door: true }, { k: 'glass', u: pc + 0.8, w: 1.5, z: 0.35, h: 6.8 }]
+        .concat(span(1.9, pw0 - 2.0, 6).slice(0, 5).map(u => ({ k: 'lamp', u: u + 1.8, z: 3.0 }))).concat(span(pw1 + 1.9, D - 1.9, 6).slice(0, 5).map(u => ({ k: 'lamp', u: u + 1.6, z: 3.0 }))));
+    const westItems = wins(span(1.9, D / 2 - 2.4, 6).concat(span(D / 2 + 2.4, D - 1.9, 6)), [{ k: 'glass', u: D / 2 - 1.3, w: 2.6, z: 0.3, h: 2.6, door: true }]);
+    const southItems = [{ k: 'win', u: W * 0.55, z: 4.75, h: 1.85 }, { k: 'win', u: W * 0.8, z: 4.75, h: 1.85 }, { k: 'door', u: W * 0.55 - 0.5, w: 1.0, h: 2.2, c: '#6b5444' }, { k: 'win', u: W * 0.8, z: 0.9, h: 1.85 }, { k: 'door', u: W * 0.2, w: 1.0, h: 2.2, c: '#7a756c' }, { k: 'lamp', u: W * 0.55 + 0.9, z: 2.4 }];
+    const wallBox = new THREE.Mesh(new THREE.BoxGeometry(W, H, D), [facade(D, eastItems, 'e'), facade(D, westItems, 'w'), hid, hid, facade(W, southItems, 's'), facade(W, [], 'n')]);
+    wallBox.position.set(cx, H / 2, cz); g.add(wallBox);
+    // north bay
+    const [bsw, bne] = B.nbay.map(EN), bW = bne[0] - bsw[0], bD = bne[1] - bsw[1];
+    const nb = new THREE.Mesh(new THREE.BoxGeometry(bW, H, bD), [facade(bD, [], 'be'), facade(bD, [], 'bw'), hid, hid, hid, facade(bW, wins(span(2.6, bW - 2.6, 4)), 'bn')]);
+    nb.position.set((bsw[0] + bne[0]) / 2, H / 2, -(bsw[1] + bne[1]) / 2); g.add(nb);
+    // cornice + soffit slabs
+    for (const [x0, z0, w, d] of [[cx, cz, W, D], [(bsw[0] + bne[0]) / 2, -(bsw[1] + bne[1]) / 2, bW, bD]]) {
+      g.add(box(w + 0.5, 0.28, d + 0.5, x0, H - 0.28, z0, cream)); g.add(box(w + 0.9, 0.12, d + 0.9, x0, H - 0.02, z0, white)); }
+    // ---------- shingle hip roofs
+    const shC = cvs(64, 64), sx = shC.getContext('2d'); sx.fillStyle = '#7c8086'; sx.fillRect(0, 0, 64, 64);
+    for (let r = 0; r < 4; r++) { sx.fillStyle = r % 2 ? '#74787e' : '#82868c'; sx.fillRect(0, r * 16, 64, 15); sx.fillStyle = '#55595e'; sx.fillRect(0, r * 16 + 15, 64, 1);
+      for (let k = 0; k < 4; k++) sx.fillRect(((k * 16 + (r % 2) * 8) % 64), r * 16, 1, 15); }
+    const shT = texOf(shC, true), shingle = lam('lm-shingle', { map: shT, side: THREE.DoubleSide, emissive: '#16181a' });
+    function hip(x0, x1, z0, z1, y, pitch) {   // three coords (z0 < z1); ridge along the longer side; UV ~ 1 tile / m
+      const t = Math.tan(pitch * Math.PI / 180), P = [], UV = [], wx = x1 - x0, dz = z1 - z0, alongZ = dz >= wx, h = (alongZ ? wx : dz) / 2, r = y + h * t;
+      const cx_ = (x0 + x1) / 2, cz_ = (z0 + z1) / 2, sl = 1 / Math.cos(Math.atan(t));
+      const tri = (a, b, c, uv) => { P.push(...a, ...b, ...c); UV.push(...uv); };
+      if (alongZ) { const ra = [cx_, r, z0 + h], rb = [cx_, r, z1 - h];
+        tri([x1, y, z0], [x1, y, z1], rb, [z0, 0, z1, 0, z1 - h, h * sl]); tri([x1, y, z0], rb, ra, [z0, 0, z1 - h, h * sl, z0 + h, h * sl]);
+        tri([x0, y, z1], [x0, y, z0], ra, [z1, 0, z0, 0, z0 + h, h * sl]); tri([x0, y, z1], ra, rb, [z1, 0, z0 + h, h * sl, z1 - h, h * sl]);
+        tri([x0, y, z0], [x1, y, z0], ra, [x0, 0, x1, 0, cx_, h * sl]); tri([x1, y, z1], [x0, y, z1], rb, [x1, 0, x0, 0, cx_, h * sl]);
+      } else { const ra = [x0 + h, r, cz_], rb = [x1 - h, r, cz_];
+        tri([x0, y, z1], [x1, y, z1], rb, [x0, 0, x1, 0, x1 - h, h * sl]); tri([x0, y, z1], rb, ra, [x0, 0, x1 - h, h * sl, x0 + h, h * sl]);
+        tri([x1, y, z0], [x0, y, z0], ra, [x1, 0, x0, 0, x0 + h, h * sl]); tri([x1, y, z0], ra, rb, [x1, 0, x0 + h, h * sl, x1 - h, h * sl]);
+        tri([x0, y, z0], [x0, y, z1], ra, [z0, 0, z1, 0, cz_, h * sl]); tri([x1, y, z1], [x1, y, z0], rb, [z1, 0, z0, 0, cz_, h * sl]); }
+      const ge = new THREE.BufferGeometry(); ge.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); ge.setAttribute('uv', new THREE.Float32BufferAttribute(UV.map(v => v / 1.0), 2)); ge.computeVertexNormals();
+      return new THREE.Mesh(ge, shingle);
+    }
+    const ov = 0.45, yR = H + 0.1;
+    g.add(hip(sw[0] - ov, ne[0] + ov, -ne[1] - ov, -sw[1] + ov, yR, B.pitch));
+    g.add(hip(bsw[0] - ov, bne[0] + ov, -bne[1] - ov, -bsw[1] + 0.2, yR, B.pitch));
+    // ---------- east portico: porch, 4 columns, entablature with LAMAR HALL, pediment gable roof
+    const px0 = ne[0], px1 = pne[0], pz0 = -pne[1], pz1 = -psw[1], pzc = (pz0 + pz1) / 2, pW = pz1 - pz0;
+    g.add(box(px1 - px0 + 0.4, 0.35, pW, (px0 + px1) / 2 + 0.2, 0, pzc, conc)); g.add(box(0.7, 0.17, pW - 2.0, px1 + 0.75, 0, pzc, conc));
+    const colX = px1 - 0.75, colM = lam('lm-col', { color: '#f7f5ef', emissive: '#3c3b37' }), TOPC = 7.5, front = px1 - 0.15;
+    for (const f of [-1.5, -0.5, 0.5, 1.5]) { const z = pzc + f * (pW * 0.79 / 3);
+      g.add(box(1.05, 0.45, 1.05, colX, 0.35, z, white)); g.add(cyl(0.44, 0.38, TOPC - 1.1, colX, 0.8, z, colM, 24)); g.add(box(1.0, 0.3, 1.0, colX, TOPC - 0.3, z, white)); }
+    const eC = cvs(pW * 64, 2.5 * 64), ex_ = eC.getContext('2d'); ex_.fillStyle = '#f3efe5'; ex_.fillRect(0, 0, eC.width, eC.height);
+    ex_.fillStyle = '#d9d2c0'; ex_.fillRect(0, 0, eC.width, 0.35 * 64); ex_.fillRect(0, eC.height - 0.45 * 64, eC.width, 3); ex_.fillRect(0, eC.height - 0.22 * 64, eC.width, 2);
+    ex_.fillStyle = '#26282a'; ex_.font = 'bold ' + Math.round(0.5 * 64) + 'px Georgia, "DejaVu Serif", "Times New Roman", serif'; ex_.textAlign = 'center'; ex_.textBaseline = 'middle';
+    const txt = 'L A M A R   H A L L'; ex_.fillText(txt, eC.width / 2, eC.height * 0.52);
+    const entT = texOf(eC), ent = M('ent', { map: entT, emissive: '#2e2d2a' });
+    const eb = new THREE.Mesh(new THREE.BoxGeometry(front - px0 + 0.45, 2.5, pW + 0.2), [ent, white, white, white, white, white]);
+    eb.position.set((px0 - 0.45 + front) / 2, TOPC + 1.25, pzc); g.add(eb);
+    const pBase = TOPC + 2.5, pRise = 2.8, gx0 = cx + 0.2;
+    const shp = new THREE.Shape([new THREE.Vector2(-pW / 2 - 0.15, pBase), new THREE.Vector2(pW / 2 + 0.15, pBase), new THREE.Vector2(0, pBase + pRise)]);
+    const pg = new THREE.ExtrudeGeometry(shp, { depth: front - gx0, bevelEnabled: false }); pg.rotateY(Math.PI / 2);
+    const prism = new THREE.Mesh(pg, [whiteD, shingle]); prism.position.set(gx0, 0, pzc); g.add(prism);
+    const slope = Math.atan2(pRise, pW / 2 + 0.15), rl = Math.hypot(pRise, pW / 2 + 0.15);
+    for (const sgn of [-1, 1]) { const r = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.3, rl + 0.3), cream);
+      r.position.set(front + 0.1, pBase + pRise / 2 + 0.1, pzc + sgn * (pW / 4 + 0.07)); r.rotation.x = sgn * slope; g.add(r);
+      const rs = new THREE.Mesh(new THREE.BoxGeometry(front - gx0 + 0.3, 0.1, rl + 0.35), shingle);   // roof overhang slabs on the portico gable
+      rs.position.set((gx0 + front) / 2 + 0.15, pBase + pRise / 2 + 0.2, pzc + sgn * (pW / 4 + 0.07)); rs.rotation.x = sgn * slope; g.add(rs); }
+    g.add(box(0.55, 0.3, pW + 0.6, front + 0.05, pBase - 0.05, pzc, cream));
+    // ---------- downspouts (white)
+    const dsp = (x, z) => g.add(box(0.13, H - 0.3, 0.13, x, 0, z, white));
+    for (const u of [0.5, 11.8, pw0 - 0.4, pw1 + 0.4, pw1 + 10.5, D - 0.5]) dsp(ne[0] + 0.08, -(sw[1] + u));
+    for (const u of [0.5, 13.0, D / 2 - 3.0, D / 2 + 3.0, D - 13.0, D - 0.5]) dsp(sw[0] - 0.08, -(sw[1] + u));
+    dsp(sw[0] + W * 0.42, -sw[1] + 0.08);
+    // ---------- service yard: brick screen wall + bins
+    const bt = brickTex(['#9c4632', '#a84e38', '#8f3f2d', '#b0573e']), brick = lam('lm-brick', { map: bt, side: THREE.DoubleSide, emissive: '#140c08' });
+    const YP = B.yard.map(EN);
+    for (let i = 0; i < YP.length - 1; i++) { const a = YP[i], b = YP[i + 1], Ls = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      const ge = new THREE.BoxGeometry(Ls, 2.4, 0.3), uv = ge.attributes.uv; for (let k = 0; k < uv.count; k++) uv.setXY(k, uv.getX(k) * Ls / 0.8, uv.getY(k) * 2.4 / 0.3);
+      const w = new THREE.Mesh(ge, brick); w.position.set((a[0] + b[0]) / 2, 1.2, -(a[1] + b[1]) / 2); w.rotation.y = Math.atan2(b[1] - a[1], b[0] - a[0]); g.add(w);
+      const cp = new THREE.Mesh(new THREE.BoxGeometry(Ls + 0.3, 0.1, 0.42), cream); cp.position.set(w.position.x, 2.45, w.position.z); cp.rotation.y = w.rotation.y; g.add(cp); }
+    B.bins.forEach((p, i) => { const [x, y] = EN(p), col = i < 2 ? '#c4362b' : '#36495e';
+      g.add(box(0.62, 1.0, 0.72, x, 0, -y, M('bin' + i, { color: col }))); g.add(box(0.68, 0.06, 0.8, x, 1.0, -y, M('binl' + i, { color: col }))); });
+    // ---------- light poles
+    const pole = M('pole', { color: '#4a4f55' }), led = new THREE.MeshBasicMaterial({ color: '#f4f6ff' });
+    for (const p of B.poles) { const [x, y] = EN(p), o = new THREE.Group(); o.position.set(x, 0, -y);
+      o.add(cyl(0.28, 0.28, 0.5, 0, 0, 0, M('pbase', { color: '#bdb8ad' }), 10)); o.add(cyl(0.11, 0.09, 8.5, 0, 0.5, 0, pole, 8));
+      o.add(box(0.1, 0.1, 1.2, 0, 9.3, -0.6, pole)); o.add(box(0.45, 0.14, 0.8, 0, 9.2, -1.2, pole));
+      const l = new THREE.Mesh(new THREE.PlaneGeometry(0.35, 0.65), led); l.rotation.x = Math.PI / 2; l.position.set(0, 9.19, -1.2); o.add(l); g.add(o); }
+    // ---------- basketball court: canvas-painted surface, hoops, fence
+    const C = B.court, [csw, cne] = C.surf.map(EN), SW_ = cne[0] - csw[0], SL = cne[1] - csw[1], [ccx, ccy] = EN(C.c), Q = 30;
+    const cc = cvs(SW_ * Q, SL * Q), k = cc.getContext('2d');
+    const P = (x, y) => [(x - csw[0]) * Q, (cne[1] - y) * Q];   // local EN -> canvas px (north up)
+    k.fillStyle = '#a7c1e2'; k.fillRect(0, 0, cc.width, cc.height);
+    const hw = C.W / 2, hl = C.L / 2, [a0, a1] = P(ccx - hw, ccy + hl), [b0, b1] = P(ccx + hw, ccy - hl);
+    k.fillStyle = '#5a7fc1'; k.fillRect(a0, a1, b0 - a0, b1 - a1);
+    k.strokeStyle = '#ffffff'; k.lineWidth = 0.06 * Q * 1.6; k.strokeRect(a0, a1, b0 - a0, b1 - a1);
+    const [m0, m1] = P(ccx - hw, ccy), [m2] = P(ccx + hw, ccy); k.beginPath(); k.moveTo(m0, m1); k.lineTo(m2, m1); k.stroke();
+    const [c0, c1] = P(ccx, ccy); k.beginPath(); k.arc(c0, c1, 1.83 * Q, 0, 2 * Math.PI); k.stroke();
+    for (const s of [1, -1]) {   // s = +1 north end
+      const yb = ccy + s * hl, hoopY = yb - s * 1.6, ft = yb - s * 5.8, kw = 3.66;
+      const [k0, k1] = P(ccx - kw / 2, yb), [k2, k3] = P(ccx + kw / 2, ft);
+      k.fillStyle = '#a7c1e2'; k.fillRect(Math.min(k0, k2), Math.min(k1, k3), Math.abs(k2 - k0), Math.abs(k3 - k1)); k.strokeRect(Math.min(k0, k2), Math.min(k1, k3), Math.abs(k2 - k0), Math.abs(k3 - k1));
+      const [f0, f1] = P(ccx, ft); k.beginPath(); k.arc(f0, f1, 1.83 * Q, 0, 2 * Math.PI); k.stroke();
+      const [h0, h1] = P(ccx, hoopY), R3 = 6.75 * Q, cxl = (hw - 0.9) * Q, ang = Math.asin(Math.min(1, cxl / R3));
+      // 3-pt arc: corner straights from the baseline, arc toward mid-court
+      const start = s > 0 ? Math.PI / 2 - ang : -Math.PI / 2 - ang, end = s > 0 ? Math.PI / 2 + ang : -Math.PI / 2 + ang;
+      k.beginPath(); k.arc(h0, h1, R3, start, end); k.stroke();
+      const yy = h1 + s * R3 * Math.cos(ang);
+      for (const sx of [-1, 1]) { k.beginPath(); k.moveTo(h0 + sx * cxl, P(0, yb)[1]); k.lineTo(h0 + sx * cxl, yy); k.stroke(); }
+    }
+    // centre logo: red rounded square, white N
+    const LG = 3.4 * Q; k.fillStyle = '#c3272f'; k.beginPath(); k.roundRect ? k.roundRect(c0 - LG / 2, c1 - LG / 2, LG, LG, 0.3 * Q) : k.rect(c0 - LG / 2, c1 - LG / 2, LG, LG); k.fill();
+    k.lineWidth = 0.12 * Q; k.strokeStyle = '#ffffff'; k.strokeRect(c0 - LG / 2 + 0.25 * Q, c1 - LG / 2 + 0.25 * Q, LG - 0.5 * Q, LG - 0.5 * Q);
+    k.fillStyle = '#ffffff'; k.font = 'bold ' + Math.round(2.3 * Q) + 'px Georgia, "DejaVu Serif", serif'; k.textAlign = 'center'; k.textBaseline = 'middle'; k.fillText('N', c0, c1 + 0.1 * Q);
+    const ct = texOf(cc), cm = new THREE.Mesh(new THREE.PlaneGeometry(SW_, SL), lam('lm-court', { map: ct, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2 }));
+    cm.rotation.x = -Math.PI / 2; cm.position.set((csw[0] + cne[0]) / 2, 0.06, -(csw[1] + cne[1]) / 2); g.add(cm);
+    const metal = M('metal', { color: '#2a2e33' }), bb = M('bboard', { color: '#f4f4f4', emissive: '#333' }), rim = M('rim', { color: '#e06a1c' });
+    for (const s of [1, -1]) { const yb = ccy + s * hl, z = -(yb + s * 0.9);
+      g.add(cyl(0.1, 0.1, 3.3, ccx, 0, z, metal, 10)); g.add(box(0.12, 0.12, 1.5, ccx, 3.2, -(yb - s * 0.1) , metal));
+      g.add(box(1.8, 1.05, 0.06, ccx, 2.9, -(yb - s * 1.2), bb)); const r = new THREE.Mesh(new THREE.TorusGeometry(0.23, 0.02, 6, 16), rim); r.rotation.x = Math.PI / 2; r.position.set(ccx, 3.05, -(yb - s * 1.6) ); g.add(r); }
+    const fence = lam('lm-fence', { color: '#15181b', transparent: true, opacity: 0.35, depthWrite: false, side: THREE.DoubleSide });
+    const fx0 = csw[0] - 0.4, fx1 = cne[0] + 0.4, fy0 = csw[1] - 0.4, fy1 = cne[1] + 0.4;
+    const gy = ccy + 12.55;   // gate on the east side, facing the hall's rear walk
+    const runs = [[[fx0, fy0], [fx1, fy0]], [[fx1, fy0], [fx1, gy - 1.1]], [[fx1, gy + 1.1], [fx1, fy1]], [[fx1, fy1], [fx0, fy1]], [[fx0, fy1], [fx0, fy0]]];
+    for (const [a, b] of runs) { const Ls = Math.hypot(b[0] - a[0], b[1] - a[1]); if (Ls < 0.1) continue;
+      const f = new THREE.Mesh(new THREE.PlaneGeometry(Ls, 3.0), fence); f.position.set((a[0] + b[0]) / 2, 1.5, -(a[1] + b[1]) / 2); f.rotation.y = Math.atan2(b[1] - a[1], b[0] - a[0]); f.renderOrder = 2; g.add(f);
+      const rr = new THREE.Mesh(new THREE.BoxGeometry(Ls, 0.06, 0.06), metal); rr.position.set(f.position.x, 3.0, f.position.z); rr.rotation.y = f.rotation.y; g.add(rr);
+      const n = Math.max(1, Math.round(Ls / 3)); for (let i = 0; i <= n; i++) g.add(cyl(0.04, 0.04, 3.05, a[0] + (b[0] - a[0]) * i / n, 0, -(a[1] + (b[1] - a[1]) * i / n), metal, 6)); }
+    return g;
+  }
+  // <<< LAMAR-11 build
+  root.add(buildSign()); root.add(buildPlaza()); if (L.nwdr) root.add(buildNwdr()); if (L.baseball) root.add(buildBaseball()); if (L.football) root.add(buildFootball()); if (L.softball) root.add(buildSoftball()); if (L.practice) root.add(buildPractice()); if (L.lamar) root.add(buildLamar());
   root.traverse(o => { o.frustumCulled = false; });
   return root;
 };
@@ -512,3 +687,7 @@ window.NWCC_LANDMARKS.softball = {"parts":[{"t":"dugout","c":[-89.9782639,34.621
 // #49 practice facility structures traced on Brent's aerial + street views (2026-10-09). Coordinates [lng,lat]; heights in m.
 window.NWCC_LANDMARKS.practice = {"main":[[-89.9784276,34.6221079],[-89.9779189,34.6226017]],"eave":10.5,"band":2.4,"rise":2.038,"cols":[[-89.9779254,34.6221134,"e"],[-89.9784211,34.6221134,"w"],[-89.9779254,34.6221737,"e"],[-89.9784211,34.6221737,"w"],[-89.9779254,34.6222341,"e"],[-89.9784211,34.6222341,"w"],[-89.9779254,34.6222945,"e"],[-89.9784211,34.6222945,"w"],[-89.9779254,34.6223548,"e"],[-89.9784211,34.6223548,"w"],[-89.9779254,34.6224152,"e"],[-89.9784211,34.6224152,"w"],[-89.9779254,34.6224756,"e"],[-89.9784211,34.6224756,"w"],[-89.9779254,34.6225359,"e"],[-89.9784211,34.6225359,"w"],[-89.9779254,34.6225963,"e"],[-89.9784211,34.6225963,"w"],[-89.9782972,34.6221134,"s"],[-89.9782972,34.6225963,"n"],[-89.9781733,34.6221134,"s"],[-89.9781733,34.6225963,"n"],[-89.9780494,34.6221134,"s"],[-89.9780494,34.6225963,"n"]],"open":[[[-89.9779189,34.6221079],[-89.9779189,34.6226017]],[[-89.9779189,34.6226017],[-89.9784276,34.6226017]],[[-89.9784276,34.6226017],[-89.9784276,34.6224959]],[[-89.9784276,34.6221079],[-89.9779189,34.6221079]]],"annex":[{"sw":[-89.9785018,34.6221079],"ne":[-89.9784276,34.6224959],"h":12.9,"win":0},{"sw":[-89.9786525,34.6221125],"ne":[-89.9785018,34.6223114],"h":5.8,"win":1}],"poles":[{"c":[-89.9784374,34.6220799],"h":9.0,"a":0,"street":false},{"c":[-89.9782497,34.6220799],"h":9.0,"a":0,"street":false},{"c":[-89.9780499,34.6220799],"h":9.0,"a":0,"street":false},{"c":[-89.9783446,34.6219868],"h":9.0,"a":180,"street":false},{"c":[-89.9781263,34.6219868],"h":9.0,"a":180,"street":false}]};
 /* <<< PRACTICE-49 data */
+/* LAMAR-11 data >>> */
+// #11 Lamar Hall + basketball court traced on Brent's aerial + street views (2026-10-09). Coordinates [lng,lat]; heights in m.
+window.NWCC_LANDMARKS.lamar = {"main":[[-89.9781951,34.6237806],[-89.9779784,34.6242517]],"nbay":[[-89.9781733,34.6242517],[-89.977992,34.6242811]],"porch":[[-89.9779784,34.6239809],[-89.9779484,34.6240718]],"eave":8.4,"pitch":24.0,"yard":[[-89.9781099,34.6237806],[-89.9781099,34.6237087],[-89.9782055,34.6237087],[-89.9782055,34.6237806]],"bins":[[-89.9780957,34.6236987],[-89.9780859,34.6236987],[-89.9780739,34.6236987]],"court":{"c":[-89.9783747,34.6240139],"L":28.5,"W":15.2,"surf":[[-89.9784789,34.6238706],[-89.9782791,34.6241627]]},"poles":[[-89.9780171,34.6236834],[-89.9784101,34.6236834],[-89.9782791,34.623498]]};
+/* <<< LAMAR-11 data */

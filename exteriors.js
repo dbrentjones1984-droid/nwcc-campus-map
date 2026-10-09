@@ -403,6 +403,17 @@ window.NWCCExteriors = function (THREE) {
       }
       return grp;
     }
+    // LAMAR-11 shell >>>
+    // arch 'shell' (2026-10-09): the building is drawn by landmarks.js; here only the category halo, an invisible pick prism
+    // (raycast still hits it) and the selection outline data.
+    if (ex.arch === 'shell') {
+      if (ex.catColor) { const hm = cap(offsetRing(pts, 1.6), 0.06, lam('halo:' + ex.catColor, { color: ex.catColor, transparent: true, opacity: 0.55, depthWrite: false }), pts); hm.renderOrder = -1; grp.add(hm); }
+      const H = ex.height || 8, sh = new THREE.Shape(pts.map(p => new THREE.Vector2(p[0], p[1])));
+      const pg = new THREE.ExtrudeGeometry(sh, { depth: H, bevelEnabled: false }); pg.rotateX(-Math.PI / 2);
+      grp.add(new THREE.Mesh(pg, new THREE.MeshBasicMaterial({ visible: false })));
+      grp.userData.topY = H; grp.userData.ring = pts; grp.userData.center = c; return grp;
+    }
+    // <<< LAMAR-11 shell
     if (ex.catColor) { const hm = cap(offsetRing(pts, 1.6), 0.06, lam('halo:' + ex.catColor, { color: ex.catColor, transparent: true, opacity: 0.55, depthWrite: false }), pts); hm.renderOrder = -1; grp.add(hm); }
     const H = ex.height || 7, fh = ex.floor_h || 3.6, F = ex.facade || 'brick_red_ribbon', G = ex.ground || F;
     const trim = colorMat(ex.trim || '#ece6da');

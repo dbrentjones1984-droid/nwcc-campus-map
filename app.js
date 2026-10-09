@@ -124,7 +124,7 @@ let view = null;
 if (P.get('view')) { const v = P.get('view').split(',').map(Number); view = { center: [v[0], v[1]], zoom: v[2] || 17, pitch: v[3] ?? META.pitch, bearing: v[4] ?? META.bearing }; }
 const map = new maplibregl.Map({
   container: 'map', style: styleStreet, center: view ? view.center : META.center, zoom: view ? view.zoom : META.zoom,
-  pitch: view ? view.pitch : META.pitch, bearing: view ? view.bearing : META.bearing,
+  pitch: view ? view.pitch : 0, bearing: view ? view.bearing : 0,  /* MOCKUP 2D default: open flat */
   maxPitch: 78, minZoom: 14, maxBounds: MAXB, maxZoom: 20.5, attributionControl: true, canvasContextAttributes: { antialias: true }, antialias: true,
   preserveDrawingBuffer: P.get('selftest') === '1'
 });
@@ -339,8 +339,10 @@ Promise.all([threeReady, new Promise(r => map.once('load', r))]).then(() => {
   addLayers(); refreshFilter();
   ['p2-extrusion', 'p2-highlight'].forEach(id => map.getLayer(id) && map.setLayoutProperty(id, 'visibility', (compare || !THREE) ? 'visible' : 'none'));
   hideSplash();
-  if (!view) fitCampus(false);
-  if (P.get('flat') === '1') document.getElementById('tTilt').click();
+  if (!view) home2D(false);
+  syncTilt();
+  if (P.get('flat') === '1' && map.getPitch() >= 5) document.getElementById('tTilt').click();
+  if (P.get('tilt') === '1' && map.getPitch() < 5) document.getElementById('tTilt').click();  // MOCKUP: ?tilt=1 opens in 3D
   if (P.get('clean') === '1') document.querySelectorAll('.hud,.tools,.maplibregl-ctrl-bottom-right,.maplibregl-ctrl-bottom-left').forEach(e => e.style.display = 'none');
   if (P.get('nolabels') === '1') document.getElementById('tLabels').click();
   if (P.get('q')) { qEl.value = P.get('q'); search(); }
@@ -382,12 +384,30 @@ function fitCampus(animate) {
   const c = bounds.getCenter();
   map.easeTo({ center: [c.lng + 0.0004, c.lat + 0.0004], zoom: Math.min(cam.zoom + (window.innerWidth < 720 ? 0.3 : 0.6), 17)  /* PWA: narrower phone screens get less extra zoom */, pitch: META.pitch, bearing: META.bearing, duration: animate ? 900 : 0 });
 }
+// MOCKUP 2D default (2026-10-09): flat, north-up, centred on the campus core (Alumni Dr / #55 Haraway / #54 McLendon /
+// #42 baseball). Zoom = 2D fit of the campus boundary + a boost, so the core fills the screen but the whole box does not.
+// Phone (<720 px) boost 0.75 = option A; ?z2d=B uses 1.25 (option B). Desktop boost 0.6. ?z2dzoom=<n> forces an absolute zoom.
+const HOME2D_CENTER = [-89.9735, 34.6245];
+const HOME2D_BOOST = { phoneA: 1.25, phoneB: 1.25, desktop: 0.6 };
+function home2DZoom() {
+  if (P.get('z2dzoom')) return +P.get('z2dzoom');
+  const bounds = new maplibregl.LngLatBounds();
+  (BOUNDARY && BOUNDARY.length ? BOUNDARY.map(q => [q[1], q[0]]) : ITEMS.map(i => [i.lng, i.lat])).forEach(c => bounds.extend(c));
+  const cam = map.cameraForBounds(bounds, { padding: 20, bearing: 0 });
+  const phone = window.innerWidth < 720;
+  const boost = phone ? (P.get('z2d') === 'B' ? HOME2D_BOOST.phoneB : HOME2D_BOOST.phoneA) : HOME2D_BOOST.desktop;
+  return Math.min(cam.zoom + boost, 18);
+}
+function home2D(animate) {
+  map.easeTo({ center: HOME2D_CENTER, zoom: home2DZoom(), pitch: 0, bearing: 0, duration: animate ? 900 : 0 });
+}
+function syncTilt() { const t = document.getElementById('tTilt'), flat = map.getPitch() < 5; t.classList.toggle('on', !flat); t.textContent = flat ? '2D' : '3D'; }
 function flyToItem(it, animate) {
   const lm = it.landmark;
   // PWA (phone): the info card sits at the bottom of the screen, so shift the target up into the visible area.
   const phone = window.innerWidth < 720 && card.classList.contains('show');
   const off = phone ? [0, -Math.min(card.offsetHeight, window.innerHeight * 0.6) / 2] : [0, 0];
-  map.flyTo({ center: [it.lng, it.lat], offset: off, zoom: Math.max(map.getZoom(), lm ? 17.9 : 17.4), pitch: Math.max(map.getPitch(), 55), duration: animate ? 1000 : 0 });
+  map.flyTo({ center: [it.lng, it.lat], offset: off, zoom: Math.max(map.getZoom(), lm ? 17.9 : 17.4), pitch: map.getPitch() < 5 ? 0 : Math.max(map.getPitch(), 55) /* MOCKUP: stay flat in 2D */, duration: animate ? 1000 : 0 });
 }
 
 const card = document.getElementById('card');
@@ -464,7 +484,7 @@ clr.onclick = () => { qEl.value = ''; search(); qEl.focus(); };
 document.addEventListener('click', e => { if (!e.target.closest('#searchwrap') && !e.target.closest('#results')) resEl.classList.remove('show'); });
 
 // tools
-document.getElementById('tHome').onclick = () => { closeCard(); fitCampus(true); };
+document.getElementById('tHome').onclick = () => { closeCard(); if (map.getPitch() < 5) home2D(true); else fitCampus(true); };  // MOCKUP: Home keeps current 2D/3D mode
 document.getElementById('tTilt').onclick = function () {
   const flat = map.getPitch() < 5;
   map.easeTo({ pitch: flat ? META.pitch : 0, bearing: flat ? META.bearing : 0, duration: 700 });
@@ -481,7 +501,7 @@ document.getElementById('tSpin').onclick = function () {
 };
 map.on('mousedown', () => { if (spin) document.getElementById('tSpin').click(); });
 document.getElementById('tLabels').classList.add('on');
-document.getElementById('tTilt').classList.add('on');
+syncTilt();  // MOCKUP: button reflects the real (2D) start state
 
 // ---------- self test (?selftest=1): search + 3D picking of each landmark ----------
 function selftest() {

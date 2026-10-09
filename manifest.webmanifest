@@ -1,0 +1,30 @@
+{
+  "id": "./",
+  "name": "NWCC Campus Map",
+  "short_name": "NWCC Map",
+  "description": "3D campus map of Northwest Mississippi Community College, Senatobia: search buildings, landmarks and categories (Phase 3, campus only).",
+  "lang": "en-US",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "theme_color": "#222c62",
+  "background_color": "#222c62",
+  "categories": ["education", "navigation", "travel"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "screenshots": [
+    { "src": "screenshots/phone.png", "sizes": "780x1688", "type": "image/png", "form_factor": "narrow", "label": "3D campus map on a phone" },
+    { "src": "screenshots/wide.png", "sizes": "1600x1000", "type": "image/png", "form_factor": "wide", "label": "3D campus map with a building selected" }
+  ],
+  "shortcuts": [
+    { "name": "Search buildings", "short_name": "Search", "url": "./?hud=1", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Satellite view", "short_name": "Satellite", "url": "./?sat=1", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

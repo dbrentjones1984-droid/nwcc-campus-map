@@ -51,6 +51,8 @@ function basemapLayers(sat) {
   // sidewalks (2 m) in both styles: light walk on the lawn, translucent white over the imagery
   L.push({ id: 'bm-path', type: 'line', source: 'basemap', filter: lay('path'), layout: { 'line-join': 'round' },
     paint: { 'line-color': sat ? '#ffffff' : '#f3f2ea', 'line-width': mw(0, 0.7), 'line-opacity': sat ? 0.55 : 1 } });
+  // LANDMARK mockup 2026-10-09: Seal Plaza brick circle (flat fallback; landmarks.js draws the herringbone + medallion on top)
+  if (!sat) L.push({ id: 'bm-plaza', type: 'fill', source: 'basemap', filter: lay('plaza'), paint: { 'fill-color': '#b0604a', 'fill-outline-color': '#e3dfd3' } });
   const casing = sat ? 'rgba(20,24,32,.55)' : '#a7aa9b';
   L.push({ id: 'bm-road-case', type: 'line', source: 'basemap', filter: lay('road'), layout: { 'line-cap': 'round', 'line-join': 'round' },
     paint: { 'line-color': casing, 'line-width': mw(0, byCls({ minor: 2.4, service: 1.6, _: 1 })), 'line-opacity': sat ? 0.6 : 1 } });
@@ -148,6 +150,8 @@ function buildScene() {
     campus.add(g); groups.push(g);
   }
   buildTrees();
+  // LANDMARK mockup 2026-10-09: entrance sign + Seal Plaza (landmarks.js), drawn with the campus, not pickable
+  if (window.NWCCLandmarks) { try { campus.add(window.NWCCLandmarks(THREE, toEN, () => map.triggerRepaint())); } catch (err) { console.warn('landmarks failed', err); } }
   selGroup = new THREE.Group(); scene.add(selGroup);
 }
 // Low-poly campus trees (trees.js, tools/build_trees.py): instanced trunks, round or conifer canopies, soft ground shadows.

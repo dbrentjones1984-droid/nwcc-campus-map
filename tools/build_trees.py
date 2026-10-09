@@ -43,6 +43,7 @@ for f in BM:
     elif L == 'pitch': obst.append(g.buffer(5))
     elif L == 'water': obst.append(g.buffer(4))
     elif L == 'path': obst.append(g.buffer(2.5)); paths.append(g)
+    elif L == 'plaza': obst.append(g.buffer(2.0))   # Seal Plaza (landmark mockup 2026-10-09)
 for f in BLD:
     g = to_m(shape(f['geometry'])); g = g if g.is_valid else g.buffer(0)
     bldgs.append(g); obst.append(g.buffer(6))

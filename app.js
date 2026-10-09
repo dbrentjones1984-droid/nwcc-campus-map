@@ -57,9 +57,9 @@ function basemapLayers(sat) {
   L.push({ id: 'bm-road', type: 'line', source: 'basemap', filter: lay('road'), layout: { 'line-cap': 'round', 'line-join': 'round' },
     paint: { 'line-color': sat ? '#ffffff' : '#e6e7de', 'line-width': mw(-1, byCls({ minor: 1.6, service: 1, _: 0.6 })), 'line-opacity': sat ? 0.45 : 1 } });
   L.push({ id: 'bm-conn-case', type: 'line', source: 'basemap', filter: lay('connector'), layout: { 'line-cap': 'butt', 'line-join': 'round' },
-    paint: { 'line-color': ['match', ['get', 'cls'], 'hwy51', '#b2852a', '#b8963e'], 'line-width': mw(0, byCls({ hwy51: 4.5, _: 4.2 })) } });
+    paint: { 'line-color': ['match', ['get', 'cls'], 'hwy51', '#b2852a', '#b8963e'], 'line-width': mw(0, byCls({ hwy51: 8, _: 7.5 })) } });   // floor raised (was 4.5/4.2 px) so the in-road name fits when zoomed out
   L.push({ id: 'bm-conn', type: 'line', source: 'basemap', filter: lay('connector'), layout: { 'line-cap': 'butt', 'line-join': 'round' },
-    paint: { 'line-color': ['match', ['get', 'cls'], 'hwy51', '#f4c95d', '#f8db8a'], 'line-width': mw(-1.6, byCls({ hwy51: 3.2, _: 3 })) } });
+    paint: { 'line-color': ['match', ['get', 'cls'], 'hwy51', '#f4c95d', '#f8db8a'], 'line-width': mw(-1.6, byCls({ hwy51: 6.6, _: 6 })) } });   // floor raised (was 3.2/3 px)
   if (!sat) {   // roundabout island + entrance islands (lawn) with the roundabout's mountable apron ring
     L.push({ id: 'bm-apron', type: 'fill', source: 'basemap', filter: lay('apron'), paint: { 'fill-color': '#d3d0c2', 'fill-outline-color': '#a7aa9b' } });
     L.push({ id: 'bm-island', type: 'fill', source: 'basemap', filter: lay('island'), paint: { 'fill-color': LAWN, 'fill-outline-color': '#a7aa9b' } });
@@ -67,15 +67,17 @@ function basemapLayers(sat) {
   L.push({ id: 'bm-road-label', type: 'symbol', source: 'basemap', filter: ['all', lay('road'), ['!=', ['get', 'name'], '']], minzoom: 15.5,
     layout: { 'symbol-placement': 'line', 'text-field': ['get', 'name'], 'text-font': ['Noto Sans Regular'], 'text-size': 11, 'symbol-spacing': 320, 'text-max-angle': 35 },
     paint: { 'text-color': sat ? '#ffffff' : '#4d5843', 'text-halo-color': sat ? 'rgba(0,0,0,.75)' : '#ffffff', 'text-halo-width': 1.4 } });
-  L.push({ id: 'bm-conn-badge', type: 'symbol', source: 'basemap', filter: lay('connector-label'),
-    layout: { 'text-field': ['get', 'name'], 'text-font': ['Noto Sans Medium'], 'text-size': ['match', ['get', 'cls'], 'hwy51', 14, 12],
-      'icon-image': ['match', ['get', 'cls'], 'hwy51', 'badge-hwy51', 'badge-wilson'], 'icon-text-fit': 'both', 'icon-text-fit-padding': [3, 7, 3, 7],
-      'text-letter-spacing': ['match', ['get', 'cls'], 'hwy51', 0.08, 0.02], 'icon-allow-overlap': true, 'text-allow-overlap': true },
-    paint: { 'text-color': ['match', ['get', 'cls'], 'hwy51', '#ffffff', '#4a3a10'] } });
-  L.push({ id: 'bm-conn-label', type: 'symbol', source: 'basemap', filter: lay('connector'), minzoom: 16.5,
-    layout: { 'symbol-placement': 'line', 'text-field': ['get', 'name'], 'text-font': ['Noto Sans Medium'], 'text-size': ['match', ['get', 'cls'], 'hwy51', 14, 12.5],
-      'text-letter-spacing': ['match', ['get', 'cls'], 'hwy51', 0.12, 0.04], 'symbol-spacing': 260, 'text-max-angle': 30, 'text-keep-upright': true },
-    paint: { 'text-color': ['match', ['get', 'cls'], 'hwy51', '#5a3d00', '#5b4a1c'], 'text-halo-color': '#fff7df', 'text-halo-width': 2 } });
+  // Road names for Wilson Dr / HWY 51 (2026-10-09): small text drawn INSIDE the road, along the road line, flat on the map and
+  // rotated with it (replaces the pill badges + the second along-road label). Text size tracks the drawn road width (cap height
+  // <= road fill at every zoom); spacing gives ~1-2 names per road on the phone default view and at least one per screen when zoomed in.
+  L.push({ id: 'bm-conn-badge', type: 'symbol', source: 'basemap', filter: lay('connector'),
+    layout: { 'symbol-placement': 'line', 'symbol-spacing': ['interpolate', ['linear'], ['zoom'], 14, 250, 16, 300],
+      'text-field': ['match', ['get', 'cls'], 'wilson', 'Wilson Dr', ['get', 'name']], 'text-font': ['Noto Sans Medium'],
+      'text-size': ['interpolate', ['exponential', 2], ['zoom'], 14, 7, 16, 9.5, 17, 11, 18, 12],
+      'text-rotation-alignment': 'map', 'text-pitch-alignment': 'map', 'text-keep-upright': true, 'text-max-angle': 30,
+      'text-letter-spacing': ['match', ['get', 'cls'], 'hwy51', 0.06, 0.03], 'text-allow-overlap': true, 'text-padding': 0 },
+    paint: { 'text-color': ['match', ['get', 'cls'], 'hwy51', '#174f96', '#5b4a1c'],
+      'text-halo-color': ['match', ['get', 'cls'], 'hwy51', '#f4c95d', '#f8db8a'], 'text-halo-width': 0.6 } });
   return L;
 }
 // rounded badge images for the connector-road labels (re-added on demand after every style switch)

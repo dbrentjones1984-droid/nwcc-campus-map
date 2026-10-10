@@ -7,6 +7,10 @@ FILES = ['./', 'index.html', 'app.js', 'pwa.js', 'exteriors.js', 'landmarks.js',
          'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-192.png', 'icons/icon-maskable-512.png',
          'icons/apple-touch-icon.png', 'icons/favicon-32.png', 'assets/logo.png',
          'assets/landmark-sign-panel.png', 'assets/landmark-seal-navy.png', 'assets/landmark-medallion.png', 'assets/landmark-herringbone.jpg', 'assets/football-field.png', 'assets/compass-rose.webp']
+# CARD-PHOTO: precache card banner photos (-480 / -800); lightbox -1600 images are runtime-cached
+_pd = os.path.join(ROOT, 'assets', 'photos')
+if os.path.isdir(_pd):
+    FILES += ['assets/photos/' + f for f in sorted(os.listdir(_pd)) if re.search(r'-(480|800)\.webp$', f)]
 for d in sorted(os.listdir(os.path.join(ROOT, 'fonts'))):
     for f in sorted(os.listdir(os.path.join(ROOT, 'fonts', d))):
         FILES.append(f'fonts/{d}/{f}'.replace(' ', '%20'))

@@ -452,9 +452,11 @@ function showCard(it) { // card UI simplified 2026-10-08
   const c = CATS[it.category];
   const partsHtml = it.siblings && it.siblings.length ? `<div class="parts">${it.siblings.map(q => `<button class="${q.id.toLowerCase() === it.key ? 'cur' : ''}" data-k="${q.id.toLowerCase()}">${esc(q.label)}${q.name ? ' · ' + esc(q.name) : ''}</button>`).join('')}</div>` : '';
   const parent = it.parent_name ? `<div class="parent">#${it.number} · ${esc(it.parent_name)}</div>` : `<div class="parent">Building #${it.number}</div>`;
+  const photoHtml = cardPhotoHtml(it);   // CARD-PHOTO
   card.innerHTML = `<div class="top"><div class="badge" style="--c:${c.color}">${esc(it.label)}</div>
     <div class="ttl"><h2>${esc(title(it))}</h2>${parent}</div>
     <button class="x" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    ${photoHtml}
     <div class="body"><div class="meta"><span class="tag" style="--c:${c.color}"><i></i>${c.label}</span>${it.landmark ? '<span class="lmk">★ Landmark</span>' : ''}</div>
     ${partsHtml}
     <a class="dir" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=${it.lat},${it.lng}"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.7 11.3 12.7 2.3a1 1 0 0 0-1.4 0l-9 9a1 1 0 0 0 0 1.4l9 9a1 1 0 0 0 1.4 0l9-9a1 1 0 0 0 0-1.4zM14 14.5V12h-4v3H8v-4a1 1 0 0 1 1-1h5V7.5l3.5 3.5L14 14.5z"/></svg>Directions</a></div>
@@ -462,7 +464,38 @@ function showCard(it) { // card UI simplified 2026-10-08
   card.classList.add('show');
   card.querySelector('.x').onclick = closeCard;
   card.querySelectorAll('.parts button').forEach(bt => bt.onclick = () => select(bt.dataset.k, true));
+  const ph = card.querySelector('.photo'); if (ph) ph.onclick = () => openLightbox(it, ph);   // CARD-PHOTO
 }
+// CARD-PHOTO >>>
+// Building photos (2026-10-09): any item with `photo` {src, srcset, full, w, h, alt} gets a banner on its card; tap = lightbox.
+function cardPhotoHtml(it) {
+  const p = it.photo; if (!p) return '';
+  return `<button class="photo" type="button" aria-label="View larger photo of ${esc(title(it))}">
+    <img src="${p.src}" ${p.srcset ? `srcset="${p.srcset}" sizes="(max-width: 719px) 100vw, 330px"` : ''} width="${p.w}" height="${p.h}" alt="${esc(p.alt || title(it))}" loading="lazy" decoding="async">
+    <span class="zoom" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></span></button>`;
+}
+let lbEl = null, lbReturn = null;
+function openLightbox(it, from) {
+  const p = it.photo; if (!p) return; lbReturn = from || null;
+  if (!lbEl) {
+    lbEl = document.createElement('div'); lbEl.id = 'lightbox'; lbEl.setAttribute('role', 'dialog'); lbEl.setAttribute('aria-modal', 'true');
+    lbEl.innerHTML = `<figure><img alt=""><figcaption></figcaption></figure>
+      <button class="x" type="button" aria-label="Close photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>`;
+    document.body.appendChild(lbEl);
+    lbEl.addEventListener('click', e => { if (e.target === lbEl || e.target.closest('.x')) closeLightbox(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && lbEl.classList.contains('show')) { e.stopPropagation(); closeLightbox(); } }, true);
+  }
+  const img = lbEl.querySelector('img');
+  img.src = p.full || p.src; img.alt = p.alt || title(it); if (p.fw) { img.width = p.fw; img.height = p.fh; }
+  lbEl.querySelector('figcaption').textContent = title(it);
+  lbEl.setAttribute('aria-label', 'Photo: ' + title(it));
+  lbEl.classList.add('show'); lbEl.querySelector('.x').focus();
+}
+function closeLightbox() {
+  if (!lbEl) return; lbEl.classList.remove('show');
+  if (lbReturn && document.body.contains(lbReturn)) lbReturn.focus(); lbReturn = null;
+}
+// <<< CARD-PHOTO
 function closeCard() {
   card.classList.remove('show'); selKey = null; showSelection(null);
   if (map.getLayer('p2-highlight')) map.setFilter('p2-highlight', ['==', ['get', 'key'], '']);

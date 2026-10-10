@@ -256,6 +256,27 @@ button{touch-action:manipulation;-webkit-user-select:none;user-select:none}
   .lm{flex-wrap:wrap;overflow:visible}
   #card .top{padding-top:16px}
 }
+/* COMPASS-ROSE >>> */
+/* NORTHWEST compass-rose button (bottom-right, where the zoom/compass group was). The 64 px button is the hit area; the
+   rose image is larger and overflows it so the N/E/S/W letters stay readable; the shadow sits on the (unrotated) button. */
+.maplibregl-ctrl.nw-compass-ctrl{margin:0 calc(var(--gap) + 20px) 24px 0;pointer-events:auto}
+.nw-compass{position:relative;display:block;width:64px;height:64px;padding:0;border:0;border-radius:50%;background:transparent;cursor:pointer;
+  filter:drop-shadow(0 1px 1.5px rgba(10,14,40,.45)) drop-shadow(0 3px 8px rgba(10,14,40,.25));transition:transform .15s ease,filter .15s ease;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.nw-compass img{position:absolute;left:50%;top:50%;width:104px;height:104px;margin:-52px 0 0 -52px;pointer-events:none;
+  -webkit-user-select:none;user-select:none;will-change:transform}
+.nw-compass:hover{transform:scale(1.07);filter:drop-shadow(0 1px 1.5px rgba(10,14,40,.5)) drop-shadow(0 4px 12px rgba(10,14,40,.35))}
+.nw-compass:active{transform:scale(.93);transition-duration:.06s}
+.nw-compass:focus{outline:none}
+.nw-compass:focus-visible::after{content:"";position:absolute;inset:-6px;border-radius:50%;box-shadow:0 0 0 2px var(--accent)}
+/* attribution "i" moved to the bottom-left (scale bar removed) */
+.maplibregl-ctrl-bottom-left .maplibregl-ctrl.maplibregl-ctrl-attrib{margin:0 0 8px var(--gap)!important}
+.maplibregl-ctrl-bottom-left .maplibregl-ctrl-attrib.maplibregl-compact{padding:0 9px 0 26px}
+.maplibregl-ctrl-bottom-left .maplibregl-ctrl-attrib.maplibregl-compact:not(.maplibregl-compact-show){padding:0}
+.maplibregl-ctrl-bottom-left .maplibregl-ctrl-attrib-button{left:0!important;right:auto!important}
+@media(max-width:719px){ body .maplibregl-ctrl-bottom-left{bottom:env(safe-area-inset-bottom)} }
+@media(pointer:coarse){ .nw-compass{width:68px;height:68px} .nw-compass img{width:108px;height:108px;margin:-54px 0 0 -54px} }
+/* <<< COMPASS-ROSE */
 </style>
 </head>
 <body>

@@ -125,12 +125,39 @@ if (P.get('view')) { const v = P.get('view').split(',').map(Number); view = { ce
 const map = new maplibregl.Map({
   container: 'map', style: styleStreet, center: view ? view.center : META.center, zoom: view ? view.zoom : META.zoom,
   pitch: view ? view.pitch : 0, bearing: view ? view.bearing : 0,  /* MOCKUP 2D default: open flat */
-  maxPitch: 78, minZoom: 14, maxBounds: MAXB, maxZoom: 20.5, attributionControl: true, canvasContextAttributes: { antialias: true }, antialias: true,
+  maxPitch: 78, minZoom: 14, maxBounds: MAXB, maxZoom: 20.5, attributionControl: false, canvasContextAttributes: { antialias: true }, antialias: true,
   preserveDrawingBuffer: P.get('selftest') === '1'
 });
 map_onReady.forEach(f => f(map));
-map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'bottom-right');
-map.addControl(new maplibregl.ScaleControl({ unit: 'imperial' }), 'bottom-left');
+// COMPASS-ROSE >>>
+// NORTHWEST compass rose (2026-10-09): replaces the +/- / compass group and the scale bar. The rose turns with the map
+// (rotate(-bearing): its N always points to true north); tap = ease back to north, keeping centre, zoom and pitch.
+class CompassRose {
+  onAdd(m) {
+    this._m = m;
+    const c = this._el = document.createElement('div'); c.className = 'maplibregl-ctrl nw-compass-ctrl';
+    const b = this._btn = document.createElement('button'); b.type = 'button'; b.className = 'nw-compass';
+    b.setAttribute('aria-label', 'Compass: map faces north. Tap to reset to north'); b.title = 'Reset to north';
+    const img = this._img = document.createElement('img'); img.src = 'assets/compass-rose.webp'; img.alt = ''; img.draggable = false; img.decoding = 'async';
+    b.appendChild(img); c.appendChild(b);
+    b.addEventListener('click', () => {
+      if (spin) document.getElementById('tSpin').click();      // stop the slow orbit first
+      m.easeTo({ bearing: 0, duration: 600 });                    // centre / zoom / pitch untouched
+    });
+    this._sync = () => {
+      const br = m.getBearing(); img.style.transform = 'rotate(' + (-br) + 'deg)';
+      const deg = Math.round(((br % 360) + 360) % 360), north = deg === 0 || deg === 360;
+      b.classList.toggle('rotated', !north);
+      b.setAttribute('aria-label', north ? 'Compass: map faces north' : 'Compass: map rotated ' + deg + '\u00b0. Tap to reset to north');
+    };
+    m.on('rotate', this._sync); this._sync();
+    return c;
+  }
+  onRemove() { this._m.off('rotate', this._sync); this._el.remove(); }
+}
+map.addControl(new CompassRose(), 'bottom-right');
+map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-left');   // was bottom-right under the zoom group
+// <<< COMPASS-ROSE
 
 let labelsOn = true, satOn = false, selKey = null, compare = false, spin = false;
 

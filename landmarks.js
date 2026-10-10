@@ -695,7 +695,30 @@ window.NWCCLandmarks = function (THREE, toEN, onTexture) {
     return g;
   }
   // <<< RAB-31 build
-  root.add(buildSign()); root.add(buildPlaza()); if (L.nwdr) root.add(buildNwdr()); if (L.baseball) root.add(buildBaseball()); if (L.football) root.add(buildFootball()); if (L.softball) root.add(buildSoftball()); if (L.practice) root.add(buildPractice()); if (L.lamar) root.add(buildLamar()); if (L.rab31) root.add(buildRab31());
+  // BENTON build >>>
+  // Benton Halls (2026-10-09): small gray-roof storage shed between Halls C and B (door on the east, toward the walk).
+  function buildBenton() {
+    const B = L.benton, g = new THREE.Group(); g.name = 'benton-shed';
+    const P = B.shed.map(c => toEN(c[0], c[1])); const xs = P.map(p => p[0]), ys = P.map(p => p[1]);
+    const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys), w = x1 - x0, d = y1 - y0, cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+    const wall = lam('benton-shed-wall', { color: '#cdbfa6' }), trim = lam('benton-shed-trim', { color: '#efebe2' }), door = lam('benton-shed-door', { color: '#7b7266' });
+    const roof = lam('benton-shed-roof', { color: B.roof, side: THREE.DoubleSide });
+    const H = B.h, rise = (w / 2) * Math.tan(B.pitch * Math.PI / 180);
+    g.add(box(w, H, d, cx, 0, -cy, wall)); g.add(box(w + 0.02, 0.18, d + 0.02, cx, H - 0.18, -cy, trim));
+    // gable roof, ridge N-S (the long side), 0.3 m overhang; explicit triangles (x east, y up, z = -north)
+    const ov = 0.3, X0 = x0 - ov, X1 = x1 + ov, Z0 = -(y0 - ov), Z1 = -(y1 + ov), R = H + rise, E = H - ov * Math.tan(B.pitch * Math.PI / 180);
+    const v = [X0, E, Z0, cx, R, Z0, cx, R, Z1,  X0, E, Z0, cx, R, Z1, X0, E, Z1,  X1, E, Z0, X1, E, Z1, cx, R, Z1,  X1, E, Z0, cx, R, Z1, cx, R, Z0];
+    const rg = new THREE.BufferGeometry(); rg.setAttribute('position', new THREE.Float32BufferAttribute(v, 3)); rg.computeVertexNormals();
+    g.add(new THREE.Mesh(rg, roof));
+    const gv = [], gz = [-(y0), -(y1)];
+    for (const z of gz) gv.push(x0, H, z, x1, H, z, cx, H + (w / 2) * Math.tan(B.pitch * Math.PI / 180), z);
+    const gg = new THREE.BufferGeometry(); gg.setAttribute('position', new THREE.Float32BufferAttribute(gv, 3)); gg.computeVertexNormals();
+    g.add(new THREE.Mesh(gg, lam('benton-shed-gable', { color: '#cdbfa6', side: THREE.DoubleSide })));
+    g.add(box(0.05, 2.1, 1.8, x1 + 0.03, 0, -cy, door));
+    return g;
+  }
+  // <<< BENTON build
+  root.add(buildSign()); root.add(buildPlaza()); if (L.nwdr) root.add(buildNwdr()); if (L.baseball) root.add(buildBaseball()); if (L.football) root.add(buildFootball()); if (L.softball) root.add(buildSoftball()); if (L.practice) root.add(buildPractice()); if (L.lamar) root.add(buildLamar()); if (L.rab31) root.add(buildRab31()); if (L.benton) root.add(buildBenton());
   root.traverse(o => { o.frustumCulled = false; });
   return root;
 };
@@ -728,3 +751,7 @@ window.NWCC_LANDMARKS.lamar = {"main":[[-89.9781951,34.6237806],[-89.9779784,34.
 // Thompson St / West St roundabout by #31 (2026-10-09). Coordinates [lng,lat]; radii m.
 window.NWCC_LANDMARKS.rab31 = {"c":[-89.9704313,34.6221007],"r_isl":8.7,"r_apron":11.6,"splitters":[[[-89.9704793,34.6222608],[-89.9704269,34.6222608],[-89.9704542,34.622315]],[[-89.9706179,34.6221224],[-89.9706147,34.6220609],[-89.9707195,34.6220908]],[[-89.9702533,34.622164],[-89.9700885,34.6221559],[-89.9700885,34.6221387],[-89.9702446,34.6220917]],[[-89.9704433,34.621947],[-89.9703691,34.6219488],[-89.9704094,34.6218674]]],"shrub_c":[-89.9704302,34.6221043],"shrub_r":4.9,"shrub_n":26,"pole":[-89.9704269,34.6220627],"pole_rot":-0.4363323129985824};
 /* <<< RAB-31 data */
+/* BENTON data >>> */
+// Benton Halls shed (2026-10-09). Coordinates [lng,lat].
+window.NWCC_LANDMARKS.benton = {"shed":[[-89.9692719,34.623403],[-89.9692719,34.6234717],[-89.9693353,34.6234717],[-89.9693353,34.623403],[-89.9692719,34.623403]],"h":2.7,"pitch":18,"roof":"#b4b8bd"};
+/* <<< BENTON data */

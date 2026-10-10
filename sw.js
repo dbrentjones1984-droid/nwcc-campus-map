@@ -3,7 +3,7 @@
    - Satellite tiles (Esri World Imagery): network only (never stored by the SW; needs internet).
    - CDN fallbacks (jsDelivr / unpkg / protomaps glyphs, only used if a local copy fails): network-first, cached copy offline.
    VERSION and PRECACHE are rewritten by tools/build_sw.py; bump them whenever app files change. */
-const VERSION = 'f1cf0851c8';
+const VERSION = 'f2b6f18bee';
 const SHELL = 'nwcc-shell-' + VERSION;
 const RUNTIME = 'nwcc-runtime-' + VERSION;
 const PRECACHE = [
@@ -16,6 +16,7 @@ const PRECACHE = [
   "data.js",
   "basemap.js",
   "basemap.geojson",
+  "surround.geojson",
   "buildings_3d.geojson",
   "boundary.json",
   "manifest.webmanifest",

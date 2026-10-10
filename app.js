@@ -26,7 +26,7 @@ const glyphs = (location.protocol === 'file:' ? 'https://protomaps.github.io/bas
 // Campus-only basemap (basemap.js, built by src/build_basemap.py): no OSM raster tiles, so nothing outside the
 // campus is drawn except the two connecting roads, Wilson Drive and HWY 51.
 const BASE = window.NWCC_BASEMAP, BASE_META = window.NWCC_BASEMAP_META || {};
-const OUTSIDE = '#e8eae3';
+const OUTSIDE = '#dfe6d4';  // SURROUND: was flat gray #e8eae3
 // Colors follow the official 2D campus map: lawn green, darker field green, light gray pavement/parking (2026-10-08).
 const LAWN = '#b7d99c', FIELD = '#95b871', PAVE = '#dcded2';
 const lay = (k) => ['==', ['get', 'layer'], k];
@@ -38,6 +38,50 @@ const PXM14 = 512 * 16384 / (40075016.686 * Math.cos(34.623 * Math.PI / 180));
 const mw = (d, floor) => { const g = (z) => ['*', ['max', 0.3, ['+', ['get', 'w'], d]], PXM14 * Math.pow(2, z - 14)];
   return ['interpolate', ['exponential', 2], ['zoom'], 14, ['max', floor, g(14)], 16, ['max', floor, g(16)], 17, g(17), 22, g(22)]; };
 const byCls = (m) => ['match', ['get', 'cls'], ...Object.keys(m).filter(x => x !== '_').flatMap(x => [x, m[x]]), m._];
+// SURROUND-DEF >>>
+// Faded surroundings (2026-10-10): muted context outside the campus block so the map blends out instead of flat gray.
+const SR = { grass: '#dfe6d4', wood: '#d3dcc8', water: '#d2e0e8', case: '#cfd2c6', road: '#f1f2ec', hcase: '#ddd2ae', hroad: '#f4ead0', rail: '#c3c5bb', text: '#9fa595' };
+const SR_M = { motorway: 24, hwy51: 14, major: 11, minor: 8, link: 6, _: 4.5 }, SR_FI = { motorway: 0, hwy51: 1, major: 1, minor: 2, link: 3, _: 3 };
+const srClsW = (add, floors) => { const at = (f) => ['match', ['get', 'c'], ...['motorway', 'hwy51', 'major', 'minor', 'link'].flatMap(k => [k, f(k)]), f('_')];
+  return ['interpolate', ['exponential', 2], ['zoom'], 14, at(k => Math.max(floors[SR_FI[k]], (SR_M[k] + add) * PXM14)),
+    17, at(k => (SR_M[k] + add) * PXM14 * 8), 22, at(k => (SR_M[k] + add) * PXM14 * 256)]; };
+const srLay = (k) => ['==', ['get', 'l'], k];
+function surroundLayers() {
+  return [
+    { id: 'sr-trees', type: 'fill', source: 'surround', filter: srLay('land'), paint: { 'fill-pattern': 'sr-trees', 'fill-opacity': 0.55 } },
+    { id: 'sr-wood', type: 'fill', source: 'surround', filter: srLay('wood'), paint: { 'fill-color': SR.wood } },
+    { id: 'sr-wood-trees', type: 'fill', source: 'surround', filter: srLay('wood'), paint: { 'fill-pattern': 'sr-wood', 'fill-opacity': 0.6 } },
+    { id: 'sr-water', type: 'fill', source: 'surround', filter: srLay('water'), paint: { 'fill-color': SR.water } },
+    { id: 'sr-stream', type: 'line', source: 'surround', filter: srLay('stream'), paint: { 'line-color': SR.water, 'line-width': 1.5 } },
+    { id: 'sr-rail', type: 'line', source: 'surround', filter: srLay('rail'), paint: { 'line-color': SR.rail, 'line-width': 1.2, 'line-dasharray': [3, 2] } },
+    { id: 'sr-road-case', type: 'line', source: 'surround', filter: srLay('road'), layout: { 'line-join': 'round', 'line-cap': 'round' },
+      paint: { 'line-color': ['match', ['get', 'c'], 'hwy51', SR.hcase, SR.case], 'line-width': srClsW(1.5, [3.2, 2.6, 1.8, 1.2]) } },
+    { id: 'sr-road', type: 'line', source: 'surround', filter: srLay('road'), layout: { 'line-join': 'round', 'line-cap': 'round' },
+      paint: { 'line-color': ['match', ['get', 'c'], 'hwy51', SR.hroad, SR.road], 'line-width': srClsW(0, [2.2, 1.8, 1.1, 0.6]) } },
+    { id: 'sr-edge', type: 'line', source: 'surround', filter: srLay('edge'), layout: { 'line-join': 'round' },
+      paint: { 'line-color': 'rgba(70,92,52,0.30)', 'line-width': 7, 'line-blur': 5 } },
+    { id: 'sr-label', type: 'symbol', source: 'surround', filter: ['all', srLay('road'), ['has', 'n']], minzoom: 15.5,
+      layout: { 'symbol-placement': 'line', 'text-field': ['get', 'n'], 'text-font': ['Noto Sans Regular'], 'text-size': 10, 'symbol-spacing': 400, 'text-max-angle': 30, 'text-padding': 4 },
+      paint: { 'text-color': SR.text, 'text-halo-color': SR.grass, 'text-halo-width': 1 } },
+  ];
+}
+// scattered faded trees as a repeating canvas pattern (deterministic layout, two sizes; no asset file)
+function srPattern(size, n, seed, rMin, rMax) {
+  const cv = document.createElement('canvas'); cv.width = cv.height = size; const x = cv.getContext('2d');
+  let s = seed; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < n; i++) {
+    const cx = rnd() * size, cy = rnd() * size, r = rMin + rnd() * (rMax - rMin), tone = rnd();
+    for (const [ox, oy] of [[0, 0], [size, 0], [-size, 0], [0, size], [0, -size]]) {   // wrap so tiles seam cleanly
+      x.fillStyle = 'rgba(120,140,104,0.35)'; x.beginPath(); x.arc(cx + ox + r * 0.25, cy + oy + r * 0.25, r, 0, 7); x.fill();
+      x.fillStyle = tone < 0.5 ? '#bccab0' : '#c5d1b9'; x.beginPath(); x.arc(cx + ox, cy + oy, r, 0, 7); x.fill();
+      x.fillStyle = 'rgba(255,255,255,0.22)'; x.beginPath(); x.arc(cx + ox - r * 0.3, cy + oy - r * 0.3, r * 0.45, 0, 7); x.fill();
+    }
+  }
+  return x.getImageData(0, 0, size, size);
+}
+const SR_IMG = { 'sr-trees': () => srPattern(192, 9, 7, 3.5, 6), 'sr-wood': () => srPattern(96, 22, 11, 3.5, 6.5) };
+const srSource = { type: 'geojson', data: 'surround.geojson', attribution: '© OpenStreetMap contributors' };
+// <<< SURROUND-DEF
 function basemapLayers(sat) {
   const L = [];
   if (!sat) {
@@ -110,9 +154,13 @@ function badge(fill, stroke) {
 }
 const BADGES = { 'badge-hwy51': ['#1f5fae', '#ffffff'], 'badge-wilson': ['#fbe3a1', '#b99a4a'] };
 map_onReady.push(m => m.on('styleimagemissing', e => { const b = BADGES[e.id]; if (!b || m.hasImage(e.id)) return; const q = badge(b[0], b[1]); m.addImage(e.id, q.img, q.opt); }));
-const bmSource = { type: 'geojson', data: BASE || { type: 'FeatureCollection', features: [] }, attribution: '© OpenStreetMap contributors (campus-only extract)' };
-const styleStreet = { version: 8, name: 'nwcc-campus-only', glyphs, sources: { basemap: bmSource },
-  layers: [{ id: 'bg', type: 'background', paint: { 'background-color': OUTSIDE } }].concat(basemapLayers(false)) };
+// SURROUND-IMG >>>
+map_onReady.push(m => m.on('styleimagemissing', e => { const f = SR_IMG[e.id]; if (f && !m.hasImage(e.id)) m.addImage(e.id, f(), { pixelRatio: 2 }); }));
+// <<< SURROUND-IMG
+const bmSource = { type: 'geojson', data: BASE || { type: 'FeatureCollection', features: [] }, attribution: '© OpenStreetMap contributors' };
+const styleStreet = { version: 8, name: 'nwcc-campus-only', glyphs, sources: { basemap: bmSource, surround: srSource },   // SURROUND
+  sky: { 'sky-color': '#cfdfec', 'horizon-color': '#e9eee4', 'sky-horizon-blend': 0.7, 'horizon-fog-blend': 0.9, 'fog-color': '#e3e9dc', 'fog-ground-blend': 0.9 },
+  layers: [{ id: 'bg', type: 'background', paint: { 'background-color': OUTSIDE } }].concat(surroundLayers(), basemapLayers(false)) };
 const styleSat = { version: 8, name: 'nwcc-sat-campus-only', glyphs,
   sources: { sat: { type: 'raster', tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], tileSize: 256, attribution: 'Imagery © Esri, Maxar, Earthstar Geographics', maxzoom: 19 }, basemap: bmSource },
   layers: [{ id: 'bg', type: 'background', paint: { 'background-color': '#1d2431' } }, { id: 'sat', type: 'raster', source: 'sat' }].concat(basemapLayers(true)) };

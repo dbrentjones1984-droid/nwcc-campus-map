@@ -1,7 +1,7 @@
 """Fill sw.js PRECACHE + VERSION from the files on disk. Run after editing any app file: python3 tools/build_sw.py"""
 import hashlib, json, os, re
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-FILES = ['./', 'index.html', 'app.js', 'pwa.js', 'exteriors.js', 'landmarks.js', 'data.js', 'basemap.js', 'basemap.geojson',
+FILES = ['./', 'index.html', 'app.js', 'pwa.js', 'exteriors.js', 'landmarks.js', 'data.js', 'basemap.js', 'basemap.geojson', 'surround.geojson',
          'buildings_3d.geojson', 'boundary.json', 'manifest.webmanifest', 'trees.js',
          'vendor/maplibre-gl.js', 'vendor/maplibre-gl.css', 'vendor/three.module.js',
          'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-192.png', 'icons/icon-maskable-512.png',

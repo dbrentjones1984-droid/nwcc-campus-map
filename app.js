@@ -141,7 +141,6 @@ class CompassRose {
     const img = this._img = document.createElement('img'); img.src = 'assets/compass-rose.webp'; img.alt = ''; img.draggable = false; img.decoding = 'async';
     b.appendChild(img); c.appendChild(b);
     b.addEventListener('click', () => {
-      if (spin) document.getElementById('tSpin').click();      // stop the slow orbit first
       m.easeTo({ bearing: 0, duration: 600 });                    // centre / zoom / pitch untouched
     });
     this._sync = () => {
@@ -159,7 +158,7 @@ map.addControl(new CompassRose(), 'bottom-right');
 map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-left');   // was bottom-right under the zoom group
 // <<< COMPASS-ROSE
 
-let labelsOn = true, satOn = false, selKey = null, compare = false, spin = false;
+let labelsOn = true, satOn = false, selKey = null, compare = false;
 
 // ---------- Three.js custom layer ----------
 let THREE = null, EXT = null, renderer = null, scene = null, camera = null, campus = null, selGroup = null, raycaster = null;
@@ -261,7 +260,7 @@ const layer3d = {
     }
     renderer.resetState();
     renderer.render(scene, camera);
-    if (selGroup.children.length || spin) map.triggerRepaint();
+    if (selGroup.children.length) map.triggerRepaint();
   }
 };
 
@@ -555,13 +554,7 @@ document.getElementById('tTilt').onclick = function () {
 function applyLabels() { if (map.getLayer('building-labels')) map.setLayoutProperty('building-labels', 'visibility', labelsOn ? 'visible' : 'none'); }
 document.getElementById('tLabels').onclick = function () { labelsOn = !labelsOn; this.classList.toggle('on', labelsOn); applyLabels(); };
 // P2 compare + satellite toggle buttons removed from UI 2026-10-08 (compare/satOn stay false).
-let spinRaf = null;
-document.getElementById('tSpin').onclick = function () {
-  spin = !spin; this.classList.toggle('on', spin);
-  const step = () => { if (!spin) return; map.setBearing(map.getBearing() + 0.12); spinRaf = requestAnimationFrame(step); };
-  if (spin) step(); else cancelAnimationFrame(spinRaf);
-};
-map.on('mousedown', () => { if (spin) document.getElementById('tSpin').click(); });
+// Orbit (slow auto-rotate) button removed 2026-10-10.
 document.getElementById('tLabels').classList.add('on');
 syncTilt();  // MOCKUP: button reflects the real (2D) start state
 

@@ -396,10 +396,10 @@ function addLayers() {
   if (map.getLayer('bm-conn-badge')) map.moveLayer('bm-conn-badge');
   if (map.getLayer('building-labels')) map.moveLayer('building-labels');
   else map.addLayer({ id: 'building-labels', type: 'symbol', source: 'labels', filter: catFilter(),
-    layout: { 'text-field': ['case', ['==', ['get', 'lm'], 1], ['concat', '★ #', ['get', 'label'], '\n', ['get', 'name']], ['concat', '#', ['get', 'label']]],
-      'text-size': ['case', ['==', ['get', 'lm'], 1], 12, 11], 'text-font': ['Noto Sans Regular'], 'text-anchor': 'bottom', 'text-offset': [0, -1.2],
-      'text-max-width': 12, 'symbol-sort-key': ['-', 1, ['get', 'lm']], 'text-allow-overlap': false, visibility: labelsOn ? 'visible' : 'none' },
-    paint: { 'text-color': ['case', ['==', ['get', 'lm'], 1], '#ffe6a3', '#ffffff'], 'text-halo-color': '#0b1220', 'text-halo-width': 1.6 } });
+    layout: { 'text-field': ['concat', '#', ['get', 'label']],   // NO-LANDMARK-LABELS (2026-10-12): no gold ★ name labels on landmark buildings
+      'text-size': 11, 'text-font': ['Noto Sans Regular'], 'text-anchor': 'bottom', 'text-offset': [0, -1.2],
+      'text-max-width': 12, 'text-allow-overlap': false, visibility: labelsOn ? 'visible' : 'none' },
+    paint: { 'text-color': '#ffffff', 'text-halo-color': '#0b1220', 'text-halo-width': 1.6 } });
 }
 function refreshFilter() {
   if (!map.getLayer('p2-extrusion')) return;
@@ -409,9 +409,9 @@ function refreshFilter() {
 }
 
 // ---------- boot: load Three.js, then style ----------
-const THREE_CDN = 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+const THREE_CDN = 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js';
 const loadThree = () => location.protocol === 'file:' ? import(THREE_CDN)
-  : import(new URL('vendor/three.module.js', location.href).href).catch(() => import(THREE_CDN));
+  : import(new URL('vendor/three.module.min.js', location.href).href).catch(() => import(THREE_CDN));
 let threeReady = loadThree().then(mod => {
   THREE = mod; EXT = window.NWCCExteriors(THREE); buildScene(); refreshVisibility();
 }).catch(err => { console.error('Three.js failed to load; falling back to Phase 2 extrusions', err); document.getElementById('loadingMsg').textContent = '3D exteriors unavailable (Three.js failed to load). Showing Phase 2 extrusions.'; });
@@ -436,7 +436,7 @@ Promise.all([threeReady, new Promise(r => map.once('load', r))]).then(() => {
 
 // Splash hold: keep the icon on screen 1 s longer than the old instant removal, then fade (.4 s) and remove.
 // Map/3D are already live underneath; only the overlay waits. On Three.js failure it collapses to the bottom pill.
-const SPLASH_EXTRA_MS = 1000;
+const SPLASH_EXTRA_MS = 0;   // FAST-LOAD (2026-10-12): fade as soon as the base map is ready (was a 1 s hold)
 function hideSplash() {
   const el = document.getElementById('loading'); if (!el) return;
   setTimeout(() => {
@@ -511,7 +511,7 @@ function showCard(it) { // card UI simplified 2026-10-08
     <div class="ttl"><h2>${esc(title(it))}</h2>${parent}</div>
     <button class="x" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
     ${photoHtml}
-    <div class="body"><div class="meta"><span class="tag" style="--c:${c.color}"><i></i>${c.label}</span>${it.landmark ? '<span class="lmk">★ Landmark</span>' : ''}</div>
+    <div class="body"><div class="meta"><span class="tag" style="--c:${c.color}"><i></i>${c.label}</span></div>
     ${partsHtml}
     <a class="dir" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=${it.lat},${it.lng}"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.7 11.3 12.7 2.3a1 1 0 0 0-1.4 0l-9 9a1 1 0 0 0 0 1.4l9 9a1 1 0 0 0 1.4 0l9-9a1 1 0 0 0 0-1.4zM14 14.5V12h-4v3H8v-4a1 1 0 0 1 1-1h5V7.5l3.5 3.5L14 14.5z"/></svg>Directions</a></div>
     <div class="sheet-attrib">© OpenStreetMap contributors · MapLibre</div>`; // polished card markup (theme mockup 2026-10-08); notes paragraph removed 2026-10-08
@@ -606,8 +606,8 @@ Object.keys(CATS).forEach(k => {
   el.onclick = () => { active[k] = !active[k]; el.classList.toggle('off', !active[k]); refreshFilter(); if (qEl.value) search(); };
   chipsEl.appendChild(el);
 });
-const lmEl = document.getElementById('lm');
-LANDMARKS.forEach(k => { const it = byKey[k]; if (!it) return; const b = document.createElement('button'); b.textContent = '#' + it.label; b.title = it.name; b.onclick = () => select(k, true); lmEl.appendChild(b); });
+const lmEl = document.getElementById('lm');   // NO-LANDMARK-UI: row removed from index.html
+if (lmEl) LANDMARKS.forEach(k => { const it = byKey[k]; if (!it) return; const b = document.createElement('button'); b.textContent = '#' + it.label; b.title = it.name; b.onclick = () => select(k, true); lmEl.appendChild(b); });
 
 // search (same behavior as Phase 1/2)
 const qEl = document.getElementById('q'), resEl = document.getElementById('results'), clr = document.getElementById('clr');
@@ -623,7 +623,7 @@ function search() {
   resEl.innerHTML = hits.map((it, i) => {
     const c = CATS[it.category];
     return `<li role="option" class="${i === act ? 'act' : ''}" data-k="${it.key}"><span class="pinb" style="background:${c.color}">${esc(it.label)}</span>
-      <div><div class="n">${esc(title(it))}${it.landmark ? ' ★' : ''}</div><div class="s">${it.parent_name ? esc(it.parent_name) + ' · ' : ''}${c.label}${active[it.category] ? '' : ' (hidden)'}</div></div></li>`;
+      <div><div class="n">${esc(title(it))}</div><div class="s">${it.parent_name ? esc(it.parent_name) + ' · ' : ''}${c.label}${active[it.category] ? '' : ' (hidden)'}</div></div></li>`;
   }).join('');
   resEl.querySelectorAll('li').forEach(li => li.onclick = () => { select(li.dataset.k, true); qEl.value = ''; search(); });
   return hits;

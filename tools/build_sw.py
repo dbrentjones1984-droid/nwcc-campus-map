@@ -3,7 +3,7 @@ import hashlib, json, os, re
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 FILES = ['./', 'index.html', 'app.js', 'pwa.js', 'exteriors.js', 'landmarks.js', 'data.js', 'basemap.js', 'basemap.geojson', 'surround.geojson',
          'buildings_3d.geojson', 'boundary.json', 'manifest.webmanifest', 'trees.js',
-         'vendor/maplibre-gl.js', 'vendor/maplibre-gl.css', 'vendor/three.module.js',
+         'vendor/maplibre-gl.js', 'vendor/maplibre-gl.css', 'vendor/three.module.min.js',
          'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-192.png', 'icons/icon-maskable-512.png',
          'icons/apple-touch-icon.png', 'icons/favicon-32.png', 'assets/logo.png',
          'assets/landmark-sign-panel.png', 'assets/landmark-seal-navy.png', 'assets/landmark-medallion.png', 'assets/landmark-herringbone.jpg', 'assets/football-field.png', 'assets/compass-rose.webp']

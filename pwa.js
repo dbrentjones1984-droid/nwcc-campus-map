@@ -20,7 +20,10 @@ const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platfo
 
 // ---------- service worker ----------
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
-  window.addEventListener('load', () => {
+  // FAST-LOAD (2026-10-12): register (and precache) only once the splash is gone and the map is idle (15 s fallback)
+  const afterFirstLoad = cb => { let done = false; const go = () => { if (!done) { done = true; cb(); } }; setTimeout(go, 15000);
+    const t = setInterval(() => { const A = window.NWCC_APP; if (A && A.map && !document.getElementById('loading')) { clearInterval(t); A.map.once('idle', () => setTimeout(go, 1500)); A.map.triggerRepaint(); } }, 250); };
+  window.addEventListener('load', () => afterFirstLoad(() => {
     navigator.serviceWorker.register('sw.js', { scope: './' }).then(reg => {
       // A new version finished installing while an old one controls the page: offer a reload.
       reg.addEventListener('updatefound', () => {
@@ -36,7 +39,7 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
     }).catch(err => console.warn('Service worker registration failed', err));
     let reloading = false;
     navigator.serviceWorker.addEventListener('controllerchange', () => { if (reloading) return; reloading = true; location.reload(); });
-  });
+  }));
 } else if (location.protocol === 'http:' && !standalone) {
   console.info('Service worker needs https:// or localhost; the map still works but is not installable here.');
 }
@@ -83,7 +86,7 @@ tgl.addEventListener('click', () => setCollapsed(!hud.classList.contains('collap
 const P = new URLSearchParams(location.search);
 if (window.innerWidth < 720 && P.get('hud') !== '1') setCollapsed(true);
 // Picking a landmark or chip on a phone collapses the HUD again so the map and card have room.
-document.getElementById('lm').addEventListener('click', e => { if (e.target.tagName === 'BUTTON' && window.innerWidth < 720) setCollapsed(true); });
+document.getElementById('lm')?.addEventListener('click', e => { if (e.target.tagName === 'BUTTON' && window.innerWidth < 720) setCollapsed(true); });
 // Dismiss the on-screen keyboard after choosing a search result.
 document.getElementById('results').addEventListener('click', () => { const q = $('q'); if (window.innerWidth < 720) q.blur(); });
 })();

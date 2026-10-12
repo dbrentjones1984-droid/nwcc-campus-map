@@ -211,6 +211,7 @@ button,input{font-family:inherit}
 @media(min-width:720px){#loading .splash-icon{width:160px;height:160px;border-radius:36px}}
 @media(prefers-reduced-motion:reduce){#loading .splash-icon,#loading .splash-msg,#loading .splash-bar::after{animation:none}}
 /* Three.js failed: overlay collapses back to the old bottom pill with the fallback message */
+#loading #loadingMsg:empty{display:none} /* NO-LOAD-TEXT (2026-10-12) */
 #loading.fallback{inset:auto auto 24px 50%;transform:translateX(-50%);z-index:2;display:block;padding:8px 14px;border-radius:var(--r-pill);
   background:var(--panel);font-size:12px;bottom:calc(24px + env(safe-area-inset-bottom))}
 #loading.fallback .splash-icon,#loading.fallback .splash-bar{display:none}
@@ -352,9 +353,9 @@ button{touch-action:manipulation;-webkit-user-select:none;user-select:none}
   <button id="tLabels" title="Toggle labels" aria-label="Toggle labels">Aa</button>
 </div>
 <div id="card" role="dialog" aria-live="polite"></div>
-<div id="loading" role="status" aria-live="polite">
+<div id="loading" role="status" aria-live="polite" aria-label="Loading campus map">
   <img class="splash-icon" src="icons/icon-512.png" alt="NWCC Campus Map" width="160" height="160" decoding="async"/>
-  <div class="splash-msg"><span id="loadingMsg">Loading 3D exteriors…</span><div class="splash-bar" aria-hidden="true"></div></div>
+  <div class="splash-msg"><span id="loadingMsg"></span><div class="splash-bar" aria-hidden="true"></div></div>
 </div>
 <div id="toast" class="glass" role="status" aria-live="polite"></div>
 <pre id="selftest"></pre>

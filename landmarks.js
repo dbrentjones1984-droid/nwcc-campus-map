@@ -1007,7 +1007,165 @@ window.NWCCLandmarks = function (THREE, toEN, onTexture) {
     return g;
   }
   // <<< LAFAYETTE-20 build
-  root.add(buildSign()); root.add(buildPlaza()); if (L.nwdr) root.add(buildNwdr()); if (L.baseball) root.add(buildBaseball()); if (L.football) root.add(buildFootball()); if (L.softball) root.add(buildSoftball()); if (L.practice) root.add(buildPractice()); if (L.lamar) root.add(buildLamar()); if (L.rab31) root.add(buildRab31()); if (L.benton) root.add(buildBenton()); if (L.heindl) root.add(buildHeindl()); if (L.lafayette) root.add(buildLafayette());
+  // YALOBUSHA-51 build >>>
+  // #51 Yalobusha Hall (2-story red brick, white cornice + window surrounds, gray hip roof with three black half-round louvered vents on
+  // the NW slope, NW entry with 2 white columns + balustrade balcony, SE portico with 4 columns + balustrade top, low brick lattice screen
+  // walls, chain-link equipment yard, flag pole) and #58 Strategic Communications (1-story brick, hip roof with flat silver deck +
+  // cupola). Each building is drawn in its own rotated frame (x = along the long side, -z = toward the "v" side). NO ground shadows.
+  function buildYalobusha() {
+    const B = L.yalobusha, root_ = new THREE.Group(); root_.name = 'yalobusha-hall';
+    const EN = c => toEN(c[0], c[1]);
+    const M = (k, o) => lam('yb-' + k, Object.assign({ side: THREE.FrontSide }, o));
+    const hid = new THREE.MeshBasicMaterial({ visible: false });
+    const cvs = (w, h) => { const c = document.createElement('canvas'); c.width = Math.max(4, Math.round(w)); c.height = Math.max(4, Math.round(h)); return c; };
+    const texOf = (c, rep) => { const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; if (rep) t.wrapS = t.wrapT = THREE.RepeatWrapping; return t; };
+    const white = M('white', { color: '#f5f3ee', emissive: '#3b3a36' }), conc = M('conc', { color: '#d9d5ca' }), dark = M('dark', { color: '#202327' });
+    const brickM = M('brickwall', { color: '#a9573f', emissive: '#1c120e' });
+    const PX = 20;
+    function frame(F) {   // F: {o, u, v} lng/lat corners -> group in the building frame
+      const o = EN(F.o), a = EN(F.u), b = EN(F.v), L_ = Math.hypot(a[0] - o[0], a[1] - o[1]), D_ = Math.hypot(b[0] - o[0], b[1] - o[1]);
+      const th = Math.atan2(a[1] - o[1], a[0] - o[0]), g = new THREE.Group(); g.rotation.y = th;
+      const cx = o[0] + (a[0] - o[0]) / 2 + (b[0] - o[0]) / 2, cy = o[1] + (a[1] - o[1]) / 2 + (b[1] - o[1]) / 2; g.position.set(cx, 0, -cy);
+      return { g, L: L_, D: D_ };
+    }
+    function facade(key, len, H, o) {
+      const c = cvs(len * PX, H * PX), x = c.getContext('2d'), Y = h => (H - h) * PX, U = u => u * PX;
+      let s = 7 + key.length * 17; const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+      x.fillStyle = '#a9563f'; x.fillRect(0, 0, c.width, c.height);
+      for (let r = 0, hh = 0; hh < H; r++, hh += 0.3) for (let u = (r % 2) * 0.3; u < len; u += 0.6) {
+        const t = rnd(); x.fillStyle = t < 0.3 ? '#9f4f3a' : t < 0.6 ? '#b15d46' : t < 0.82 ? '#a95842' : '#934733'; x.fillRect(U(u), Y(hh + 0.3) + 1, 0.58 * PX, 0.3 * PX - 1); }
+      x.fillStyle = 'rgba(80,45,32,0.18)'; for (let hh = 0; hh < H; hh += 0.3) x.fillRect(0, Y(hh), c.width, 1);
+      x.fillStyle = '#8c4532'; x.fillRect(0, Y(0.45), c.width, 0.45 * PX);                         // darker water table
+      const CB = o.cornice || 0.6; x.fillStyle = '#f5f3ee'; x.fillRect(0, 0, c.width, CB * PX);    // white cornice / frieze
+      x.fillStyle = 'rgba(0,0,0,0.13)'; x.fillRect(0, CB * PX - 2, c.width, 2); x.fillRect(0, 0.22 * PX, c.width, 1);
+      if (o.band) { x.fillStyle = '#e9e4d8'; x.fillRect(0, Y(o.band + 0.18), c.width, 0.18 * PX); }
+      for (const w of (o.win || [])) {   // white surround, two sashes with a white centre pier, soldier-course lintel
+        const ww = w.w || 1.9, hh = w.h || 1.8, u0 = w.u - ww / 2;
+        x.fillStyle = '#8f4734'; x.fillRect(U(u0 - 0.15), Y(w.z + hh + 0.38), (ww + 0.3) * PX, 0.3 * PX);
+        x.fillStyle = '#f4f2ec'; x.fillRect(U(u0 - 0.1), Y(w.z + hh + 0.08), (ww + 0.2) * PX, (hh + 0.16) * PX);
+        const gr = x.createLinearGradient(0, Y(w.z + hh), 0, Y(w.z)); gr.addColorStop(0, '#6f8494'); gr.addColorStop(1, '#2d3944'); x.fillStyle = gr;
+        x.fillRect(U(u0), Y(w.z + hh), ww * PX, hh * PX);
+        x.fillStyle = '#f4f2ec'; const pier = ww > 1.3 ? 0.22 : 0.06; x.fillRect(U(w.u - pier / 2), Y(w.z + hh), pier * PX, hh * PX);
+        x.fillRect(U(u0), Y(w.z + hh * 0.52), ww * PX, 2);
+        if (ww > 1.3) { x.fillStyle = '#f4f2ec'; x.fillRect(U(w.u - 0.18), Y(w.z + hh + 0.4), 0.36 * PX, 0.34 * PX); }   // keystone
+      }
+      for (const d of (o.door || [])) {
+        x.fillStyle = '#f4f2ec'; x.fillRect(U(d.u - d.w / 2 - 0.15), Y(d.h + 0.15), (d.w + 0.3) * PX, (d.h + 0.15) * PX);
+        x.fillStyle = '#2c353d'; x.fillRect(U(d.u - d.w / 2), Y(d.h), d.w * PX, d.h * PX);
+        x.fillStyle = '#e8e6df'; x.fillRect(U(d.u) - 2, Y(d.h), 4, d.h * PX); x.fillRect(U(d.u - d.w / 2), Y(d.h - 0.55), d.w * PX, 3);
+      }
+      for (const u of (o.down || [])) { x.fillStyle = '#f1efe8'; x.fillRect(U(u) - 2, CB * PX, 4, (H - CB) * PX); }
+      return M('fac-' + key, { map: texOf(c), emissive: '#1c1410' });
+    }
+    const shc = cvs(64, 64), shx = shc.getContext('2d'); shx.fillStyle = '#6d7175'; shx.fillRect(0, 0, 64, 64);
+    for (let r = 0; r < 4; r++) { shx.fillStyle = 'rgba(30,32,35,0.35)'; shx.fillRect(0, r * 16 + 14, 64, 2); for (let k = 0; k < 4; k++) { shx.fillStyle = (r + k) % 3 ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.07)'; shx.fillRect(k * 16 + (r % 2) * 8, r * 16, 15, 14); } }
+    const roofM = lam('yb-roof', { map: texOf(shc, true), side: THREE.DoubleSide, emissive: '#111214' });
+    const silver = M('silver', { color: '#c9ced3', emissive: '#3a3d40', side: THREE.DoubleSide });
+    function hip(x0, x1, z0, z1, y, pitch, mat) {   // same construction as buildLafayette(); uv in metres
+      const t = Math.tan(pitch * Math.PI / 180), P = [], UV = [], wx = x1 - x0, dz = z1 - z0, alongZ = dz >= wx, h = (alongZ ? wx : dz) / 2, r = y + h * t;
+      const cx_ = (x0 + x1) / 2, cz_ = (z0 + z1) / 2, sl = 1 / Math.cos(Math.atan(t));
+      const tri = (a, b, c, uv) => { P.push(...a, ...b, ...c); UV.push(...uv); };
+      if (alongZ) { const ra = [cx_, r, z0 + h], rb = [cx_, r, z1 - h];
+        tri([x1, y, z0], [x1, y, z1], rb, [z0, 0, z1, 0, z1 - h, h * sl]); tri([x1, y, z0], rb, ra, [z0, 0, z1 - h, h * sl, z0 + h, h * sl]);
+        tri([x0, y, z1], [x0, y, z0], ra, [z1, 0, z0, 0, z0 + h, h * sl]); tri([x0, y, z1], ra, rb, [z1, 0, z0 + h, h * sl, z1 - h, h * sl]);
+        tri([x0, y, z0], [x1, y, z0], ra, [x0, 0, x1, 0, cx_, h * sl]); tri([x1, y, z1], [x0, y, z1], rb, [x1, 0, x0, 0, cx_, h * sl]);
+      } else { const ra = [x0 + h, r, cz_], rb = [x1 - h, r, cz_];
+        tri([x0, y, z1], [x1, y, z1], rb, [x0, 0, x1, 0, x1 - h, h * sl]); tri([x0, y, z1], rb, ra, [x0, 0, x1 - h, h * sl, x0 + h, h * sl]);
+        tri([x1, y, z0], [x0, y, z0], ra, [x1, 0, x0, 0, x0 + h, h * sl]); tri([x1, y, z0], ra, rb, [x1, 0, x0 + h, h * sl, x1 - h, h * sl]);
+        tri([x0, y, z0], [x0, y, z1], ra, [z0, 0, z1, 0, cz_, h * sl]); tri([x1, y, z1], [x1, y, z0], rb, [z1, 0, z0, 0, cz_, h * sl]); }
+      const ge = new THREE.BufferGeometry(); ge.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); ge.setAttribute('uv', new THREE.Float32BufferAttribute(UV, 2)); ge.computeVertexNormals();
+      return { mesh: new THREE.Mesh(ge, mat || roofM), ridge: r };
+    }
+    // balustrade: white rail + balusters on a transparent canvas (one plane, double sided)
+    const bc = cvs(64, 48), bx_ = bc.getContext('2d'); bx_.fillStyle = '#f5f3ee'; bx_.fillRect(0, 0, 64, 7); bx_.fillRect(0, 41, 64, 7);
+    for (let k = 0; k < 4; k++) { bx_.beginPath(); bx_.ellipse(k * 16 + 8, 24, 3.2, 15, 0, 0, Math.PI * 2); bx_.fill(); }
+    const balT = texOf(bc, true);
+    function bal(len, ht, x, y, z, ry) {
+      const t = balT.clone(); t.needsUpdate = true; t.repeat.set(Math.max(1, Math.round(len / 0.75)), 1);
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(len, ht), new THREE.MeshLambertMaterial({ map: t, transparent: true, alphaTest: 0.5, side: THREE.DoubleSide, emissive: '#3b3a36' }));
+      m.position.set(x, y + ht / 2, z); m.rotation.y = ry || 0; return m;
+    }
+    function label(txt, w, h, x, y, z, ry) {
+      const c = cvs(w * 80, h * 80), x2 = c.getContext('2d'); x2.fillStyle = '#f5f3ee'; x2.fillRect(0, 0, c.width, c.height);
+      x2.fillStyle = '#3a3f45'; x2.textAlign = 'center'; x2.textBaseline = 'middle'; x2.font = 'bold ' + Math.round(h * 80 * 0.55) + 'px "DejaVu Serif", Georgia, serif';
+      x2.fillText(txt.split('').join(String.fromCharCode(8202)), c.width / 2, c.height / 2 + 1);
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshLambertMaterial({ map: texOf(c), emissive: '#3b3a36' })); m.position.set(x, y, z); m.rotation.y = ry || 0; return m;
+    }
+    const col = (x, z, h) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.24, h, 14), white); m.position.set(x, h / 2, z); return m; };
+    // ====================================================== #51 Yalobusha Hall
+    { const F = frame(B.hall), g = F.g, Ln = F.L, Dn = F.D, H = B.eave, hz = Dn / 2, hx = Ln / 2;
+      const up = { z: 4.5, h: 1.75 }, lo = { z: 0.95, h: 1.85 };
+      const two = us => us.flatMap(u => [{ u, z: lo.z, h: lo.h }, { u, z: up.z, h: up.h }]);
+      const eU = Ln / 2 - B.entry_x;               // NW face texture runs from the NE end
+      const nw = facade('nw', Ln, H, { band: 3.75, win: two([3.4, 10.6, 17.4, 30.6]).concat([{ u: eU, z: up.z + 0.1, h: 1.6, w: 1.3 }]), door: [{ u: eU, w: 1.9, h: 2.7 }], down: [0.3, 14.0, 21.0, Ln - 0.3] });
+      const se = facade('se', Ln, H, { band: 3.75, win: two([2.6, 6.6, 10.6, 13.9, 20.5, 23.8, 27.8, 31.8]).concat([{ u: Ln / 2, z: up.z, h: up.h }]), door: [{ u: Ln / 2, w: 2.0, h: 2.7 }], down: [0.3, Ln - 0.3] });
+      const ne = facade('ne', Dn, H, { band: 3.75, win: two([4.2, 10.0, 16.7, 22.5]), down: [0.3, Dn - 0.3] });
+      const sw = facade('sw', Dn, H, { band: 3.75, win: two([4.2, 10.0, 16.7, 22.5]), door: [{ u: 13.4, w: 1.1, h: 2.4 }], down: [0.3, Dn - 0.3] });
+      const wb = new THREE.Mesh(new THREE.BoxGeometry(Ln, H, Dn), [ne, sw, hid, hid, se, nw]); wb.position.set(0, H / 2, 0); g.add(wb);
+      const ov = 0.55; g.add(box(Ln + 2 * ov, 0.2, Dn + 2 * ov, 0, H - 0.18, 0, white));
+      const rf = hip(-hx - ov, hx + ov, -hz - ov, hz + ov, H + 0.02, B.pitch); g.add(rf.mesh);
+      g.add(box(0.5, 1.6, 0.5, 6.0, rf.ridge - 1.0, 2.2, M('chim', { color: '#9c4f3b' })));
+      // three black half-round louvered vents on the NW slope
+      const lc = cvs(32, 32), lx = lc.getContext('2d'); lx.fillStyle = '#1b1e22'; lx.fillRect(0, 0, 32, 32); lx.fillStyle = '#3a3f45'; for (let k = 0; k < 32; k += 8) lx.fillRect(0, k, 32, 3);
+      const louT = texOf(lc, true); louT.repeat.set(4, 4);
+      const louM = new THREE.MeshLambertMaterial({ map: louT, emissive: '#0c0d0f' });
+      const sh = new THREE.Shape(); const vr = 0.85; sh.moveTo(-vr, 0); sh.lineTo(vr, 0); sh.lineTo(vr, 1.7); sh.absarc(0, 1.7, vr, 0, Math.PI, false); sh.lineTo(-vr, 0);
+      const vg = new THREE.ExtrudeGeometry(sh, { depth: 2.6, bevelEnabled: false, curveSegments: 12 });
+      for (const u of B.vents) { const v = new THREE.Mesh(vg, [louM, dark]); v.position.set(u, H - 0.25, -(hz - 0.35)); g.add(v); }
+      // NW entry: 2 white columns, flat slab with lettering, balustrade balcony on top
+      { const ex = B.entry_x, ez = -hz, d = 1.9, w = 3.4, hc = 3.45;
+        for (const sx of [-1.35, 1.35]) g.add(col(ex + sx, ez - d + 0.3, hc));
+        g.add(box(w + 0.3, 0.55, d + 0.15, ex, hc, ez - d / 2 - 0.05, white));
+        g.add(label('YALOBUSHA HALL', 2.4, 0.3, ex, hc + 0.28, ez - d - 0.14, Math.PI));
+        g.add(bal(w, 0.95, ex, hc + 0.55, ez - d - 0.05, 0)); g.add(bal(d, 0.95, ex - w / 2 + 0.05, hc + 0.55, ez - d / 2, Math.PI / 2)); g.add(bal(d, 0.95, ex + w / 2 - 0.05, hc + 0.55, ez - d / 2, Math.PI / 2));
+        g.add(box(w, 0.15, d + 0.6, ex, 0, ez - d / 2 - 0.3, conc)); }
+      // SE portico: 4 columns, entablature with lettering, balustrade top; white rails along the terrace either side
+      { const ez = hz, d = 2.9, w = 6.4, hc = 3.7;
+        for (const sx of [-2.6, -0.95, 0.95, 2.6]) g.add(col(sx, ez + d - 0.35, hc));
+        g.add(box(w + 0.4, 0.7, d + 0.2, 0, hc, ez + d / 2 - 0.05, white));
+        g.add(label('YALOBUSHA HALL', 3.2, 0.36, 0, hc + 0.36, ez + d + 0.06, 0));
+        g.add(bal(w + 0.4, 0.9, 0, hc + 0.7, ez + d + 0.02, 0)); g.add(bal(d, 0.9, -(w / 2 + 0.18), hc + 0.7, ez + d / 2, Math.PI / 2)); g.add(bal(d, 0.9, w / 2 + 0.18, hc + 0.7, ez + d / 2, Math.PI / 2));
+        g.add(box(w, 0.18, d + 0.4, 0, 0, ez + d / 2 + 0.2, conc));
+        for (const s of [-1, 1]) { g.add(bal(5.4, 1.0, s * (w / 2 + 2.9), 0.0, ez + 1.6, 0)); g.add(bal(1.6, 1.0, s * (w / 2 + 0.2), 0.0, ez + 0.8, Math.PI / 2)); } }
+      // low brick lattice screen walls on the NW side
+      { const sc = cvs(80, 30), sx2 = sc.getContext('2d'); sx2.fillStyle = '#a9563f'; sx2.fillRect(0, 0, 80, 30); sx2.fillStyle = '#8f4734'; sx2.fillRect(0, 0, 80, 3);
+        sx2.fillStyle = '#3a2219'; for (let r = 0; r < 4; r++) for (let k = 0; k < 9; k++) if (k % 9 < 8) sx2.fillRect(8 + k * 4 + (r % 2) * 2, 8 + r * 4, 2, 2);
+        for (let r = 0; r < 4; r++) for (let k = 0; k < 8; k++) sx2.fillRect(46 + k * 4 + (r % 2) * 2, 8 + r * 4, 2, 2);
+        const scT = texOf(sc, true);
+        for (const [u0, u1] of B.screens) { const len = u1 - u0, t = scT.clone(); t.needsUpdate = true; t.repeat.set(Math.max(1, len / 4), 1);
+          const mm = new THREE.MeshLambertMaterial({ map: t, emissive: '#1c120e' });
+          const m = new THREE.Mesh(new THREE.BoxGeometry(len, 1.5, 0.3), [brickM, brickM, M('cap', { color: '#8f4734' }), hid, mm, mm]); m.position.set((u0 + u1) / 2, 0.75, -(hz + 1.6)); g.add(m); } }
+      // chain-link equipment yard on the SE side (east end) + flag pole
+      { const [u0, u1] = B.yard_u, d = 4.2, fm = new THREE.MeshLambertMaterial({ color: '#5d6166', transparent: true, opacity: 0.45, side: THREE.DoubleSide, depthWrite: false });
+        const fen = (len, x, z, ry) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(len, 1.8), fm); m.position.set(x, 0.9, z); m.rotation.y = ry; return m; };
+        g.add(fen(u1 - u0, (u0 + u1) / 2, hz + d, 0)); g.add(fen(d, u0, hz + d / 2, Math.PI / 2)); g.add(fen(d, u1, hz + d / 2, Math.PI / 2));
+        g.add(box(u1 - u0, 0.12, d, (u0 + u1) / 2, 0, hz + d / 2, conc));
+        g.add(box(1.6, 1.3, 1.2, u0 + 1.4, 0, hz + 2.2, M('xfmr', { color: '#5d7a5c' }))); g.add(box(1.8, 1.1, 1.3, u0 + 3.6, 0, hz + 2.2, M('unit', { color: '#a9adb1' }))); }
+      { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.08, 9.5, 8), M('pole', { color: '#d8dadc' })); p.position.set(-9.5, 4.75, hz + 6.5); g.add(p);
+        g.add(box(1.5, 0.9, 0.03, -9.5 + 0.78, 8.4, hz + 6.5, M('flag', { color: '#b8323a', emissive: '#2a0b0d', side: THREE.DoubleSide }))); }
+      root_.add(g); }
+    // ====================================================== #58 Strategic Communications
+    { const F = frame(B.sc), g = F.g, Ln = F.L, Dn = F.D, H = B.sc_eave, hx = Ln / 2, hz = Dn / 2, nu = B.sc_notch_u, nv = B.sc_notch_v;
+      // main body: x in [-hx, hx], local z: v=0 -> +hz, v=Dn -> -hz ; wing (notch excluded) spans x >= -hx + nu at v in [nv, Dn]
+      const zv = v => hz - v, wins = len => { const o = []; for (let u = 2.2; u < len - 1.5; u += 3.6) o.push({ u, z: 0.9, h: 1.7, w: 1.6 }); return o; };
+      const mk = (x0, x1, v0, v1, faces, k) => { const w = x1 - x0, d = v1 - v0;
+        const fm = (s, len) => facade('sc' + k + s, len, H, { cornice: 0.45, win: wins(len), down: [0.25, len - 0.25], door: s === 'x0' ? [{ u: len / 2, w: 1.2, h: 2.4 }] : [] });
+        const m = new THREE.Mesh(new THREE.BoxGeometry(w, H, d), [faces.x1 ? fm('x1', d) : hid, faces.x0 ? fm('x0', d) : hid, hid, hid, faces.v0 ? fm('v0', w) : hid, faces.v1 ? fm('v1', w) : hid]);
+        m.position.set((x0 + x1) / 2, H / 2, (zv(v0) + zv(v1)) / 2); g.add(m); return { x0, x1, z0: zv(v1), z1: zv(v0) }; };
+      const a = mk(-hx, hx, 0, nv, { x0: 1, x1: 1, v0: 1, v1: 1 }, 'a'), b = mk(-hx + nu, hx, nv, Dn, { x0: 1, x1: 1, v1: 1 }, 'b');
+      const ov = 0.5;
+      for (const r of [a, b]) g.add(box(r.x1 - r.x0 + 2 * ov, 0.18, r.z1 - r.z0 + 2 * ov, (r.x0 + r.x1) / 2, H - 0.16, (r.z0 + r.z1) / 2, white));
+      const ra = hip(a.x0 - ov, a.x1 + ov, a.z0 - ov, a.z1 + ov, H + 0.02, B.sc_pitch); g.add(ra.mesh);
+      g.add(hip(b.x0 - ov, b.x1 + ov, b.z0 - ov, b.z1 + 5, H + 0.02, B.sc_pitch).mesh);
+      const dw = 7.5, dd = 2.0 * 0.7 / Math.tan(B.sc_pitch * Math.PI / 180) + 0.6;     // flat silver deck that truncates the ridge
+      g.add(box(dw, 0.75, dd, 1.5, ra.ridge - 0.7, (a.z0 + a.z1) / 2, silver));
+      g.add(box(1.5, 1.1, 1.5, 1.5, ra.ridge + 0.05, (a.z0 + a.z1) / 2, white));
+      const cap = new THREE.Mesh(new THREE.ConeGeometry(1.2, 0.9, 4), roofM); cap.rotation.y = Math.PI / 4; cap.position.set(1.5, ra.ridge + 1.6, (a.z0 + a.z1) / 2); g.add(cap);
+      root_.add(g); }
+    return root_;
+  }
+  // <<< YALOBUSHA-51 build
+  root.add(buildSign()); root.add(buildPlaza()); if (L.nwdr) root.add(buildNwdr()); if (L.baseball) root.add(buildBaseball()); if (L.football) root.add(buildFootball()); if (L.softball) root.add(buildSoftball()); if (L.practice) root.add(buildPractice()); if (L.lamar) root.add(buildLamar()); if (L.rab31) root.add(buildRab31()); if (L.benton) root.add(buildBenton()); if (L.heindl) root.add(buildHeindl()); if (L.lafayette) root.add(buildLafayette()); if (L.yalobusha) root.add(buildYalobusha());
   root.traverse(o => { o.frustumCulled = false; });
   return root;
 };
@@ -1052,3 +1210,7 @@ window.NWCC_LANDMARKS.heindl = {"parts":{"ft":{"sw":[-89.9745042,34.6272222],"ne
 // #20 Lafayette Humanities Building (2026-10-12). Coordinates [lng,lat]; heights in m.
 window.NWCC_LANDMARKS.lafayette = {"main":[[-89.9691049,34.6262255],[-89.9687927,34.6264987]],"nbay":[[-89.9690165,34.6264987],[-89.9689313,34.6265629]],"sbay":[[-89.9690045,34.6261604],[-89.9689215,34.6262255]],"eave":12.4,"fascia":1.2,"pitch":18.0,"yard":[[-89.9687927,34.6263702],[-89.968713,34.6263702],[-89.968713,34.6262436],[-89.9687927,34.6262436],[-89.9687927,34.6263702]],"units":[[-89.9687523,34.6263341],[-89.9687523,34.6262798]]};
 /* <<< LAFAYETTE-20 data */
+/* YALOBUSHA-51 data >>> */
+// #51 Yalobusha Hall + #58 Strategic Communications (2026-10-12). Coordinates [lng,lat]; local frame metres.
+window.NWCC_LANDMARKS.yalobusha = {"hall":{"o":[-89.9695099,34.6261559],"u":[-89.9691661,34.6262798],"v":[-89.9696278,34.6263784]},"eave":7.4,"pitch":18.0,"entry_x":-7.0,"vents":[-7.0,-0.5,6.0],"screens":[[-5.6,0.6],[-16.4,-9.6]],"yard_u":[10.5,15.8],"sc":{"o":[-89.9697534,34.6260356],"u":[-89.9696169,34.6261966],"v":[-89.9698677,34.6261021]},"sc_eave":4.2,"sc_pitch":28.0,"sc_notch_u":7.4,"sc_notch_v":9.8};
+/* <<< YALOBUSHA-51 data */

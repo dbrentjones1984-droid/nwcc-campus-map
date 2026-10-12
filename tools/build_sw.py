@@ -1,12 +1,12 @@
 """Fill sw.js PRECACHE + VERSION from the files on disk. Run after editing any app file: python3 tools/build_sw.py"""
 import hashlib, json, os, re
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-FILES = ['./', 'index.html', 'app.js', 'pwa.js', 'exteriors.js', 'landmarks.js', 'data.js', 'basemap.js', 'basemap.geojson', 'surround.geojson',
-         'buildings_3d.geojson', 'boundary.json', 'manifest.webmanifest', 'trees.js',
+FILES = ['./', 'index.html', 'app.js', 'pwa.js', 'exteriors.js', 'landmarks.js', 'data.js', 'basemap.js', 'surround.geojson',
+         'manifest.webmanifest', 'trees.js',   # FINAL-PHASE: build inputs (.geojson/boundary.json) not precached
          'vendor/maplibre-gl.js', 'vendor/maplibre-gl.css', 'vendor/three.module.min.js',
          'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-192.png', 'icons/icon-maskable-512.png',
          'icons/apple-touch-icon.png', 'icons/favicon-32.png', 'assets/logo.png',
-         'assets/landmark-sign-panel.png', 'assets/landmark-seal-navy.png', 'assets/landmark-medallion.png', 'assets/landmark-herringbone.jpg', 'assets/football-field.png', 'assets/compass-rose.webp']
+         'assets/landmark-sign-panel.webp', 'assets/landmark-seal-navy.webp', 'assets/landmark-medallion.webp', 'assets/landmark-herringbone.webp', 'assets/football-field.webp', 'assets/compass-rose.webp']
 # CARD-PHOTO: precache card banner photos (-480 / -800); lightbox -1600 images are runtime-cached
 _pd = os.path.join(ROOT, 'assets', 'photos')
 if os.path.isdir(_pd):

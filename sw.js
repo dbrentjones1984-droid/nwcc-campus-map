@@ -3,7 +3,7 @@
    - Satellite tiles (Esri World Imagery): network only (never stored by the SW; needs internet).
    - CDN fallbacks (jsDelivr / unpkg / protomaps glyphs, only used if a local copy fails): network-first, cached copy offline.
    VERSION and PRECACHE are rewritten by tools/build_sw.py; bump them whenever app files change. */
-const VERSION = '75121b36b0';
+const VERSION = 'b908582ed1';
 const SHELL = 'nwcc-shell-' + VERSION;
 const RUNTIME = 'nwcc-runtime-' + VERSION;
 const PRECACHE = [
@@ -15,10 +15,7 @@ const PRECACHE = [
   "landmarks.js",
   "data.js",
   "basemap.js",
-  "basemap.geojson",
   "surround.geojson",
-  "buildings_3d.geojson",
-  "boundary.json",
   "manifest.webmanifest",
   "trees.js",
   "vendor/maplibre-gl.js",
@@ -31,11 +28,11 @@ const PRECACHE = [
   "icons/apple-touch-icon.png",
   "icons/favicon-32.png",
   "assets/logo.png",
-  "assets/landmark-sign-panel.png",
-  "assets/landmark-seal-navy.png",
-  "assets/landmark-medallion.png",
-  "assets/landmark-herringbone.jpg",
-  "assets/football-field.png",
+  "assets/landmark-sign-panel.webp",
+  "assets/landmark-seal-navy.webp",
+  "assets/landmark-medallion.webp",
+  "assets/landmark-herringbone.webp",
+  "assets/football-field.webp",
   "assets/compass-rose.webp",
   "assets/photos/heindl-day-480.webp",
   "assets/photos/heindl-day-800.webp",

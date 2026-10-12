@@ -57,11 +57,11 @@ window.NWCCLandmarks = function (THREE, toEN, onTexture) {
       g.add(box(0.62, 0.1, 0.62, x, yP + 0.76 + HS, 0, WHITE2));
     }
     const yTop = yP + 0.86 + HS;   // top of the capitals = underside of the entablature
-    // sign panel between the columns (upper part), lettered on both faces (assets/landmark-sign-panel.png)
+    // sign panel between the columns (upper part), lettered on both faces (assets/landmark-sign-panel.webp)
     const PW = 2 * CX - 0.3, PH = 0.98, PD = 0.3, yPn = yTop - PH;
     g.add(box(PW, PH, PD, 0, yPn, 0, WHITE));
     g.add(box(PW + 0.04, 0.06, PD + 0.08, 0, yPn - 0.06, 0, WHITE2));   // sill
-    const panelTex = tex('assets/landmark-sign-panel.png'); const pm = new THREE.MeshLambertMaterial({ map: panelTex, emissive: '#3c3c3a' });
+    const panelTex = tex('assets/landmark-sign-panel.webp'); const pm = new THREE.MeshLambertMaterial({ map: panelTex, emissive: '#3c3c3a' });
     for (const sz of [1, -1]) { const p = new THREE.Mesh(new THREE.PlaneGeometry(PW - 0.12, PH - 0.1), pm); p.position.set(0, yPn + PH / 2, sz * (PD / 2 + 0.004)); if (sz < 0) p.rotation.y = Math.PI; g.add(p); }
     // entablature: architrave, frieze, cornice
     g.add(box(2 * CX + 0.66, 0.16, 0.66, 0, yTop, 0, WHITE));
@@ -78,7 +78,7 @@ window.NWCCLandmarks = function (THREE, toEN, onTexture) {
       const rc = new THREE.Mesh(new THREE.BoxGeometry(rl, 0.13, 0.76), WHITE2);
       rc.position.set(sx * BW / 4 + sx * 0.03, yT + PHt / 2 + 0.06, 0); rc.rotation.z = -sx * slope; g.add(rc);
     }
-    const sealTex = tex('assets/landmark-seal-navy.png');
+    const sealTex = tex('assets/landmark-seal-navy.webp');
     const sm = new THREE.MeshLambertMaterial({ map: sealTex, transparent: true, alphaTest: 0.4, emissive: '#151515' });
     for (const sz of [1, -1]) { const d = new THREE.Mesh(new THREE.CircleGeometry(0.33, 40), sm); d.position.set(0, yT + 0.42, sz * (TD / 2 + 0.006)); if (sz < 0) d.rotation.y = Math.PI; g.add(d); }
     g.userData.height = yT + PHt + 0.06;
@@ -125,10 +125,10 @@ window.NWCCLandmarks = function (THREE, toEN, onTexture) {
     const [e, n] = toEN(Pz.lng, Pz.lat);
     const conc = lam('plaza-conc', { color: '#e3dfd3' });
     const ring = new THREE.Mesh(new THREE.RingGeometry(Pz.r - 0.02, Pz.r + Pz.band, 72), conc); ring.rotation.x = -Math.PI / 2; ring.position.y = 0.05; g.add(ring);
-    const ht = tex('assets/landmark-herringbone.jpg');   // texture spans the 8.0 m brick field (make_textures.py D = 8.0)
+    const ht = tex('assets/landmark-herringbone.webp');   // texture spans the 8.0 m brick field (make_textures.py D = 8.0)
     const disc = new THREE.Mesh(new THREE.CircleGeometry(Pz.r, 72), new THREE.MeshLambertMaterial({ map: ht }));
     disc.rotation.x = -Math.PI / 2; disc.position.y = 0.055; g.add(disc);
-    const md = new THREE.Mesh(new THREE.CircleGeometry(Pz.medallion, 64), new THREE.MeshLambertMaterial({ map: tex('assets/landmark-medallion.png'), transparent: true, alphaTest: 0.3 }));
+    const md = new THREE.Mesh(new THREE.CircleGeometry(Pz.medallion, 64), new THREE.MeshLambertMaterial({ map: tex('assets/landmark-medallion.webp'), transparent: true, alphaTest: 0.3 }));
     md.rotation.x = -Math.PI / 2; md.position.y = 0.07; g.add(md);
     // bench (black metal, slatted) at the plaza edge, facing the medallion
     if (Pz.bench != null) {

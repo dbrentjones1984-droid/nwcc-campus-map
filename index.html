@@ -325,6 +325,7 @@ button{touch-action:manipulation;-webkit-user-select:none;user-select:none}
 #lightbox .lbnav.prev{left:calc(12px + env(safe-area-inset-left))} #lightbox .lbnav.next{right:calc(12px + env(safe-area-inset-right))}
 @media(max-width:719px){ #lightbox .lbnav{top:auto;bottom:calc(14px + env(safe-area-inset-bottom));transform:none} }
 /* <<< CARD-PHOTO2 */
+@media (hover:none) and (pointer:coarse){:root{--blur:none}*{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}}   /* FINAL-PHASE: no frosted-glass blur on touch devices */
 </style>
 </head>
 <body>

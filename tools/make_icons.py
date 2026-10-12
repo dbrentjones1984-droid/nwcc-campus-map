@@ -1,4 +1,4 @@
-"""Generate the PWA icons: NWCC athletic block 'N' + NORTHWEST banner (assets/logo-n.png) on NWCC navy #222C62.
+"""Generate the PWA icons: NWCC athletic block 'N' + NORTHWEST banner (source-assets/logo-n.png) on NWCC navy #222C62.
 Treatment: the logo's own outer outline is navy (~#222D65), which disappears on the navy tile, so a thin white
 outer stroke (sticker style, ~2% of logo width) is added around the silhouette.
 Run: python3 tools/make_icons.py
@@ -12,7 +12,7 @@ N = 1024
 NAVY = (34, 44, 98)
 
 def logo_with_stroke(stroke_frac=0.02):
-    im = Image.open(os.path.join(ROOT, 'assets', 'logo-n.png')).convert('RGBA')
+    im = Image.open(os.path.join(ROOT, 'source-assets', 'logo-n.png')).convert('RGBA')
     lg = im.crop(im.getchannel('A').point(lambda v: 255 if v > 10 else 0).getbbox())
     w = max(2, int(lg.width * stroke_frac)); pad = w * 2
     L = Image.new('RGBA', (lg.width + 2 * pad, lg.height + 2 * pad), (0, 0, 0, 0)); L.paste(lg, (pad, pad))

@@ -145,7 +145,7 @@ function basemapLayers(sat) {
       'text-field': ['match', ['get', 'cls'], 'wilson', 'Wilson Dr', ['get', 'name']], 'text-font': ['Noto Sans Medium'],
       'text-size': ['interpolate', ['exponential', 2], ['zoom'], 14, 7, 16, 9.5, 17, 11, 18, 12],
       'text-rotation-alignment': 'map', 'text-pitch-alignment': 'map', 'text-keep-upright': true, 'text-max-angle': 30,
-      'text-letter-spacing': ['match', ['get', 'cls'], 'hwy51', 0.06, 0.03], 'text-allow-overlap': true, 'text-padding': 0 },
+      'text-letter-spacing': ['match', ['get', 'cls'], 'hwy51', 0.06, 0.03], 'text-allow-overlap': false, 'text-padding': 2 },   // FINAL-PHASE: no overlapping road names
     paint: { 'text-color': ['match', ['get', 'cls'], 'hwy51', '#174f96', '#5b4a1c'],
       'text-halo-color': ['match', ['get', 'cls'], 'hwy51', '#f4c95d', '#f8db8a'], 'text-halo-width': 0.6 } });
   return L;
@@ -178,7 +178,7 @@ if (P.get('view')) { const v = P.get('view').split(',').map(Number); view = { ce
 const map = new maplibregl.Map({
   container: 'map', style: styleStreet, center: view ? view.center : META.center, zoom: view ? view.zoom : META.zoom,
   pitch: view ? view.pitch : 0, bearing: view ? view.bearing : 0,  /* MOCKUP 2D default: open flat */
-  maxPitch: 78, minZoom: 14, maxBounds: MAXB, maxZoom: 20.5, attributionControl: false, canvasContextAttributes: { antialias: true }, antialias: true,
+  maxPitch: 78, minZoom: 14, maxBounds: MAXB, maxZoom: 20.5, attributionControl: false, antialias: true, pixelRatio: Math.min(window.devicePixelRatio || 1, 2),   // FINAL-PHASE: DPR cap 2
   preserveDrawingBuffer: P.get('selftest') === '1'
 });
 map_onReady.forEach(f => f(map));
@@ -254,6 +254,49 @@ function buildScene() {
   // LANDMARK mockup 2026-10-09: entrance sign + Seal Plaza (landmarks.js), drawn with the campus, not pickable
   if (window.NWCCLandmarks) { try { campus.add(window.NWCCLandmarks(THREE, toEN, () => map.triggerRepaint())); } catch (err) { console.warn('landmarks failed', err); } }
   selGroup = new THREE.Group(); scene.add(selGroup);
+  if (P.get('nomerge') !== '1') { let saved = 0; for (const g of campus.children) if (g.isGroup && g.name !== 'trees') saved += mergeStatic(g); window.__mergeSaved = saved; }   // FINAL-PHASE
+}
+// FINAL-PHASE (2026-10-12): merge static meshes per material inside each group -> far fewer draw calls. Geometry is baked into the
+// group's frame; merged meshes stay children of their building group, so picking (hit -> parent keys) and visibility are unchanged.
+function mergeStatic(root) {
+  root.updateMatrixWorld(true);
+  const inv = new THREE.Matrix4().copy(root.matrixWorld).invert(), buckets = new Map(), drop = [];
+  root.traverse(o => {
+    if (!o.isMesh || o.isInstancedMesh || o.isSkinnedMesh || !o.geometry || o.geometry.morphAttributes.position || o.userData.noMerge) return;
+    for (let p = o; p && p !== root; p = p.parent) if (!p.visible) return;
+    const g0 = o.geometry; if (!g0.attributes.position || (g0.attributes.color && !Array.isArray(o.material) && o.material.vertexColors)) return;
+    const M = new THREE.Matrix4().multiplyMatrices(inv, o.matrixWorld), mats = Array.isArray(o.material) ? o.material : [o.material];
+    const g = g0.index ? g0.toNonIndexed() : g0, n = g.attributes.position.count;
+    const ranges = (Array.isArray(o.material) && g.groups.length) ? g.groups.map(q => [q.start, Math.min(n, q.start + q.count), mats[q.materialIndex]]) : [[0, n, mats[0]]];
+    for (const [s, e, mat] of ranges) { if (!mat || e <= s) continue;
+      const k = mat.uuid + '|' + o.renderOrder; let b = buckets.get(k); if (!b) buckets.set(k, b = { mat, ro: o.renderOrder, parts: [], bkey: o.userData.bkey });
+      b.parts.push({ g, s, e, M }); }
+    drop.push(o);
+  });
+  if (drop.length < 2) return 0;
+  for (const o of drop) o.parent.remove(o);
+  const nm = new THREE.Matrix3(), v = new THREE.Vector3();
+  for (const b of buckets.values()) {
+    let N = 0; for (const q of b.parts) N += q.e - q.s;
+    const pos = new Float32Array(N * 3), nor = new Float32Array(N * 3), uv = new Float32Array(N * 2); let w = 0;
+    for (const q of b.parts) {
+      const P = q.g.attributes.position, Nn = q.g.attributes.normal, U = q.g.attributes.uv, flip = q.M.determinant() < 0;
+      nm.getNormalMatrix(q.M);
+      for (let i = q.s; i < q.e; i++) {
+        const j = flip ? (i - q.s) % 3 === 1 ? i + 1 : (i - q.s) % 3 === 2 ? i - 1 : i : i;   // mirrored: swap winding
+        v.fromBufferAttribute(P, j).applyMatrix4(q.M); pos[w * 3] = v.x; pos[w * 3 + 1] = v.y; pos[w * 3 + 2] = v.z;
+        if (Nn) { v.fromBufferAttribute(Nn, j).applyMatrix3(nm).normalize(); nor[w * 3] = v.x; nor[w * 3 + 1] = v.y; nor[w * 3 + 2] = v.z; }
+        if (U) { uv[w * 2] = U.getX(j); uv[w * 2 + 1] = U.getY(j); }
+        w++;
+      }
+    }
+    const ge = new THREE.BufferGeometry(); ge.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    ge.setAttribute('normal', new THREE.BufferAttribute(nor, 3)); ge.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+    ge.computeBoundingSphere(); ge.computeBoundingBox();
+    const m = new THREE.Mesh(ge, b.mat); m.renderOrder = b.ro; m.frustumCulled = false; m.userData.bkey = b.bkey; m.userData.merged = true; root.add(m);
+  }
+  const prune = o => { for (const c of o.children.slice()) { prune(c); if (c.isGroup && !c.children.length) o.remove(c); } }; prune(root);
+  return drop.length - buckets.size;
 }
 // Low-poly campus trees (trees.js, tools/build_trees.py): instanced trunks, round or conifer canopies, soft ground shadows.
 // Not pickable (not in `groups`), so taps still select buildings.
@@ -298,7 +341,7 @@ const layer3d = {
   id: 'nwcc-3d', type: 'custom', renderingMode: '3d',
   onAdd(m, gl) {
     if (!renderer) {
-      renderer = new THREE.WebGLRenderer({ canvas: m.getCanvas(), context: gl, antialias: true });
+      renderer = new THREE.WebGLRenderer({ canvas: m.getCanvas(), context: gl });   // FINAL-PHASE: AA comes from the shared MapLibre context
       renderer.autoClear = false;
       renderer.outputColorSpace = THREE.SRGBColorSpace;
     }
@@ -678,5 +721,5 @@ function selftest() {
   document.title = 'SELFTEST ' + (out.pass ? 'PASS' : 'FAIL');
   fitCampus(false);
 }
-window.NWCC_APP = { map, pickAt, select, search, closeCard, fitCampus };
+window.NWCC_APP = { map, pickAt, select, search, closeCard, fitCampus, stats: () => renderer ? { calls: renderer.info.render.calls, tris: renderer.info.render.triangles, geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures, meshes: (() => { let n = 0; scene.traverse(o => { if (o.isMesh) n++; }); return n; })() } : null };
 })();

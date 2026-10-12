@@ -718,7 +718,191 @@ window.NWCCLandmarks = function (THREE, toEN, onTexture) {
     return g;
   }
   // <<< BENTON build
-  root.add(buildSign()); root.add(buildPlaza()); if (L.nwdr) root.add(buildNwdr()); if (L.baseball) root.add(buildBaseball()); if (L.football) root.add(buildFootball()); if (L.softball) root.add(buildSoftball()); if (L.practice) root.add(buildPractice()); if (L.lamar) root.add(buildLamar()); if (L.rab31) root.add(buildRab31()); if (L.benton) root.add(buildBenton());
+  // HEINDL-50 build >>>
+  // #50 Heindl Center for the Performing Arts, traced 2026-10-11 on Esri imagery (lean-corrected) + Brent's 4 obliques and 2 street
+  // photos: tall cream fly tower, cream auditorium block, 2-story brick front block with cream band + tall fanlight windows, south
+  // portico (4 + 2 columns, HEINDL CENTER frieze, pediment), lower brick wings with cream parapets and dark diamond trim, brick
+  // stage/support block with tall windows and a small east portico, white flat roofs (fly-tower smoke hatches; the mechanical well is
+  // a plain screened recess, no HVAC units), plaza bollards + lamp posts, west service yard, NORTHWEST sign on the Northwest Dr wall.
+  // Facades are canvas textures (windows painted); deliberately NO ground shadows.
+  function buildHeindl() {
+    const B = L.heindl, g = new THREE.Group(); g.name = 'heindl-center';
+    const EN = c => toEN(c[0], c[1]);
+    const M = (k, o) => lam('hd-' + k, Object.assign({ side: THREE.FrontSide }, o));
+    const hid = new THREE.MeshBasicMaterial({ visible: false });
+    const cvs = (w, h) => { const c = document.createElement('canvas'); c.width = Math.max(4, Math.min(4096, Math.round(w))); c.height = Math.max(4, Math.min(2048, Math.round(h))); return c; };
+    const texOf = (c, rep) => { const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; if (rep) t.wrapS = t.wrapT = THREE.RepeatWrapping; return t; };
+    const cream = M('cream', { color: '#ece2c8', emissive: '#2c2a22' }), creamD = M('creamD', { color: '#e2d6b8', emissive: '#28251d' });
+    const white = M('white', { color: '#f6f4ee', emissive: '#3a3935' }), black = M('black', { color: '#22252a' }), conc = M('conc', { color: '#d9d5ca' });
+    // ---------- facade canvas: brick / cream panel body, bands, parapet with diamond trim, painted windows
+    const PX = 14;
+    function facade(key, len, H, o) {
+      const c = cvs(len * PX, H * PX), x = c.getContext('2d'), Y = h => (H - h) * PX, U = u => u * PX, Wc = c.width;
+      let s = 11 + key.length * 7; const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+      if (o.body === 'cream') {
+        x.fillStyle = o.col || '#e7ddc4'; x.fillRect(0, 0, Wc, c.height);
+        x.fillStyle = 'rgba(120,105,80,0.22)';
+        for (let u = 3.05; u < len; u += 3.05) x.fillRect(U(u) - 1, 0, 1.5, c.height);
+        for (let h = 1.5; h < H; h += 3.0) x.fillRect(0, Y(h), Wc, 1.2);
+        x.fillStyle = 'rgba(255,255,255,0.18)'; x.fillRect(0, 0, Wc, Y(H - 0.6));
+      } else {
+        x.fillStyle = '#a9553f'; x.fillRect(0, 0, Wc, c.height);
+        for (let r = 0, hh = 0; hh < H; r++, hh += 0.32) for (let u = (r % 2) * 0.32; u < len; u += 0.64) {
+          const t = rnd(); x.fillStyle = t < 0.3 ? '#9f4e3a' : t < 0.6 ? '#b45e46' : t < 0.82 ? '#ab5741' : '#97483a'; x.fillRect(U(u), Y(hh + 0.32) + 1, 0.62 * PX, 0.32 * PX - 1); }
+        x.fillStyle = 'rgba(80,45,32,0.22)'; for (let hh = 0; hh < H; hh += 0.32) x.fillRect(0, Y(hh), Wc, 1);
+        x.fillStyle = '#8e4434'; x.fillRect(0, Y(0.4), Wc, 0.4 * PX);
+      }
+      for (const [z, h, col] of (o.bands || [])) { x.fillStyle = col || '#e9dfc5'; x.fillRect(0, Y(z + h), Wc, h * PX); x.fillStyle = 'rgba(90,80,60,0.35)'; x.fillRect(0, Y(z), Wc, 1); }
+      if (o.para) {   // cream parapet band from o.para to the top with dark diamond trim
+        x.fillStyle = '#ebe1c7'; x.fillRect(0, 0, Wc, Y(o.para)); x.fillStyle = 'rgba(90,80,60,0.4)'; x.fillRect(0, Y(o.para), Wc, 1.5);
+        const zc = (o.para + H) / 2, r = Math.min(0.42, (H - o.para) * 0.36); x.fillStyle = '#5b3428';
+        for (let u = (o.dOff || 2.4); u < len - 0.6; u += (o.dStep || 4.8)) { x.beginPath(); x.moveTo(U(u), Y(zc + r)); x.lineTo(U(u + r), Y(zc)); x.lineTo(U(u), Y(zc - r)); x.lineTo(U(u - r), Y(zc)); x.closePath(); x.fill(); }
+      }
+      const glass = (u, z, w, h) => { const gr = x.createLinearGradient(0, Y(z + h), 0, Y(z)); gr.addColorStop(0, '#8ea6b8'); gr.addColorStop(1, '#3c4d5c'); x.fillStyle = gr; x.fillRect(U(u), Y(z + h), w * PX, h * PX); };
+      for (const it of (o.items || [])) {
+        if (it.k === 'tall') {   // tall window, cream surround, square fanlight grid on top
+          const { u, w, z0, z1 } = it, f0 = z1 - w;
+          x.fillStyle = '#ece3cb'; x.fillRect(U(u - w / 2 - 0.35), Y(z1 + 0.35), (w + 0.7) * PX, (z1 - z0 + 0.6) * PX);
+          glass(u - w / 2, z0, w, z1 - z0);
+          x.fillStyle = '#f3efe4'; x.fillRect(U(u) - 1, Y(f0), 2, (f0 - z0) * PX); for (let h = z0 + 1.6; h < f0 - 0.2; h += 1.6) x.fillRect(U(u - w / 2), Y(h) - 1, w * PX, 2);
+          x.fillRect(U(u - w / 2), Y(f0) - 2, w * PX, 3);
+          x.strokeStyle = '#f3efe4'; x.lineWidth = 1.3; x.beginPath();
+          for (let k = -4; k <= 4; k++) { const a = u + k * w / 4; x.moveTo(U(a - w), Y(f0)); x.lineTo(U(a + w), Y(f0 + 2 * w)); x.moveTo(U(a + w), Y(f0)); x.lineTo(U(a - w), Y(f0 + 2 * w)); }
+          x.save(); x.beginPath(); x.rect(U(u - w / 2), Y(z1), w * PX, w * PX); x.clip(); x.beginPath();
+          for (let k = -4; k <= 4; k++) { const a = u + k * w / 4; x.moveTo(U(a - w), Y(f0)); x.lineTo(U(a + w), Y(f0 + 2 * w)); x.moveTo(U(a + w), Y(f0)); x.lineTo(U(a - w), Y(f0 + 2 * w)); }
+          x.stroke(); x.restore();
+        } else if (it.k === 'win') {
+          x.fillStyle = '#ece3cb'; x.fillRect(U(it.u - it.w / 2 - 0.2), Y(it.z + it.h + 0.35), (it.w + 0.4) * PX, 0.35 * PX); x.fillRect(U(it.u - it.w / 2 - 0.15), Y(it.z), (it.w + 0.3) * PX, 0.15 * PX);
+          x.fillStyle = '#f2f0e9'; x.fillRect(U(it.u - it.w / 2), Y(it.z + it.h), it.w * PX, it.h * PX);
+          glass(it.u - it.w / 2 + 0.08, it.z + 0.08, it.w - 0.16, it.h - 0.16);
+          x.fillStyle = '#f2f0e9'; x.fillRect(U(it.u) - 1, Y(it.z + it.h), 2, it.h * PX);
+        } else if (it.k === 'glass') {
+          x.fillStyle = '#e8e6df'; x.fillRect(U(it.u - 0.1), Y(it.z + it.h + 0.1), (it.w + 0.2) * PX, (it.h + 0.2) * PX);
+          glass(it.u, it.z, it.w, it.h);
+          x.fillStyle = '#e4e2da'; const n = Math.max(1, Math.round(it.w / 1.5)); for (let k = 1; k < n; k++) x.fillRect(U(it.u + k * it.w / n) - 1, Y(it.z + it.h), 2, it.h * PX);
+          for (let hh = it.z + 2.7; hh < it.z + it.h - 0.3; hh += 2.7) x.fillRect(U(it.u), Y(hh) - 1, it.w * PX, 3);
+          if (it.door) { x.fillStyle = '#26303a'; for (let k = 0; k < n; k++) if (k % 2 === 0 || n < 3) x.fillRect(U(it.u + k * it.w / n + 0.12), Y(it.z + 2.3), (it.w / n - 0.24) * PX, 2.3 * PX); }
+        } else if (it.k === 'door') {
+          x.fillStyle = it.c || '#8a8d90'; x.fillRect(U(it.u - it.w / 2), Y(it.h), it.w * PX, it.h * PX);
+          if (it.ovh) { x.fillStyle = 'rgba(0,0,0,0.18)'; for (let h = 0.5; h < it.h; h += 0.55) x.fillRect(U(it.u - it.w / 2), Y(h), it.w * PX, 1); }
+        }
+      }
+      return M('fac-' + key, { map: texOf(c), emissive: o.body === 'cream' ? '#2a271f' : '#1c1410' });
+    }
+    // ---------- roofs: white membrane with seams, cream coping on the parapet edges
+    const rc = cvs(64, 64), rx = rc.getContext('2d'); rx.fillStyle = '#e9e8e2'; rx.fillRect(0, 0, 64, 64); rx.fillStyle = '#d6d5cf'; rx.fillRect(0, 0, 64, 2); rx.fillStyle = 'rgba(0,0,0,0.04)'; rx.fillRect(0, 30, 64, 1);
+    const roofT = texOf(rc, true), roofM = M('roof', { map: roofT, emissive: '#3b3b38' });
+    function part(p, mats) {
+      const [a, b] = [EN(p.sw), EN(p.ne)], W = b[0] - a[0], D = b[1] - a[1], cx = (a[0] + b[0]) / 2, cz = -(a[1] + b[1]) / 2, H = p.h;
+      const m = new THREE.Mesh(new THREE.BoxGeometry(W, H, D), [mats.e || hid, mats.w || hid, hid, hid, mats.s || hid, mats.n || hid]); m.position.set(cx, H / 2, cz); g.add(m);
+      const rg = new THREE.PlaneGeometry(W, D), uv = rg.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * W / 3.0, uv.getY(i) * D / 3.0);
+      const r = new THREE.Mesh(rg, roofM); r.rotation.x = -Math.PI / 2; r.position.set(cx, H + 0.01, cz); g.add(r);
+      const cp = p.cope === undefined ? 0.45 : p.cope, cm = p.copeM || cream, t = 0.35;
+      if (cp > 0) { g.add(box(W + 0.1, cp, t, cx, H, cz - D / 2 + t / 2 - 0.05, cm)); g.add(box(W + 0.1, cp, t, cx, H, cz + D / 2 - t / 2 + 0.05, cm));
+        g.add(box(t, cp, D, cx - W / 2 + t / 2 - 0.05, H, cz, cm)); g.add(box(t, cp, D, cx + W / 2 - t / 2 + 0.05, H, cz, cm)); }
+      return { x0: a[0], x1: b[0], y0: a[1], y1: b[1], W, D, cx, cz, H };
+    }
+    const P = B.parts, len = p => { const [a, b] = [EN(p.sw), EN(p.ne)]; return [b[0] - a[0], b[1] - a[1]]; };
+    const wingWins = (L0, step, off, extra) => { const out = []; for (let u = off; u < L0 - 1.2; u += step) out.push({ k: 'win', u, w: 1.5, z: 1.0, h: 2.6 }); return out.concat(extra || []); };
+    // fly tower + auditorium (cream)
+    { const p = P.ft, [W, D] = len(p), o = { body: 'cream', col: '#e9e0c9' };
+      part(p, { e: facade('ft-e', D, p.h, o), w: facade('ft-w', D, p.h, o), s: facade('ft-s', W, p.h, o), n: facade('ft-n', W, p.h, o) }); }
+    { const p = P.au, [W, D] = len(p), o = { body: 'cream' };
+      part(p, { e: facade('au-e', D, p.h, o), w: facade('au-w', D, p.h, o), s: facade('au-s', W, p.h, o) }); }
+    // front block: brick, cream band + cornice, tall fanlight windows either side of the portico, glazing behind it
+    { const p = P.fl, [W, D] = len(p), po = EN(B.po.sw)[0] - EN(p.sw)[0], po1 = EN(B.po.ne)[0] - EN(p.sw)[0];
+      const bands = [[8.55, 0.5], [p.h - 1.15, 1.15]];
+      part(p, { s: facade('fl-s', W, p.h, { bands, items: [{ k: 'tall', u: po / 2 + 0.3, w: 2.5, z0: 0.9, z1: 8.2 }, { k: 'tall', u: (po1 + W) / 2 - 0.3, w: 2.5, z0: 0.9, z1: 8.2 },
+          { k: 'glass', u: po + 1.6, w: po1 - po - 3.2, z: 0.25, h: 8.0, door: true }] }),
+        e: facade('fl-e', D, p.h, { bands }), w: facade('fl-w', D, p.h, { bands }) }); }
+    // stage / support block: brick, tall windows on the east (Northwest Dr) side, loading doors on the north
+    { const p = P.nb, [W, D] = len(p), ep0 = EN(B.ep.sw)[1] - EN(p.sw)[1], ep1 = EN(B.ep.ne)[1] - EN(p.sw)[1], bands = [[p.h - 0.7, 0.7]];
+      const tall = u => ({ k: 'tall', u, w: 2.3, z0: 1.0, z1: 9.6 });
+      part(p, { e: facade('nb-e', D, p.h, { bands, items: [tall(ep0 / 2), { k: 'glass', u: ep0 + 1.6, w: ep1 - ep0 - 3.2, z: 0.2, h: 4.6, door: true }, tall(ep1 + 4.2), tall(ep1 + 10.6), tall(D - 3.0)] }),
+        n: facade('nb-n', W, p.h, { bands, items: [{ k: 'door', u: 11, w: 3.6, h: 4.3, ovh: 1 }, { k: 'door', u: 15.6, w: 3.6, h: 4.3, ovh: 1 }, { k: 'door', u: 20, w: 1.0, h: 2.2, c: '#6e6a63' }]
+          .concat([28, 32, 36, 40, 44, 48].map(u => ({ k: 'win', u, w: 1.3, z: 2.6, h: 1.6 }))) }),
+        w: facade('nb-w', D, p.h, { bands, items: [{ k: 'door', u: 12, w: 1.0, h: 2.2, c: '#6e6a63' }, { k: 'door', u: 30, w: 3.0, h: 3.6, ovh: 1 }] }),
+        s: facade('nb-s', W, p.h, { bands }) }); }
+    // lower wings: brick with cream parapet + diamond trim, punched windows
+    const wing = (k, p, items) => { const [W, D] = len(p), o = it => ({ para: p.h - 1.25, items: it });
+      part(p, { e: items.e ? facade(k + '-e', D, p.h, o(items.e(D))) : null, w: items.w ? facade(k + '-w', D, p.h, o(items.w(D))) : null,
+        s: items.s ? facade(k + '-s', W, p.h, o(items.s(W))) : null, n: items.n ? facade(k + '-n', W, p.h, o(items.n(W))) : null }); };
+    wing('ew', P.ew, { e: D => wingWins(D, 4.6, 6.0, [{ k: 'glass', u: 1.2, w: 3.0, z: 0.2, h: 3.0, door: true }]), s: W => [{ k: 'win', u: W * 0.3, w: 1.5, z: 1.0, h: 2.6 }, { k: 'win', u: W * 0.7, w: 1.5, z: 1.0, h: 2.6 }], n: () => [] });
+    wing('wwm', P.wwm, { w: D => wingWins(D, 5.0, 2.6) });
+    wing('wws', P.wws, { w: () => [{ k: 'door', u: 5, w: 1.0, h: 2.2, c: '#6e6a63' }], s: W => [{ k: 'win', u: W * 0.3, w: 1.5, z: 1.0, h: 2.6 }, { k: 'win', u: W * 0.72, w: 1.5, z: 1.0, h: 2.6 }], n: () => [] });
+    wing('wwn', P.wwn, { w: () => [{ k: 'door', u: 5, w: 1.0, h: 2.2, c: '#6e6a63' }], s: () => [], n: () => [] });
+    // fly-tower smoke hatches (not HVAC) and the screened mechanical recess on the support block (units omitted on purpose)
+    { const [a, b] = [EN(P.ft.sw), EN(P.ft.ne)], yc = -(a[1] + b[1]) / 2, hm = M('hatch', { color: '#cfcfca', emissive: '#262624' });
+      for (let i = 0; i < 6; i++) g.add(box(1.4, 0.5, 1.1, a[0] + (b[0] - a[0]) * (i + 1.5) / 9, P.ft.h, yc, hm)); }
+    { const [a, b] = [EN(B.well.sw), EN(B.well.ne)], W = b[0] - a[0], D = b[1] - a[1], cx = (a[0] + b[0]) / 2, cz = -(a[1] + b[1]) / 2, y = P.nb.h, scr = M('screen', { color: '#c9c9c4', emissive: '#22221f' });
+      const fl = new THREE.Mesh(new THREE.PlaneGeometry(W, D), M('wellfl', { color: '#8d9093' })); fl.rotation.x = -Math.PI / 2; fl.position.set(cx, y + 0.03, cz); g.add(fl);
+      g.add(box(W, 1.3, 0.2, cx, y, cz - D / 2, scr)); g.add(box(W, 1.3, 0.2, cx, y, cz + D / 2, scr)); g.add(box(0.2, 1.3, D, cx - W / 2, y, cz, scr)); g.add(box(0.2, 1.3, D, cx + W / 2, y, cz, scr)); }
+    // ---------- text plate helper (entablature fronts)
+    function plate(w, h, txt, size) {
+      const c = cvs(w * 64, h * 64), k = c.getContext('2d'); k.fillStyle = '#f2ede1'; k.fillRect(0, 0, c.width, c.height);
+      k.fillStyle = '#d8d0bd'; k.fillRect(0, 0, c.width, 0.18 * 64); k.fillRect(0, c.height - 0.3 * 64, c.width, 3);
+      k.fillStyle = '#2a2a2b'; k.font = 'bold ' + Math.round(size * 64) + 'px Georgia, "DejaVu Serif", "Times New Roman", serif'; k.textAlign = 'center'; k.textBaseline = 'middle';
+      k.fillText(txt.split('').join(String.fromCharCode(8202)), c.width / 2, c.height * 0.55); return M('plate-' + txt + w.toFixed(1), { map: texOf(c), emissive: '#2e2d2a' });
+    }
+    // ---------- south portico: steps, 4 front + 2 rear columns, HEINDL CENTER entablature, pediment with gray roof
+    { const [a, b] = [EN(B.po.sw), EN(B.po.ne)], x0 = a[0], x1 = b[0], yF = a[1], yB = b[1], pw = x1 - x0, xc = (x0 + x1) / 2, zF = -yF, zB = -yB;
+      g.add(box(pw + 1.2, 0.18, 2.2, xc, 0, zF + 1.6, conc)); g.add(box(pw + 0.6, 0.36, yB - yF + 0.4, xc, 0, (zF + zB) / 2 + 0.2, conc));
+      const colM = lam('hd-col', { color: '#f4f0e4', emissive: '#3c3a34' }), TOP = 8.7, y0 = 0.36;
+      const xs = [x0 + 0.9, x0 + 0.9 + (pw - 1.8) / 3, x1 - 0.9 - (pw - 1.8) / 3, x1 - 0.9];
+      const col = (x, z) => { g.add(box(1.15, 0.5, 1.15, x, y0, z, white)); g.add(cyl(0.5, 0.43, TOP - y0 - 1.0, x, y0 + 0.5, z, colM, 24)); g.add(cyl(0.48, 0.6, 0.22, x, TOP - 0.5, z, white, 24)); g.add(box(1.2, 0.28, 1.2, x, TOP - 0.28, z, white)); };
+      for (const x of xs) col(x, zF - 0.8);
+      for (const x of [xs[0], xs[3]]) col(x, zB + 2.6);
+      const EH = 1.7, ent = plate(pw, EH, 'HEINDL CENTER', 0.62);
+      const eb = new THREE.Mesh(new THREE.BoxGeometry(pw, EH, yB - yF), [white, white, white, white, ent, white]); eb.position.set(xc, TOP + EH / 2, (zF + zB) / 2); g.add(eb);
+      g.add(box(pw + 0.6, 0.3, yB - yF + 0.3, xc, TOP + EH, (zF + zB) / 2 + 0.15, cream));
+      const base = TOP + EH + 0.3, rise = 2.5, half = pw / 2 + 0.3;
+      const shp = new THREE.Shape([new THREE.Vector2(-half, 0), new THREE.Vector2(half, 0), new THREE.Vector2(0, rise)]);
+      const pg = new THREE.ExtrudeGeometry(shp, { depth: yB - yF + 0.3, bevelEnabled: false }); pg.translate(0, 0, -(yB - yF + 0.3));
+      const ped = new THREE.Mesh(pg, lam('hd-ped', { color: '#f3efe4', emissive: '#3a3833', side: THREE.DoubleSide })); ped.position.set(xc, base, zF + 0.3); g.add(ped);
+      const roofG = M('proof', { color: '#7b8087', emissive: '#16181a', side: THREE.DoubleSide }), sl = Math.atan2(rise, half), rl = Math.hypot(rise, half) + 0.3;
+      for (const sg of [-1, 1]) { const r = new THREE.Mesh(new THREE.BoxGeometry(rl, 0.14, yB - yF + 0.6), roofG); r.position.set(xc + sg * half / 2, base + rise / 2 + 0.12, (zF + zB) / 2 + 0.1); r.rotation.z = -sg * sl; g.add(r);
+        const k = new THREE.Mesh(new THREE.BoxGeometry(rl, 0.3, 0.45), cream); k.position.set(xc + sg * half / 2, base + rise / 2 + 0.05, zF + 0.4); k.rotation.z = -sg * sl; g.add(k); }
+      g.add(box(pw + 0.7, 0.32, 0.5, xc, base - 0.05, zF + 0.4, cream)); }
+    // ---------- east portico (Northwest Dr side): brick piers, cream HEINDL CENTER entablature, flat cap
+    { const [a, b] = [EN(B.ep.sw), EN(B.ep.ne)], x0 = a[0], x1 = b[0], z0 = -a[1], z1 = -b[1], pw = a[1] - b[1], zc = (z0 + z1) / 2, d = x1 - x0, TOP = 5.0;
+      const bt = brickTex(['#a9553f', '#b45e46', '#9f4e3a', '#ab5741']), brick = lam('hd-brick', { map: bt, emissive: '#140c08' });
+      for (const z of [z0 - 0.5, z1 + 0.5, zc - 2.4, zc + 2.4]) { const pb = box(0.9, TOP, 0.9, x1 - 0.5, 0, z, brick); g.add(pb); g.add(box(1.05, 0.2, 1.05, x1 - 0.5, TOP - 0.2, z, cream)); }
+      const ent = plate(Math.abs(pw), 1.2, 'HEINDL CENTER', 0.5), eb = new THREE.Mesh(new THREE.BoxGeometry(d + 0.3, 1.2, Math.abs(pw) + 0.4), [ent, white, white, white, white, white]);
+      eb.position.set((x0 + x1) / 2 + 0.15, TOP + 0.6, zc); g.add(eb); g.add(box(d + 0.8, 0.25, Math.abs(pw) + 0.9, (x0 + x1) / 2 + 0.3, TOP + 1.2, zc, cream));
+      g.add(box(d + 2.5, 0.2, Math.abs(pw) - 1.0, (x0 + x1) / 2 + 1.0, 0, zc, conc)); }
+    // ---------- west service yard: brick screen wall + equipment
+    { const bt = brickTex(['#a9553f', '#b45e46', '#9f4e3a', '#ab5741']), brick = lam('hd-brickD', { map: bt, side: THREE.DoubleSide, emissive: '#140c08' });
+      const YP = B.yard.map(EN);
+      for (let i = 0; i < YP.length - 1; i++) { const a = YP[i], b = YP[i + 1], Ls = Math.hypot(b[0] - a[0], b[1] - a[1]);
+        const ge = new THREE.BoxGeometry(Ls, 2.4, 0.3), uv = ge.attributes.uv; for (let k = 0; k < uv.count; k++) uv.setXY(k, uv.getX(k) * Ls / 0.8, uv.getY(k) * 2.4 / 0.3);
+        const w = new THREE.Mesh(ge, brick); w.position.set((a[0] + b[0]) / 2, 1.2, -(a[1] + b[1]) / 2); w.rotation.y = Math.atan2(b[1] - a[1], b[0] - a[0]); g.add(w);
+        const cp = new THREE.Mesh(new THREE.BoxGeometry(Ls + 0.3, 0.1, 0.42), cream); cp.position.set(w.position.x, 2.45, w.position.z); cp.rotation.y = w.rotation.y; g.add(cp); }
+      const teal = M('teal', { color: '#3f8f8b' });
+      for (const e of B.equip) { const [x, y] = EN(e.c); g.add(box(e.w, e.h, e.d, x, 0, -y, teal)); g.add(box(e.w + 0.3, 0.15, e.d + 0.3, x, 0, -y, conc)); } }
+    // ---------- plaza: black bollards + double-lantern lamp posts
+    { const bm = M('bollard', { color: '#1f2226' });
+      for (const c of B.bollards) { const [x, y] = EN(c); g.add(cyl(0.11, 0.11, 0.95, x, 0, -y, bm, 10)); g.add(cyl(0.13, 0.13, 0.05, x, 0.95, -y, bm, 10)); }
+      const lampM = lam('hd-lamp', { color: '#fff9e4', emissive: '#bdb48f' });
+      for (const c of B.lamps) { const [x, y] = EN(c), z = -y; g.add(cyl(0.18, 0.18, 0.5, x, 0, z, black, 10)); g.add(cyl(0.07, 0.09, 4.4, x, 0.5, z, black, 8));
+        for (const s of [-1, 1]) { g.add(box(0.9, 0.06, 0.06, x + s * 0.45, 4.6, z, black)); g.add(box(0.36, 0.5, 0.36, x + s * 0.85, 4.05, z, lampM)); g.add(box(0.44, 0.12, 0.44, x + s * 0.85, 4.55, z, black)); } } }
+    // ---------- NORTHWEST sign on the Northwest Dr entrance wall: stone panel with the seal, brick piers with ball tops
+    if (B.sign) { const S = B.sign, [x, y] = EN(S.c), sgn = new THREE.Group(); sgn.position.set(x, 0, -y); sgn.rotation.y = (90 - S.bearing) * Math.PI / 180;
+      const bt = brickTex(['#9c4632', '#a84e38', '#8f3f2d', '#b0573e']), brick = lam('hd-signbrick', { map: bt, emissive: '#140c08' });
+      const Wp = S.len, c = cvs(Wp * 80, 1.3 * 80), k = c.getContext('2d'); k.fillStyle = '#cfcac0'; k.fillRect(0, 0, c.width, c.height);
+      k.fillStyle = 'rgba(0,0,0,0.08)'; k.fillRect(0, c.height - 6, c.width, 6);
+      k.fillStyle = '#2f3a4a'; k.textBaseline = 'middle'; k.textAlign = 'left'; k.font = 'bold ' + Math.round(0.42 * 80) + 'px Georgia, "DejaVu Serif", serif';
+      k.fillText('NORTHWEST', 1.25 * 80, 0.5 * 80); k.font = Math.round(0.15 * 80) + 'px Georgia, "DejaVu Serif", serif'; k.fillText('MISSISSIPPI COMMUNITY COLLEGE', 1.27 * 80, 0.86 * 80);
+      k.strokeStyle = '#2f3a4a'; k.lineWidth = 4; k.beginPath(); k.arc(0.62 * 80, 0.62 * 80, 0.42 * 80, 0, Math.PI * 2); k.stroke(); k.beginPath(); k.arc(0.62 * 80, 0.62 * 80, 0.3 * 80, 0, Math.PI * 2); k.lineWidth = 2; k.stroke();
+      const face = M('signface', { map: texOf(c), emissive: '#2a2a28' }), stone = M('signstone', { color: '#cfcac0', emissive: '#22221f' });
+      const pn = new THREE.Mesh(new THREE.BoxGeometry(Wp, 1.3, 0.55), [stone, stone, stone, stone, face, face]); pn.position.set(0, 0.25 + 0.65, 0); sgn.add(pn);
+      sgn.add(box(Wp + 0.2, 0.25, 0.65, 0, 0, 0, brick)); sgn.add(box(Wp + 0.2, 0.1, 0.65, 0, 1.55, 0, cream));
+      for (const s of [-1, 1]) { sgn.add(box(0.75, 1.9, 0.75, s * (Wp / 2 + 0.38), 0, 0, brick)); sgn.add(box(0.85, 0.12, 0.85, s * (Wp / 2 + 0.38), 1.9, 0, cream));
+        const ball = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 12), white); ball.position.set(s * (Wp / 2 + 0.38), 2.32, 0); sgn.add(ball); }
+      g.add(sgn); }
+    return g;
+  }
+  // <<< HEINDL-50 build
+  root.add(buildSign()); root.add(buildPlaza()); if (L.nwdr) root.add(buildNwdr()); if (L.baseball) root.add(buildBaseball()); if (L.football) root.add(buildFootball()); if (L.softball) root.add(buildSoftball()); if (L.practice) root.add(buildPractice()); if (L.lamar) root.add(buildLamar()); if (L.rab31) root.add(buildRab31()); if (L.benton) root.add(buildBenton()); if (L.heindl) root.add(buildHeindl());
   root.traverse(o => { o.frustumCulled = false; });
   return root;
 };
@@ -755,3 +939,7 @@ window.NWCC_LANDMARKS.rab31 = {"c":[-89.9704313,34.6221007],"r_isl":8.7,"r_apron
 // Benton Halls shed (2026-10-09). Coordinates [lng,lat].
 window.NWCC_LANDMARKS.benton = {"shed":[[-89.9692719,34.623403],[-89.9692719,34.6234717],[-89.9693353,34.6234717],[-89.9693353,34.623403],[-89.9692719,34.623403]],"h":2.7,"pitch":18,"roof":"#b4b8bd"};
 /* <<< BENTON data */
+/* HEINDL-50 data >>> */
+// #50 Heindl Center traced on Brent's 4 obliques + 2 street photos and Esri imagery (2026-10-11). Coordinates [lng,lat]; heights in m.
+window.NWCC_LANDMARKS.heindl = {"parts":{"ft":{"sw":[-89.9745042,34.6272222],"ne":[-89.9742029,34.6273442],"h":24.0},"au":{"sw":[-89.9745413,34.6269328],"ne":[-89.9741658,34.6272222],"h":15.5},"fl":{"sw":[-89.9745413,34.6268695],"ne":[-89.9741658,34.6269328],"h":12.0},"nb":{"sw":[-89.9745894,34.6273171],"ne":[-89.9739879,34.627696],"h":13.0},"ew":{"sw":[-89.9741658,34.6268704],"ne":[-89.9740435,34.6273171],"h":7.0},"wwm":{"sw":[-89.9746505,34.6269536],"ne":[-89.9745413,34.6272231],"h":7.0},"wws":{"sw":[-89.9746822,34.6268649],"ne":[-89.9745413,34.6269536],"h":7.0},"wwn":{"sw":[-89.9746854,34.6272231],"ne":[-89.9745413,34.6273171],"h":7.0}},"po":{"sw":[-89.9744344,34.6267926],"ne":[-89.9742717,34.6268695]},"ep":{"sw":[-89.9739879,34.627394],"ne":[-89.9739355,34.6275025]},"well":{"sw":[-89.9742684,34.6275523],"ne":[-89.9741516,34.6276789]},"yard":[[-89.9746505,34.6270594],[-89.9747149,34.6270594],[-89.9747149,34.6269554],[-89.9746505,34.6269554]],"equip":[{"c":[-89.9746942,34.6271534],"w":2.4,"d":3.2,"h":1.9},{"c":[-89.9746942,34.6271173],"w":1.8,"d":2.0,"h":1.5}],"bollards":[[-89.9744256,34.626694],[-89.9744038,34.626694],[-89.974382,34.626694],[-89.9743601,34.626694],[-89.9743383,34.626694],[-89.9743165,34.626694],[-89.9742946,34.626694],[-89.9742728,34.626694],[-89.9744256,34.6266144],[-89.9744038,34.6266144],[-89.974382,34.6266144],[-89.9743601,34.6266144],[-89.9743383,34.6266144],[-89.9743165,34.6266144],[-89.9742946,34.6266144],[-89.9742728,34.6266144]],"lamps":[[-89.9744606,34.6267338],[-89.9742466,34.6267338],[-89.9744606,34.6265801],[-89.9742466,34.6265801]],"sign":{"c":[-89.9738258,34.627299],"bearing":2.2,"len":4.4}};
+/* <<< HEINDL-50 data */

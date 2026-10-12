@@ -1637,7 +1637,137 @@ window.NWCCLandmarks = function (THREE, toEN, onTexture) {
     return g;
   }
   // <<< W58 build
-  root.add(buildSign()); root.add(buildPlaza()); if (L.nwdr) root.add(buildNwdr()); if (L.baseball) root.add(buildBaseball()); if (L.football) root.add(buildFootball()); if (L.softball) root.add(buildSoftball()); if (L.practice) root.add(buildPractice()); if (L.lamar) root.add(buildLamar()); if (L.rab31) root.add(buildRab31()); if (L.benton) root.add(buildBenton()); if (L.heindl) root.add(buildHeindl()); if (L.lafayette) root.add(buildLafayette()); if (L.yalobusha) root.add(buildYalobusha()); if (L.mccormick) root.add(buildMcCormick()); if (L.tate) root.add(buildTate()); if (L.lib53) root.add(buildLib53()); if (L.conn56) root.add(buildConn56()); if (L.w58) root.add(buildW58());
+  // N22 build >>>
+  // #22A Academic Nursing + #22B Health Sciences (Gary Lee Spears Center), 2026-10-12: two-story red brick with white bands, gray shingle
+  // hip roofs with gables, flat light-gray roof sections, brick-pier porches with white bracketed trim, covered connector, tan block
+  // retaining walls + stairs, Spears Center sign wall, lamps + bollards. NO ground shadows.
+  function buildN22() {
+    const B = L.n22, g = new THREE.Group(); g.name = 'n22';
+    const M = (k, o) => lam('n22-' + k, Object.assign({ side: THREE.DoubleSide }, o));
+    const cvs = (w, h) => { const c = document.createElement('canvas'); c.width = Math.max(4, Math.round(w)); c.height = Math.max(4, Math.round(h)); return c; };
+    const texOf = c => { const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; };
+    const white = M('white', { color: '#f1eee6', emissive: '#3a3833' }), brk = M('brick', { color: '#a5523c', emissive: '#1d110c' });
+    const shing = M('shingle', { color: '#5f6268', emissive: '#14161a' }), flat = M('flat', { color: '#b8bcbf', emissive: '#2c2e30' });
+    const lite = M('lite', { color: '#a7acb1', emissive: '#26292c' }), tanb = M('tanblock', { color: '#a8977c', emissive: '#211c15' });
+    const conc = M('conc', { color: '#d8d4ca' }), dark = M('dark', { color: '#23262b' }), glass = M('glass', { color: '#2c3946', emissive: '#0d1218' });
+    const PX = 16, FM = {};
+    function facade(len, H) {
+      const key = Math.round(len * 4) + ':' + Math.round(H * 10); if (FM[key]) return FM[key];
+      const c = cvs(len * PX, H * PX), x = c.getContext('2d'), Y = h => (H - h) * PX, U = u => u * PX;
+      let s = 7 + Math.round(len * 13); const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+      const base = ['#a7553e', '#9b4b36', '#b25f45', '#8f4431'];
+      x.fillStyle = base[0]; x.fillRect(0, 0, c.width, c.height);
+      for (let r = 0, hh = 0; hh < H; r++, hh += 0.3) for (let u = (r % 2) * 0.3; u < len; u += 0.6) { const t = rnd(); x.fillStyle = base[t < 0.35 ? 1 : t < 0.7 ? 2 : t < 0.9 ? 0 : 3]; x.fillRect(U(u), Y(hh + 0.3) + 1, 0.58 * PX, 0.3 * PX - 1); }
+      x.fillStyle = '#efebe1';                                              // white bands: water table, floor line, frieze
+      x.fillRect(0, Y(0.65), c.width, 0.2 * PX); x.fillRect(0, Y(H / 2 + 0.15), c.width, 0.22 * PX); x.fillRect(0, Y(H - 0.2), c.width, 0.35 * PX);
+      if (H > 5) {
+        const step = 4.2, n = Math.max(1, Math.floor((len - 1.2) / step)), off = (len - n * step) / 2;
+        for (const [z0, wh] of [[1.05, 1.9], [H / 2 + 0.7, 1.9]]) for (let k = 0; k < n; k++) {
+          const u0 = off + k * step + 0.7, ww = step - 1.4;
+          x.fillStyle = '#f4f2ec'; x.fillRect(U(u0 - 0.1), Y(z0 + wh + 0.1), (ww + 0.2) * PX, (wh + 0.2) * PX);
+          const gr = x.createLinearGradient(0, Y(z0 + wh), 0, Y(z0)); gr.addColorStop(0, '#647a8d'); gr.addColorStop(1, '#27323c'); x.fillStyle = gr; x.fillRect(U(u0), Y(z0 + wh), ww * PX, wh * PX);
+          x.fillStyle = '#f0eee8'; for (let i = 1; i < 3; i++) x.fillRect(U(u0 + ww * i / 3) - 1, Y(z0 + wh), 3, wh * PX);
+          x.fillRect(U(u0), Y(z0 + wh * 0.72) - 1, ww * PX, 3);                                       // transom bar
+          for (let i = 1; i < 6; i++) x.fillRect(U(u0 + ww * i / 6), Y(z0 + wh), 1, wh * 0.28 * PX);   // transom muntins
+          x.fillStyle = '#e9e4d7'; x.fillRect(U(u0 - 0.2), Y(z0 - 0.02), (ww + 0.4) * PX, 0.13 * PX);
+        }
+      } else {
+        const step = 3.0, n = Math.max(1, Math.floor((len - 0.8) / step)), off = (len - n * step) / 2;
+        for (let k = 0; k < n; k++) { const u0 = off + k * step + 0.5, ww = step - 1.0; x.fillStyle = '#f4f2ec'; x.fillRect(U(u0 - 0.08), Y(2.6), (ww + 0.16) * PX, 1.9 * PX); x.fillStyle = '#34414c'; x.fillRect(U(u0), Y(2.5), ww * PX, 1.7 * PX); }
+      }
+      return (FM[key] = M('fac' + key, { map: texOf(c), emissive: '#1c1410' }));
+    }
+    function addTris(arr, m) { const ge = new THREE.BufferGeometry(); ge.setAttribute('position', new THREE.Float32BufferAttribute(arr, 3)); ge.computeVertexNormals(); g.add(new THREE.Mesh(ge, m)); }
+    const Q = (A, a, b, c, d) => A.push(...a, ...b, ...c, ...a, ...c, ...d);
+    // frustum hip: rectangle [x0,x1]x[n0,n1] (E,N) eaves at y, top inset i (i >= half the short side -> true hip ridge)
+    function hip(x0, n0, x1, n1, y, pitch, inset, m, mTop, ov) {
+      ov = ov == null ? 0.5 : ov; x0 -= ov; n0 -= ov; x1 += ov; n1 += ov;
+      const w = x1 - x0, d = n1 - n0, h2 = Math.min(w, d) / 2, i = Math.min(inset == null ? h2 : inset, h2), r = i * Math.tan(pitch * Math.PI / 180), Y = y + r;
+      const P = (e, n, yy) => [e, yy, -n];
+      const b = [P(x0, n0, y), P(x1, n0, y), P(x1, n1, y), P(x0, n1, y)], t = [P(x0 + i, n0 + i, Y), P(x1 - i, n0 + i, Y), P(x1 - i, n1 - i, Y), P(x0 + i, n1 - i, Y)];
+      const A = []; for (let k = 0; k < 4; k++) Q(A, b[k], b[(k + 1) % 4], t[(k + 1) % 4], t[k]); addTris(A, m);
+      if (w - 2 * i > 0.05 && d - 2 * i > 0.05) { const T = []; Q(T, t[0], t[1], t[2], t[3]); addTris(T, mTop || m); }
+      return Y;
+    }
+    // gable: ridge along E-W (ax 'x') or N-S (ax 'y'); brick gable-end triangles with a white rake
+    function gable(x0, n0, x1, n1, y, pitch, ax, m, ov) {
+      ov = ov == null ? 0.45 : ov; const P = (e, n, yy) => [e, yy, -n];
+      const A = [], T = [];
+      if (ax === 'x') { const r = (n1 - n0) / 2 * Math.tan(pitch * Math.PI / 180), nm = (n0 + n1) / 2;
+        Q(A, P(x0 - ov, n0 - ov, y), P(x1 + ov, n0 - ov, y), P(x1 + ov, nm, y + r), P(x0 - ov, nm, y + r)); Q(A, P(x0 - ov, n1 + ov, y), P(x1 + ov, n1 + ov, y), P(x1 + ov, nm, y + r), P(x0 - ov, nm, y + r));
+        for (const e of [x0, x1]) T.push(...P(e, n0, y), ...P(e, n1, y), ...P(e, nm, y + r)); }
+      else { const r = (x1 - x0) / 2 * Math.tan(pitch * Math.PI / 180), em = (x0 + x1) / 2;
+        Q(A, P(x0 - ov, n0 - ov, y), P(x0 - ov, n1 + ov, y), P(em, n1 + ov, y + r), P(em, n0 - ov, y + r)); Q(A, P(x1 + ov, n0 - ov, y), P(x1 + ov, n1 + ov, y), P(em, n1 + ov, y + r), P(em, n0 - ov, y + r));
+        for (const n of [n0, n1]) T.push(...P(x0, n, y), ...P(x1, n, y), ...P(em, n, y + r)); }
+      addTris(A, m); addTris(T, brk);
+    }
+    function walls(x0, n0, x1, n1, H) {
+      const R = [[x0, n0], [x1, n0], [x1, n1], [x0, n1], [x0, n0]];
+      for (let k = 0; k < 4; k++) { const a = R[k], b = R[k + 1], Ls = Math.hypot(b[0] - a[0], b[1] - a[1]);
+        const w = new THREE.Mesh(new THREE.PlaneGeometry(Ls, H), facade(Ls, H)); w.position.set((a[0] + b[0]) / 2, H / 2, -(a[1] + b[1]) / 2); w.rotation.y = Math.atan2(b[1] - a[1], b[0] - a[0]); g.add(w); }
+      g.add(box(x1 - x0 + 0.5, 0.3, n1 - n0 + 0.5, (x0 + x1) / 2, H - 0.3, -(n0 + n1) / 2, white));     // white cornice
+      const fl = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, n1 - n0), dark); fl.rotation.x = -Math.PI / 2; fl.position.set((x0 + x1) / 2, H - 0.05, -(n0 + n1) / 2); g.add(fl);
+    }
+    for (const p of B.parts) {
+      const a = toEN(p.r[0][0], p.r[0][1]), b = toEN(p.r[1][0], p.r[1][1]), x0 = Math.min(a[0], b[0]), x1 = Math.max(a[0], b[0]), n0 = Math.min(a[1], b[1]), n1 = Math.max(a[1], b[1]);
+      walls(x0, n0, x1, n1, p.h);
+      const rm = p.roof === 'lhip' ? lite : shing;
+      if (p.roof === 'gable') gable(x0, n0, x1, n1, p.h, p.pitch, p.ax, shing);
+      else hip(x0, n0, x1, n1, p.h, p.pitch, p.inset, rm, p.roof === 'phip' ? flat : lite);
+      for (let k = 0; k < (p.rtu || 0); k++) g.add(box(1.6, 0.9, 1.2, x0 + (x1 - x0) * (k + 1) / (p.rtu + 1), p.h + (p.inset || 0) * Math.tan(p.pitch * Math.PI / 180), -(n0 + n1) / 2, M('rtu', { color: '#cfd2d4' })));
+    }
+    // porches: brick piers with white base + cap, white beam with bracket triangles, low shingle hip roof (local +z = outward)
+    for (const q of B.porches) {
+      const c = toEN(q.c[0], q.c[1]), pv = new THREE.Group(); pv.position.set(c[0], 0, -c[1]); pv.rotation.y = q.a * Math.PI / 180; g.add(pv);
+      const W = q.w, D = q.d, H = q.h, n = q.piers;
+      pv.add(box(W, 0.25, D, 0, 0, D / 2, conc));
+      for (let k = 0; k < n; k++) { const px = -W / 2 + 0.35 + k * (W - 0.7) / (n - 1);
+        pv.add(box(0.7, H - 0.6, 0.7, px, 0.25, D - 0.35, brk)); pv.add(box(0.8, 0.25, 0.8, px, 0.25, D - 0.35, white)); pv.add(box(0.8, 0.18, 0.8, px, H - 0.6, D - 0.35, white));
+        if (k < n - 1) { const sp = (W - 0.7) / (n - 1), sh = new THREE.Shape([new THREE.Vector2(-0.45, 0), new THREE.Vector2(0.45, 0), new THREE.Vector2(0, -0.55)]);
+          for (const s of [px + 0.55, px + sp - 0.55]) { const tg = new THREE.ShapeGeometry(sh), tm = new THREE.Mesh(tg, white); tm.position.set(s, H - 0.35, D - 0.02); pv.add(tm); } } }
+      pv.add(box(W + 0.2, 0.42, 0.3, 0, H - 0.42, D - 0.3, white)); pv.add(box(0.3, 0.42, D, -W / 2 + 0.05, H - 0.42, D / 2, white)); pv.add(box(0.3, 0.42, D, W / 2 - 0.05, H - 0.42, D / 2, white));
+      pv.add(box(W * 0.3, 2.4, 0.12, 0, 0.25, 0.08, glass));
+      { const A = [], ov = 0.4, r = Math.min(W, D) / 2 * Math.tan(22 * Math.PI / 180), y = H, P = (e, z, yy) => [e, yy, z];
+        const x0 = -W / 2 - ov, x1 = W / 2 + ov, z0 = -0.2, z1 = D + ov, i = Math.min(W, D + 0.2) / 2;
+        const b = [P(x0, z0, y), P(x1, z0, y), P(x1, z1, y), P(x0, z1, y)], t = [P(x0 + i, z0 + i, y + r), P(x1 - i, z0 + i, y + r), P(x1 - i, z1 - i, y + r), P(x0 + i, z1 - i, y + r)];
+        for (let k = 0; k < 4; k++) Q(A, b[k], b[(k + 1) % 4], t[(k + 1) % 4], t[k]);
+        const ge = new THREE.BufferGeometry(); ge.setAttribute('position', new THREE.Float32BufferAttribute(A, 3)); ge.computeVertexNormals(); pv.add(new THREE.Mesh(ge, shing)); }
+    }
+    // covered connector walkway: white posts + low gable roof
+    for (const q of B.covers) { const a = toEN(q.r[0][0], q.r[0][1]), b = toEN(q.r[1][0], q.r[1][1]), x0 = Math.min(a[0], b[0]), x1 = Math.max(a[0], b[0]), n0 = Math.min(a[1], b[1]), n1 = Math.max(a[1], b[1]);
+      for (let n = n0 + 0.3; n <= n1; n += 3) for (const e of [x0 + 0.2, x1 - 0.2]) g.add(box(0.28, q.h, 0.28, e, 0, -n, white));
+      g.add(box(x1 - x0 + 0.2, 0.3, n1 - n0, (x0 + x1) / 2, q.h - 0.3, -(n0 + n1) / 2, white)); gable(x0, n0, x1, n1, q.h, 24, 'y', shing, 0.35); }
+    // retaining walls (tan block, cap) and stairs with rails
+    for (const q of B.rwalls) { const P = q.p.map(c => toEN(c[0], c[1]));
+      for (let i = 0; i < P.length - 1; i++) { const a = P[i], b = P[i + 1], Ls = Math.hypot(b[0] - a[0], b[1] - a[1]), ry = Math.atan2(b[1] - a[1], b[0] - a[0]);
+        const w = new THREE.Mesh(new THREE.BoxGeometry(Ls, q.h, 0.4), tanb); w.position.set((a[0] + b[0]) / 2, q.h / 2, -(a[1] + b[1]) / 2); w.rotation.y = ry; g.add(w);
+        const cp = new THREE.Mesh(new THREE.BoxGeometry(Ls + 0.1, 0.08, 0.5), conc); cp.position.set((a[0] + b[0]) / 2, q.h + 0.04, -(a[1] + b[1]) / 2); cp.rotation.y = ry; g.add(cp); } }
+    for (const q of B.stairs) { const c = toEN(q.c[0], q.c[1]), sg = new THREE.Group(); sg.position.set(c[0], 0, -c[1]); sg.rotation.y = q.a * Math.PI / 180; g.add(sg);
+      const t = 0.35, rs = q.rise / q.n, rail = M('rail', { color: '#30343a' });
+      for (let k = 0; k < q.n; k++) sg.add(box(q.w, q.rise - k * rs, t, 0, 0, -k * t + q.n * t / 2 - t / 2, conc));
+      for (const s of [-1, 1]) { sg.add(box(0.45, q.rise + 0.3, q.n * t, s * (q.w / 2 + 0.22), 0, 0, brk));
+        const r = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, q.n * t + 0.6), rail); r.position.set(s * (q.w / 2 - 0.1), q.rise / 2 + 0.95, 0); r.rotation.x = -Math.atan2(q.rise, q.n * t); sg.add(r);
+        for (const z of [-q.n * t / 2, 0, q.n * t / 2]) sg.add(box(0.05, 0.95, 0.05, s * (q.w / 2 - 0.1), q.rise * (0.5 - z / (q.n * t)), z, rail)); } }
+    // sign wall "GARY LEE SPEARS CENTER / FOR NURSING AND HEALTH SCIENCES"
+    for (const q of B.signs) { const c = toEN(q.c[0], q.c[1]), sg = new THREE.Group(); sg.position.set(c[0], 0, -c[1]); sg.rotation.y = q.a * Math.PI / 180; g.add(sg);
+      const lc = cvs(q.w * 60, q.h * 60), lx = lc.getContext('2d'); lx.fillStyle = '#cbbfa6'; lx.fillRect(0, 0, lc.width, lc.height);
+      lx.fillStyle = 'rgba(0,0,0,0.12)'; for (let i = 0; i < lc.width; i += 90) lx.fillRect(i, 0, 2, lc.height); lx.fillRect(0, lc.height / 2, lc.width, 2);
+      lx.fillStyle = '#5c5548'; lx.textAlign = 'center'; lx.font = 'bold ' + Math.round(lc.height * 0.22) + 'px "DejaVu Serif", Georgia, serif'; lx.fillText('GARY LEE SPEARS CENTER', lc.width / 2, lc.height * 0.42);
+      lx.font = 'bold ' + Math.round(lc.height * 0.15) + 'px "DejaVu Serif", Georgia, serif'; lx.fillText('FOR NURSING AND HEALTH SCIENCES', lc.width / 2, lc.height * 0.72);
+      const fm = M('signface', { map: texOf(lc), emissive: '#2f2b24' });
+      const m = new THREE.Mesh(new THREE.BoxGeometry(q.w, q.h, 0.5), [tanb, tanb, conc, tanb, fm, tanb]); m.position.set(0, q.h / 2, 0); sg.add(m);
+      sg.add(box(q.w + 0.6, 0.6, 0.7, 0, 0, 0, tanb)); sg.add(box(q.ext, q.h * 0.75, 0.4, q.w / 2 + q.ext / 2, 0, -0.05, brk)); sg.add(box(q.ext, 0.08, 0.5, q.w / 2 + q.ext / 2, q.h * 0.75, -0.05, conc)); }
+    // lamp posts + bollards (dark)
+    { const pm = M('lamp-post', { color: '#22252a' }), gl = M('lamp-globe', { color: '#fff7dc', emissive: '#bfb28a' });
+      for (const q of B.lamps) { const c = toEN(q[0], q[1]); g.add(box(0.32, 0.3, 0.32, c[0], 0, -c[1], pm));
+        const p = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.09, 4.2, 8), pm); p.position.set(c[0], 2.3, -c[1]); g.add(p);
+        const lt = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.45, 10), pm); lt.position.set(c[0], 4.5, -c[1]); g.add(lt);
+        const b = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 6), gl); b.position.set(c[0], 4.22, -c[1]); g.add(b); }
+      for (const q of B.bollards) { const c = toEN(q[0], q[1]); const p = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 1.0, 10), pm); p.position.set(c[0], 0.5, -c[1]); g.add(p); } }
+    return g;
+  }
+  // <<< N22 build
+  root.add(buildSign()); root.add(buildPlaza()); if (L.nwdr) root.add(buildNwdr()); if (L.baseball) root.add(buildBaseball()); if (L.football) root.add(buildFootball()); if (L.softball) root.add(buildSoftball()); if (L.practice) root.add(buildPractice()); if (L.lamar) root.add(buildLamar()); if (L.rab31) root.add(buildRab31()); if (L.benton) root.add(buildBenton()); if (L.heindl) root.add(buildHeindl()); if (L.lafayette) root.add(buildLafayette()); if (L.yalobusha) root.add(buildYalobusha()); if (L.mccormick) root.add(buildMcCormick()); if (L.tate) root.add(buildTate()); if (L.lib53) root.add(buildLib53()); if (L.conn56) root.add(buildConn56()); if (L.w58) root.add(buildW58()); if (L.n22) root.add(buildN22());
   root.traverse(o => { o.frustumCulled = false; });
   return root;
 };
@@ -1706,3 +1836,7 @@ window.NWCC_LANDMARKS.conn56 = {"h":4.2,"pitch":26.0,"parts":[{"k":"n","r":[[-89
 // #58 Strategic Communications site (2026-10-12). Coordinates [lng,lat]; heights in m.
 window.NWCC_LANDMARKS.w58 = {"flags":[[-89.9698462,34.6259],[-89.9698298,34.6259036],[-89.9698134,34.6259072]],"flag_h":11.0,"lamps":[[-89.9697752,34.6258963],[-89.9693429,34.6259181]],"hydrant":[-89.9699324,34.6259253],"sign":[-89.9698931,34.6259036],"walls":[{"pts":[[-89.9696748,34.6260754],[-89.9695569,34.6261152],[-89.9695612,34.6261677],[-89.9696311,34.6261731],[-89.9696748,34.6260754]],"h":1.0,"t":0.3},{"pts":[[-89.9695569,34.6261152],[-89.9694641,34.6261369],[-89.9693713,34.6261568]],"h":0.9,"t":0.3}],"planters":[[[-89.969585,34.6261652],[-89.9695938,34.6261616],[-89.9696017,34.6261567],[-89.9696083,34.6261507],[-89.9696133,34.6261436],[-89.9696166,34.6261359],[-89.9696179,34.6261279],[-89.9696174,34.6261197],[-89.969615,34.6261118]],[[-89.969579,34.6261516],[-89.9695848,34.6261493],[-89.9695899,34.6261461],[-89.9695942,34.6261421],[-89.9695975,34.6261375],[-89.9695996,34.6261325],[-89.9696005,34.6261272],[-89.9696001,34.6261219],[-89.9695986,34.6261168]]],"bollards":[[-89.9692892,34.6259568],[-89.9692566,34.6259872],[-89.9692327,34.6260054],[-89.9692088,34.6260235],[-89.9691849,34.6260417],[-89.9691418,34.6260743],[-89.9690627,34.6261136],[-89.9689851,34.6261338]],"rsign":[-89.9693298,34.6258674],"rsign_rot":-45,"acc":[[-89.9692683,34.6259358],[-89.9692206,34.6259785],[-89.9691965,34.6259969]]};
 /* <<< W58 data */
+/* N22 data >>> */
+// #22A/#22B Gary Lee Spears Center (2026-10-12). Coordinates [lng,lat]; lengths/heights in m.
+window.NWCC_LANDMARKS.n22 = {"parts":[{"k":"hip","r":[[-89.9703134,34.624141],[-89.9698407,34.6244457]],"h":7.4,"roof":"hip","pitch":20,"inset":null,"ax":null,"rtu":0},{"k":"gable","r":[[-89.9703865,34.6241717],[-89.9703134,34.6243399]],"h":7.4,"roof":"gable","pitch":28,"inset":null,"ax":"x","rtu":0},{"k":"gable","r":[[-89.9698407,34.6241518],[-89.9697534,34.6243879]],"h":7.4,"roof":"gable","pitch":28,"inset":null,"ax":"y","rtu":0},{"k":"gable","r":[[-89.9701464,34.6244457],[-89.9700154,34.6244729]],"h":7.4,"roof":"gable","pitch":28,"inset":null,"ax":"y","rtu":0},{"k":"gable","r":[[-89.9702555,34.6241165],[-89.9701682,34.624141]],"h":7.4,"roof":"gable","pitch":28,"inset":null,"ax":"y","rtu":0},{"k":"gable","r":[[-89.9699935,34.6241165],[-89.9699062,34.624141]],"h":7.4,"roof":"gable","pitch":28,"inset":null,"ax":"y","rtu":0},{"k":"phip","r":[[-89.9697162,34.6242739],[-89.9689401,34.624491]],"h":7.4,"roof":"phip","pitch":30,"inset":5.0,"ax":null,"rtu":3},{"k":"lhip","r":[[-89.9695165,34.6241373],[-89.9691573,34.6242739]],"h":7.4,"roof":"lhip","pitch":14,"inset":5.0,"ax":null,"rtu":2},{"k":"hip","r":[[-89.9696278,34.6242296],[-89.9695165,34.6242739]],"h":7.4,"roof":"hip","pitch":28,"inset":null,"ax":null,"rtu":0},{"k":"hip","r":[[-89.9691584,34.6242287],[-89.9690165,34.6242739]],"h":7.4,"roof":"hip","pitch":28,"inset":null,"ax":null,"rtu":0},{"k":"gable","r":[[-89.9694695,34.624491],[-89.969404,34.6245127]],"h":7.4,"roof":"gable","pitch":30,"inset":null,"ax":"y","rtu":0},{"k":"gable","r":[[-89.9692185,34.624491],[-89.969142,34.6245127]],"h":7.4,"roof":"gable","pitch":30,"inset":null,"ax":"y","rtu":0},{"k":"gable","r":[[-89.9693604,34.624491],[-89.969273,34.6245054]],"h":7.4,"roof":"gable","pitch":30,"inset":null,"ax":"y","rtu":0},{"k":"hip","r":[[-89.9697545,34.6243291],[-89.9697162,34.6243879]],"h":4.0,"roof":"hip","pitch":26,"inset":null,"ax":null,"rtu":0}],"porches":[{"c":[-89.9693167,34.6245054],"a":180,"w":9.0,"d":2.8,"h":3.6,"piers":4},{"c":[-89.9700809,34.6244729],"a":180,"w":8.0,"d":2.6,"h":3.6,"piers":4},{"c":[-89.9690875,34.6242287],"a":0,"w":12.0,"d":2.8,"h":3.6,"piers":5},{"c":[-89.9703505,34.6241717],"a":0,"w":6.0,"d":2.4,"h":3.6,"piers":3}],"covers":[{"r":[[-89.9697545,34.6243879],[-89.9697162,34.6244412]],"h":3.4}],"rwalls":[{"p":[[-89.9703647,34.6244873],[-89.9702162,34.6244873]],"h":0.8},{"p":[[-89.9703647,34.6245072],[-89.9702293,34.6245072]],"h":0.45},{"p":[[-89.9698996,34.6244873],[-89.9698298,34.6244873]],"h":0.8},{"p":[[-89.9700896,34.6245154],[-89.970011,34.6245154],[-89.970011,34.6245217],[-89.9700896,34.6245217],[-89.9700896,34.6245154]],"h":0.5},{"p":[[-89.9697381,34.6241744],[-89.9697381,34.6242151],[-89.9696606,34.6242151]],"h":0.7},{"p":[[-89.9696114,34.6242151],[-89.9695307,34.6242151]],"h":0.7}],"stairs":[{"c":[-89.9700809,34.6244995],"a":0,"w":3.2,"n":2,"rise":0.35},{"c":[-89.9691682,34.6245217],"a":0,"w":2.4,"n":5,"rise":0.9},{"c":[-89.969636,34.624207],"a":180,"w":3.6,"n":3,"rise":0.5}],"signs":[{"c":[-89.9692512,34.6245235],"a":180,"w":6.0,"h":1.5,"ext":6.0}],"lamps":[[-89.9698887,34.6245235],[-89.9697686,34.6245235],[-89.97019,34.6245235],[-89.9693167,34.6245362],[-89.9695787,34.6242504],[-89.9696879,34.6240967],[-89.9690329,34.6241383]],"bollards":[[-89.9698669,34.6245271],[-89.9698472,34.6245271],[-89.9698276,34.6245271],[-89.9698079,34.6245271]]};
+/* <<< N22 data */

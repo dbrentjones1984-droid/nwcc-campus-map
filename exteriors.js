@@ -51,6 +51,14 @@ window.NWCCExteriors = function (THREE) {
     for (let i = P.length - 1; i >= 0; i--) { const p = P[i]; while (up.length >= 2 && cr(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); }
     return lo.slice(0, -1).concat(up.slice(0, -1));
   }
+  function innerPt(p, c0) {   // POS-AUDIT: middle of the widest inside span on scanlines near the centroid
+    let best = null; const ys = p.map(q => q[1]), y0 = Math.min(...ys), y1 = Math.max(...ys);
+    for (let k = 1; k < 24; k++) { const y = y0 + (y1 - y0) * k / 24, xs = [];
+      for (let i = 0; i < p.length; i++) { const a = p[i], b = p[(i + 1) % p.length]; if ((a[1] > y) !== (b[1] > y)) xs.push(a[0] + (y - a[1]) / (b[1] - a[1]) * (b[0] - a[0])); }
+      xs.sort((u, v) => u - v);
+      for (let i = 0; i + 1 < xs.length; i += 2) { const w = xs[i + 1] - xs[i], m = [(xs[i] + xs[i + 1]) / 2, y], s = w - 0.15 * Math.hypot(m[0] - c0[0], m[1] - c0[1]); if (!best || s > best[0]) best = [s, m]; } }
+    return best ? best[1] : c0;
+  }
   function obb(pts) {
     const H = hull(pts); let best = null;
     for (let i = 0; i < H.length; i++) {
@@ -385,7 +393,8 @@ window.NWCCExteriors = function (THREE) {
   function build(ringEN, ex, key) {
     const grp = new THREE.Group(); grp.userData.key = key;
     const pts = cleanRing(ringEN); if (pts.length < 3) return grp;
-    const o = obb(pts), c = pip(centroid(pts), pts) ? centroid(pts) : o.c;
+    // POS-AUDIT (2026-10-12): pin falls back to a point inside the footprint for U/L shapes
+    const o = obb(pts), c = pip(centroid(pts), pts) ? centroid(pts) : pip(o.c, pts) ? o.c : innerPt(pts, centroid(pts));
     const rect = Math.abs(signedArea(pts)) / (4 * o.hx * o.hy);
     if (ex.arch === 'field') {
       const polys = (ex.pitches && ex.pitches.length) ? ex.pitches.map(q => ({ ring: q.ringEN, sport: q.sport, y: q.y, fence: q.fence, paint: q.paint, img: q.img, frame: q.frameEN })) : [{ ring: pts, sport: 'turf' }];

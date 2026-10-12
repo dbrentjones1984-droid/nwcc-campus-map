@@ -536,6 +536,80 @@ function flyToItem(it, animate) {
   map.flyTo({ center: [it.lng, it.lat], offset: off, zoom: Math.max(map.getZoom(), lm ? 17.9 : 17.4), pitch: map.getPitch() < 5 ? 0 : Math.max(map.getPitch(), 55) /* MOCKUP: stay flat in 2D */, duration: animate ? 1000 : 0 });
 }
 
+// PHASE-WALK >>> (2026-10-12) blue dot, on-campus distance / walk time on cards, walking directions
+const CAMPUS_RING = [[34.619471, -89.980023], [34.619471, -89.9686158], [34.6195293, -89.9686156], [34.6201377, -89.9686099], [34.6221589, -89.9686148], [34.6246406, -89.9686147], [34.6246718, -89.9686145], [34.6246718, -89.9675428], [34.6253637, -89.9675428], [34.6253637, -89.9678866], [34.6258204, -89.9678866], [34.6258204, -89.9686152], [34.6266639, -89.9686306], [34.6277464, -89.9686255], [34.6278259, -89.9719786], [34.6278402, -89.9726015], [34.6278399, -89.9735038], [34.6279222, -89.9767121], [34.6279593, -89.9787689], [34.6279896, -89.980023], [34.619471, -89.980023]].map(p => [p[1], p[0]]);   // boundary.json [lat,lng] -> [lng,lat]
+function dirUrl(it) {
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  return ios ? `https://maps.apple.com/?daddr=${it.lat},${it.lng}&dirflg=w` : `https://www.google.com/maps/dir/?api=1&destination=${it.lat},${it.lng}&travelmode=walking`;
+}
+const WALK = (() => {
+  const R = 6371008.8, rad = Math.PI / 180, MARGIN = 60, SPEED = 1.34;
+  let watchId = null, fix = null, state = 'off', cardIt = null, follow = false;   // state: off | asking | ok | denied | unavailable
+  const dist = (a, b, c, d) => { const x = (d - b) * rad * Math.cos((a + c) / 2 * rad), y = (c - a) * rad; return Math.hypot(x, y) * R; };
+  function inRing(lng, lat, ring) { let ins = false; for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) { const [xi, yi] = ring[i], [xj, yj] = ring[j];
+    if ((yi > lat) !== (yj > lat) && lng < (xj - xi) * (lat - yi) / (yj - yi) + xi) ins = !ins; } return ins; }
+  function edgeDist(lng, lat, ring) { let best = 1e18; const k = Math.cos(lat * rad) * rad * R, m = rad * R;
+    for (let i = 0; i < ring.length - 1; i++) { const ax = (ring[i][0] - lng) * k, ay = (ring[i][1] - lat) * m, bx = (ring[i + 1][0] - lng) * k, by = (ring[i + 1][1] - lat) * m;
+      const dx = bx - ax, dy = by - ay, t = Math.max(0, Math.min(1, -(ax * dx + ay * dy) / (dx * dx + dy * dy || 1))); best = Math.min(best, Math.hypot(ax + t * dx, ay + t * dy)); } return best; }
+  const onCampus = f => inRing(f.lng, f.lat, CAMPUS_RING) || edgeDist(f.lng, f.lat, CAMPUS_RING) <= MARGIN;
+  // ---- map layers (one source, updated only when a position arrives)
+  const EMPTY = { type: 'FeatureCollection', features: [] };
+  const circleFC = { type: 'FeatureCollection', features: [{ type: 'Feature', properties: { k: 'acc' }, geometry: { type: 'Polygon', coordinates: [[]] } },
+    { type: 'Feature', properties: { k: 'dot' }, geometry: { type: 'Point', coordinates: [0, 0] } }] };
+  const ringC = circleFC.features[0].geometry.coordinates[0], N = 48;
+  for (let i = 0; i <= N; i++) ringC.push([0, 0]);   // reused array, no reallocation per fix
+  function ensureLayers() {
+    if (!map.getSource('me')) map.addSource('me', { type: 'geojson', data: fix ? circleFC : EMPTY });
+    if (!map.getLayer('me-acc')) {
+      map.addLayer({ id: 'me-acc', type: 'fill', source: 'me', filter: ['==', ['get', 'k'], 'acc'], paint: { 'fill-color': '#2f7cf6', 'fill-opacity': 0.16 } });
+      map.addLayer({ id: 'me-acc-line', type: 'line', source: 'me', filter: ['==', ['get', 'k'], 'acc'], paint: { 'line-color': '#2f7cf6', 'line-opacity': 0.5, 'line-width': 1 } });
+      map.addLayer({ id: 'me-dot', type: 'circle', source: 'me', filter: ['==', ['get', 'k'], 'dot'],
+        paint: { 'circle-radius': 7, 'circle-color': '#1a73e8', 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 2.5, 'circle-pitch-alignment': 'viewport' } });
+    } else if (map.getStyle().layers.slice(-3).map(l => l.id).join() !== 'me-acc,me-acc-line,me-dot') ['me-acc', 'me-acc-line', 'me-dot'].forEach(id => map.moveLayer(id));
+  }
+  map.on('styledata', () => { if (map.isStyleLoaded() && (fix || map.getSource('me'))) ensureLayers(); });
+  function draw() {
+    ensureLayers();
+    const r = Math.max(fix.acc, 3), k = 1 / (R * rad), kx = k / Math.cos(fix.lat * rad);
+    for (let i = 0; i <= N; i++) { const a = i / N * 2 * Math.PI, p = ringC[i]; p[0] = fix.lng + Math.cos(a) * r * kx; p[1] = fix.lat + Math.sin(a) * r * k; }
+    const d = circleFC.features[1].geometry.coordinates; d[0] = fix.lng; d[1] = fix.lat;
+    map.getSource('me').setData(circleFC);
+  }
+  // ---- card line
+  function fmtDist(m) { const ft = m * 3.28084; return ft < 1000 ? Math.max(10, Math.round(ft / 10) * 10) + ' ft' : (m / 1609.344).toFixed(ft < 5280 * 10 ? 2 : 1).replace(/0$/, '') + ' mi'; }
+  function renderCard() {
+    const el = document.getElementById('walkInfo'); if (!el || !cardIt) return;
+    if (state !== 'ok' || !fix) { el.hidden = true; el.textContent = ''; return; }
+    if (!onCampus(fix)) { el.hidden = false; el.className = 'walk off'; el.textContent = "You're off campus"; return; }
+    const m = dist(fix.lat, fix.lng, cardIt.lat, cardIt.lng), min = Math.max(1, Math.round(m / SPEED / 60));
+    el.hidden = false; el.className = 'walk'; el.innerHTML = `<b>${fmtDist(m)}</b> away · about ${min} min walk`;
+  }
+  const btn = () => document.getElementById('tLocate');
+  function setBtn() { const b = btn(); if (b) { b.classList.toggle('on', state === 'ok'); b.classList.toggle('err', state === 'denied' || state === 'unavailable'); } }
+  function start() {
+    if (watchId !== null || state === 'denied') return;
+    if (!('geolocation' in navigator)) { state = 'unavailable'; setBtn(); renderCard(); return; }
+    state = 'asking';
+    watchId = navigator.geolocation.watchPosition(p => {
+      const first = !fix; fix = fix || {}; fix.lat = p.coords.latitude; fix.lng = p.coords.longitude; fix.acc = p.coords.accuracy || 20;
+      state = 'ok'; setBtn(); draw(); renderCard();
+      if (first && follow) { follow = false; recenter(); }
+    }, e => {
+      state = e.code === 1 ? 'denied' : 'unavailable'; setBtn(); renderCard();
+      if (e.code === 1) { navigator.geolocation.clearWatch(watchId); watchId = null; fix = null; if (map.getSource('me')) map.getSource('me').setData(EMPTY); }
+      if (follow && window.NWCC_PWA) NWCC_PWA.toast(e.code === 1 ? 'Location is turned off for this site.' : 'Your location is not available right now.');
+      follow = false;
+    }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 });
+  }
+  function recenter() {
+    if (!fix) return;
+    if (!onCampus(fix)) { if (window.NWCC_PWA) NWCC_PWA.toast("You're off campus"); return; }
+    map.easeTo({ center: [fix.lng, fix.lat], zoom: Math.max(map.getZoom(), 17.5), duration: 700 });
+  }
+  function locate() { if (fix) recenter(); else { follow = true; start(); if (state === 'denied' && window.NWCC_PWA) NWCC_PWA.toast('Location is turned off for this site.'); } }
+  return { onCard(it) { cardIt = it; renderCard(); start(); }, locate, _state: () => ({ state, fix: fix && { lat: fix.lat, lng: fix.lng, acc: fix.acc, onCampus: onCampus(fix) } }) };
+})();
+// <<< PHASE-WALK
 const card = document.getElementById('card');
 function select(key, animate) {
   const it = byKey[key]; if (!it) return;
@@ -556,12 +630,14 @@ function showCard(it) { // card UI simplified 2026-10-08
     ${photoHtml}
     <div class="body"><div class="meta"><span class="tag" style="--c:${c.color}"><i></i>${c.label}</span></div>
     ${partsHtml}
-    <a class="dir" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=${it.lat},${it.lng}"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.7 11.3 12.7 2.3a1 1 0 0 0-1.4 0l-9 9a1 1 0 0 0 0 1.4l9 9a1 1 0 0 0 1.4 0l9-9a1 1 0 0 0 0-1.4zM14 14.5V12h-4v3H8v-4a1 1 0 0 1 1-1h5V7.5l3.5 3.5L14 14.5z"/></svg>Directions</a></div>
+    <div class="walk" id="walkInfo" hidden></div>
+    <a class="dir" target="_blank" rel="noopener" href="${dirUrl(it)}"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.7 11.3 12.7 2.3a1 1 0 0 0-1.4 0l-9 9a1 1 0 0 0 0 1.4l9 9a1 1 0 0 0 1.4 0l9-9a1 1 0 0 0 0-1.4zM14 14.5V12h-4v3H8v-4a1 1 0 0 1 1-1h5V7.5l3.5 3.5L14 14.5z"/></svg>Directions</a></div>
     <div class="sheet-attrib">© OpenStreetMap contributors · MapLibre</div>`; // polished card markup (theme mockup 2026-10-08); notes paragraph removed 2026-10-08
   card.classList.add('show');
   card.querySelector('.x').onclick = closeCard;
   card.querySelectorAll('.parts button').forEach(bt => bt.onclick = () => select(bt.dataset.k, true));
   wirePhotos(it);   // CARD-PHOTO
+  WALK.onCard(it);   // PHASE-WALK
 }
 // CARD-PHOTO >>>
 // Building photos (2026-10-09, multi-photo 2026-10-11): an item's `photo` is one {src, srcset, full, w, h, fw, fh, alt, caption?}
@@ -692,6 +768,7 @@ document.getElementById('tTilt').onclick = function () {
   this.classList.toggle('on', flat); this.textContent = flat ? '3D' : '2D';
 };
 function applyLabels() { if (map.getLayer('building-labels')) map.setLayoutProperty('building-labels', 'visibility', labelsOn ? 'visible' : 'none'); }
+document.getElementById('tLocate').onclick = () => WALK.locate();   // PHASE-WALK
 document.getElementById('tLabels').onclick = function () { labelsOn = !labelsOn; this.classList.toggle('on', labelsOn); applyLabels(); };
 // P2 compare + satellite toggle buttons removed from UI 2026-10-08 (compare/satOn stay false).
 // Orbit (slow auto-rotate) button removed 2026-10-10.
@@ -721,5 +798,5 @@ function selftest() {
   document.title = 'SELFTEST ' + (out.pass ? 'PASS' : 'FAIL');
   fitCampus(false);
 }
-window.NWCC_APP = { map, pickAt, select, search, closeCard, fitCampus, stats: () => renderer ? { calls: renderer.info.render.calls, tris: renderer.info.render.triangles, geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures, meshes: (() => { let n = 0; scene.traverse(o => { if (o.isMesh) n++; }); return n; })() } : null };
+window.NWCC_APP = { map, pickAt, select, search, closeCard, fitCampus, walk: () => WALK._state(), stats: () => renderer ? { calls: renderer.info.render.calls, tris: renderer.info.render.triangles, geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures, meshes: (() => { let n = 0; scene.traverse(o => { if (o.isMesh) n++; }); return n; })() } : null };
 })();

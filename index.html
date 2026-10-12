@@ -326,6 +326,7 @@ button{touch-action:manipulation;-webkit-user-select:none;user-select:none}
 @media(max-width:719px){ #lightbox .lbnav{top:auto;bottom:calc(14px + env(safe-area-inset-bottom));transform:none} }
 /* <<< CARD-PHOTO2 */
 @media (hover:none) and (pointer:coarse){:root{--blur:none}*{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}}   /* FINAL-PHASE: no frosted-glass blur on touch devices */
+#card .walk{margin-top:12px;font-size:14px;color:var(--text);opacity:.92}#card .walk b{font-weight:700}#card .walk.off{font-size:12.5px;opacity:.7}.tools #tLocate.on{color:#5aa2ff}.tools #tLocate.err{opacity:.55}   /* PHASE-WALK */
 </style>
 </head>
 <body>
@@ -347,6 +348,7 @@ button{touch-action:manipulation;-webkit-user-select:none;user-select:none}
 <div class="tools glass">
   <button id="tHome" title="Fit campus" aria-label="Fit campus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9v11h13V9"/><path d="M10 20v-5.5h4V20"/></svg></button>
   <button id="tTilt" title="Toggle 3D tilt" aria-label="Toggle 3D tilt">2D</button>
+  <button id="tLocate" title="Show my location" aria-label="Show my location"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8"/></svg></button>
   <button id="tLabels" title="Toggle labels" aria-label="Toggle labels">Aa</button>
 </div>
 <div id="card" role="dialog" aria-live="polite"></div>

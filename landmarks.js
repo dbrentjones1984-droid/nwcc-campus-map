@@ -1407,7 +1407,191 @@ window.NWCCLandmarks = function (THREE, toEN, onTexture) {
     return g;
   }
   // <<< TATE-56 build
-  root.add(buildSign()); root.add(buildPlaza()); if (L.nwdr) root.add(buildNwdr()); if (L.baseball) root.add(buildBaseball()); if (L.football) root.add(buildFootball()); if (L.softball) root.add(buildSoftball()); if (L.practice) root.add(buildPractice()); if (L.lamar) root.add(buildLamar()); if (L.rab31) root.add(buildRab31()); if (L.benton) root.add(buildBenton()); if (L.heindl) root.add(buildHeindl()); if (L.lafayette) root.add(buildLafayette()); if (L.yalobusha) root.add(buildYalobusha()); if (L.mccormick) root.add(buildMcCormick()); if (L.tate) root.add(buildTate());
+  // LIB-53 build >>>
+  // #53 R.C. Pugh Library: two flat white-roof brick blocks (taller south main block with a rusty roof seam, lower north block), cream coping
+  // + band, tall narrow white-grid window strips, tan limestone entrance pavilion with "R.C. PUGH LIBRARY", brick entry plaza + steps between
+  // stepped brick planter walls with white urns, mulch beds, west mechanical yard with units, lamp posts + bollards. NO ground shadows.
+  function buildLib53() {
+    const B = L.lib53, g = new THREE.Group(); g.name = 'lib-53';
+    const M = (k, o) => lam('lb-' + k, Object.assign({ side: THREE.FrontSide }, o));
+    const cvs = (w, h) => { const c = document.createElement('canvas'); c.width = Math.max(4, Math.round(w)); c.height = Math.max(4, Math.round(h)); return c; };
+    const texOf = c => { const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; };
+    const cream = M('cream', { color: '#efe8d8', emissive: '#38352f' }), conc = M('conc', { color: '#d9d5ca' }), dark = M('dark', { color: '#23272c' });
+    const brk = M('brick', { color: '#b8644a', emissive: '#1d130f' }), tan = M('tan', { color: '#d9cdb2', emissive: '#2f2b24' });
+    const PX = 20;
+    function facade(key, len, H, o) {
+      const c = cvs(len * PX, H * PX), x = c.getContext('2d'), Y = h => (H - h) * PX, U = u => u * PX;
+      let s = 5 + key.length * 31 + Math.round(len * 17); const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+      const base = ['#bf6a4e', '#b25f45', '#c97556', '#a95540'];
+      x.fillStyle = base[0]; x.fillRect(0, 0, c.width, c.height);
+      for (let r = 0, hh = 0; hh < H; r++, hh += 0.3) for (let u = (r % 2) * 0.3; u < len; u += 0.6) { const t = rnd(); x.fillStyle = base[t < 0.35 ? 1 : t < 0.7 ? 2 : t < 0.9 ? 0 : 3]; x.fillRect(U(u), Y(hh + 0.3) + 1, 0.58 * PX, 0.3 * PX - 1); }
+      x.fillStyle = 'rgba(80,45,32,0.15)'; for (let hh = 0; hh < H; hh += 0.3) x.fillRect(0, Y(hh), c.width, 1);
+      x.fillStyle = '#ece5d4'; x.fillRect(0, Y(H - 0.55), c.width, 0.22 * PX); x.fillRect(0, Y(0.5), c.width, 0.12 * PX);
+      // tall narrow window strips (white frames, grid), grouped in threes
+      const ww = 1.25, wh = Math.min(2.6, H - 2.6), wz = H - 1.0 - wh, grp = 3, gap = 1.0, bay = grp * ww + (grp - 1) * gap, step = bay + 3.2;
+      const n = Math.max(0, Math.floor((len - 1.5 + 3.2) / step));
+      const off = (len - (n * step - 3.2)) / 2;
+      for (let k = 0; k < n; k++) for (let j = 0; j < grp; j++) { const u0 = off + k * step + j * (ww + gap); if (o.skip && o.skip.some(q => u0 + ww > q[0] && u0 < q[1])) continue;
+        x.fillStyle = '#f4f2ec'; x.fillRect(U(u0 - 0.1), Y(wz + wh + 0.1), (ww + 0.2) * PX, (wh + 0.2) * PX);
+        const gr = x.createLinearGradient(0, Y(wz + wh), 0, Y(wz)); gr.addColorStop(0, '#5f7487'); gr.addColorStop(1, '#25303a'); x.fillStyle = gr; x.fillRect(U(u0), Y(wz + wh), ww * PX, wh * PX);
+        x.fillStyle = '#f0eee8'; x.fillRect(U(u0 + ww / 2) - 1, Y(wz + wh), 2, wh * PX); for (let i = 1; i < 4; i++) x.fillRect(U(u0), Y(wz + wh * i / 4) - 1, ww * PX, 2);
+        x.fillStyle = '#e9e2d1'; x.fillRect(U(u0 - 0.15), Y(wz - 0.02), (ww + 0.3) * PX, 0.14 * PX); }
+      return M('fac-' + key, { map: texOf(c), emissive: '#1c1410', side: THREE.DoubleSide });
+    }
+    function roofTex(key, w, d, rust) {
+      const c = cvs(256, 256), x = c.getContext('2d'); x.fillStyle = '#eeece6'; x.fillRect(0, 0, 256, 256);
+      x.fillStyle = 'rgba(0,0,0,0.04)'; for (let i = 0; i < 256; i += 16) x.fillRect(i, 0, 1, 256);
+      if (rust) { x.strokeStyle = 'rgba(140,82,40,0.75)'; x.lineWidth = 5; x.beginPath(); x.moveTo(20, 150); for (let i = 1; i <= 12; i++) x.lineTo(20 + i * 18, 150 - i * 2 + (i % 3) * 4); x.stroke();
+        x.strokeStyle = 'rgba(150,95,50,0.35)'; x.lineWidth = 12; x.stroke(); }
+      return M('roof-' + key, { map: texOf(c), emissive: '#33322f' });
+    }
+    for (const p of B.parts) {
+      const P = p.ring.map(c => toEN(c[0], c[1])), H = p.h;
+      for (let i = 0; i < P.length - 1; i++) { const a = P[i], b = P[i + 1], Ls = Math.hypot(b[0] - a[0], b[1] - a[1]); if (Ls < 0.3) continue;
+        const ry = Math.atan2(b[1] - a[1], b[0] - a[0]), mx = (a[0] + b[0]) / 2, mz = -(a[1] + b[1]) / 2;
+        const skip = (p.skip && p.skip[i]) ? [p.skip[i]] : null;
+        const w = new THREE.Mesh(new THREE.PlaneGeometry(Ls, H), facade(p.k + i, Ls, H, { skip })); w.position.set(mx, H / 2, mz); w.rotation.y = ry; g.add(w);
+        const cp = new THREE.Mesh(new THREE.BoxGeometry(Ls + 0.4, 0.28, 0.42), cream); cp.position.set(mx, H + 0.14, mz); cp.rotation.y = ry; g.add(cp); }
+      const sh = new THREE.Shape(P.map(q => new THREE.Vector2(q[0], q[1])));
+      const bb = P.reduce((m, q) => [Math.min(m[0], q[0]), Math.min(m[1], q[1]), Math.max(m[2], q[0]), Math.max(m[3], q[1])], [1e9, 1e9, -1e9, -1e9]);
+      const rg = new THREE.ShapeGeometry(sh); const uv = rg.attributes.position; const UV = [];
+      for (let i = 0; i < uv.count; i++) UV.push((uv.getX(i) - bb[0]) / (bb[2] - bb[0]), (uv.getY(i) - bb[1]) / (bb[3] - bb[1]));
+      rg.setAttribute('uv', new THREE.Float32BufferAttribute(UV, 2)); rg.rotateX(-Math.PI / 2);
+      const r = new THREE.Mesh(rg, roofTex(p.k, 1, 1, p.rust)); r.position.y = H + 0.02; g.add(r);
+      for (let k = 0; k < (p.rtu || 0); k++) { const q = P[0], c0 = [(bb[0] + bb[2]) / 2, (bb[1] + bb[3]) / 2]; g.add(box(1.6, 0.9, 1.2, c0[0] - 4 + k * 4, H, -(c0[1] + 3 - k * 2), M('rtu', { color: '#c9ccce' }))); }
+    }
+    // entrance pavilion (local x along the south face, local +z = outward / south)
+    { const q = B.pav, c = toEN(q.c[0], q.c[1]), pv = new THREE.Group(); pv.position.set(c[0], 0, -c[1]); pv.rotation.y = q.a * Math.PI / 180; g.add(pv);
+      const W = q.w, D = q.d, H = q.h;
+      const lc = cvs(W * 40, 90), lx = lc.getContext('2d'); lx.fillStyle = '#ddd2b8'; lx.fillRect(0, 0, lc.width, 90); lx.fillStyle = 'rgba(0,0,0,0.08)'; for (let i = 0; i < lc.width; i += 60) lx.fillRect(i, 0, 2, 90);
+      lx.fillStyle = '#4d4a44'; lx.textAlign = 'center'; lx.font = 'bold 24px "DejaVu Serif", Georgia, serif'; lx.fillText('R.C. PUGH LIBRARY', lc.width / 2, 58);
+      const front = M('pavfront', { map: texOf(lc), emissive: '#2f2b24' });
+      // two piers + lintel band with lettering, recessed glass entry
+      for (const s of [-1, 1]) pv.add(box(W * 0.27, H - 1.6, D, s * (W / 2 - W * 0.135), 0, D / 2, tan));
+      const band = new THREE.Mesh(new THREE.BoxGeometry(W, 1.6, D), [tan, tan, tan, tan, front, tan]); band.position.set(0, H - 0.8, D / 2); pv.add(band);
+      pv.add(box(W + 0.3, 0.25, D + 0.3, 0, H, D / 2, cream));
+      pv.add(box(W * 0.46, H - 1.6, 0.2, 0, 0, 0.1, M('glass', { color: '#2c3946', emissive: '#0d1218' })));
+      pv.add(box(W * 0.46, 0.06, D, 0, H - 1.65, D / 2, M('soffit', { color: '#efe9da' })));
+      for (const s of [-0.12, 0.12]) pv.add(box(0.05, 2.3, 0.05, s * W, 0, 0.23, M('mull', { color: '#c8ccd0' }))); }
+    // entry plaza (raised brick), steps, stepped planter walls with white urns
+    const o = toEN(B.oll[0], B.oll[1]); const at = (e, n) => [o[0] + e, -(o[1] + n)];
+    const terr = M('terr', { color: '#a9573f', emissive: '#1b100c' });
+    { const [x, z] = at(0, 0); g.add(box(B.plaza_w, B.plaza_h, B.plaza_d, x, 0, z - B.plaza_d / 2, terr)); }
+    for (let i = 0; i < B.risers; i++) { const t = 0.38, h = B.plaza_h * (B.risers - i) / (B.risers + 1); const [x, z] = at(0, -(i + 0.5) * t); g.add(box(B.step_w, h, t, x, 0, z, conc)); }
+    const urnM = M('urn', { color: '#f2f0ea', emissive: '#3d3c38' }), soil = M('soil', { color: '#4a3526' }), green = lam('shrub', { color: '#4f8a43', flatShading: true });
+    for (const s of [-1, 1]) {
+      for (const st of B.steps_pl) { const [x, z] = at(s * st[0], st[1]); g.add(box(st[2], st[3], st[4], x, 0, z, brk)); g.add(box(st[2] + 0.12, 0.08, st[4] + 0.12, x, st[3], z, cream)); }
+      const [x, z] = at(s * B.urn[0], B.urn[1]), hp = B.urn[2];
+      g.add(box(1.5, hp, 1.5, x, 0, z, brk)); g.add(box(1.62, 0.1, 1.62, x, hp, z, cream));
+      const pts = [[0.05, 0], [0.25, 0.05], [0.25, 0.18], [0.5, 0.3], [0.62, 0.5], [0.64, 0.6], [0.55, 0.6]].map(q => new THREE.Vector2(q[0], q[1]));
+      const u = new THREE.Mesh(new THREE.LatheGeometry(pts, 20), urnM); u.position.set(x, hp + 0.1, z); g.add(u);
+      const sp = new THREE.Mesh(new THREE.IcosahedronGeometry(0.42, 0), green); sp.position.set(x, hp + 0.95, z); sp.scale.set(0.8, 1.3, 0.8); g.add(sp);
+    }
+    // west mechanical yard: low brick wall + units
+    { const P = B.yard.map(c => toEN(c[0], c[1])), um = M('ac', { color: '#d4d7d9', emissive: '#2d2e2f' });
+      for (let i = 0; i < P.length - 1; i++) { const a = P[i], b = P[i + 1], Ls = Math.hypot(b[0] - a[0], b[1] - a[1]); if (i === B.yard_open) continue;
+        const w = new THREE.Mesh(new THREE.BoxGeometry(Ls, 2.2, 0.3), brk); w.position.set((a[0] + b[0]) / 2, 1.1, -(a[1] + b[1]) / 2); w.rotation.y = Math.atan2(b[1] - a[1], b[0] - a[0]); g.add(w); }
+      for (const q of B.units) { const c = toEN(q[0], q[1]); g.add(box(1.4, 1.3, 1.2, c[0], 0, -c[1], um)); g.add(box(0.9, 0.05, 0.9, c[0], 1.3, -c[1], dark)); } }
+    // lamp posts (dark, twin lantern) and bollards
+    { const pm = M('lamp-post', { color: '#22252a' }), gl = M('lamp-globe', { color: '#fff7dc', emissive: '#bfb28a' });
+      for (const q of B.lamps) { const c = toEN(q[0], q[1]); g.add(box(0.32, 0.3, 0.32, c[0], 0, -c[1], pm));
+        const p = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.09, 4.2, 8), pm); p.position.set(c[0], 2.3, -c[1]); g.add(p);
+        g.add(box(1.2, 0.07, 0.07, c[0], 4.25, -c[1], pm));
+        for (const s of [-0.55, 0.55]) { const lt = new THREE.Mesh(new THREE.ConeGeometry(0.26, 0.42, 10), pm); lt.position.set(c[0] + s, 4.05, -c[1]); g.add(lt);
+          const b = new THREE.Mesh(new THREE.SphereGeometry(0.13, 10, 6), gl); b.position.set(c[0] + s, 3.82, -c[1]); g.add(b); } }
+      for (const q of B.bollards) { const c = toEN(q[0], q[1]); const p = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 1.0, 10), pm); p.position.set(c[0], 0.5, -c[1]); g.add(p);
+        const b = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.12, 10), gl); b.position.set(c[0], 0.95, -c[1]); g.add(b); } }
+    return g;
+  }
+  // <<< LIB-53 build
+  // CONN-56 build >>>
+  // Tate Hall (#56) west connector to the library: 1-story red brick, white cornice, gray shingle hip roofs (narrow N-S section + wider south
+  // section), white pediment porch (2 round columns + pilasters) over glass double doors, concrete steps + black rails, accessible ramp with
+  // rails along the front, brick planter walls, tall white-trimmed windows with cap lintels, 2 roof vents. NO ground shadows.
+  function buildConn56() {
+    const B = L.conn56, g = new THREE.Group(); g.name = 'conn-56';
+    const M = (k, o) => lam('cn-' + k, Object.assign({ side: THREE.FrontSide }, o));
+    const cvs = (w, h) => { const c = document.createElement('canvas'); c.width = Math.max(4, Math.round(w)); c.height = Math.max(4, Math.round(h)); return c; };
+    const texOf = (c, rep) => { const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; if (rep) t.wrapS = t.wrapT = THREE.RepeatWrapping; return t; };
+    const white = M('white', { color: '#f5f3ee', emissive: '#3b3a36' }), conc = M('conc', { color: '#d9d5ca' }), rail = M('rail', { color: '#1d2024' });
+    const brk = M('brick', { color: '#a9573f', emissive: '#1c120e' }), dark = M('dark', { color: '#2a2e33' });
+    const PX = 20;
+    function facade(key, len, H, wins) {
+      const c = cvs(len * PX, H * PX), x = c.getContext('2d'), Y = h => (H - h) * PX, U = u => u * PX;
+      let s = 3 + key.length * 29 + Math.round(len * 11); const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+      const base = ['#b25b45', '#a5523e', '#bb664f', '#97473a'];
+      x.fillStyle = base[0]; x.fillRect(0, 0, c.width, c.height);
+      for (let r = 0, hh = 0; hh < H; r++, hh += 0.3) for (let u = (r % 2) * 0.3; u < len; u += 0.6) { const t = rnd(); x.fillStyle = base[t < 0.35 ? 1 : t < 0.7 ? 2 : t < 0.9 ? 0 : 3]; x.fillRect(U(u), Y(hh + 0.3) + 1, 0.58 * PX, 0.3 * PX - 1); }
+      x.fillStyle = 'rgba(80,45,32,0.16)'; for (let hh = 0; hh < H; hh += 0.3) x.fillRect(0, Y(hh), c.width, 1);
+      for (const u of wins) { const ww = 1.0, wh = 2.2, z = 0.9, u0 = u - ww / 2;
+        x.fillStyle = '#f4f2ec'; x.fillRect(U(u0 - 0.14), Y(z + wh + 0.14), (ww + 0.28) * PX, (wh + 0.28) * PX);
+        const gr = x.createLinearGradient(0, Y(z + wh), 0, Y(z)); gr.addColorStop(0, '#6f8597'); gr.addColorStop(1, '#2b3743'); x.fillStyle = gr; x.fillRect(U(u0), Y(z + wh), ww * PX, wh * PX);
+        x.fillStyle = '#efede6'; x.fillRect(U(u0), Y(z + wh * 0.55) - 2, ww * PX, 4); x.fillRect(U(u) - 1, Y(z + wh), 2, wh * PX);
+        x.fillStyle = '#f4f2ec'; x.beginPath(); x.moveTo(U(u0 - 0.3), Y(z + wh + 0.3)); x.lineTo(U(u0 + ww + 0.3), Y(z + wh + 0.3)); x.lineTo(U(u), Y(z + wh + 0.65)); x.fill();
+        x.fillRect(U(u0 - 0.15), Y(z - 0.02), (ww + 0.3) * PX, 0.14 * PX); }
+      return M('fac-' + key, { map: texOf(c), emissive: '#1c1410', side: THREE.DoubleSide });
+    }
+    const shc = cvs(64, 64), shx = shc.getContext('2d'); shx.fillStyle = '#6a6e74'; shx.fillRect(0, 0, 64, 64);
+    for (let r = 0; r < 4; r++) { shx.fillStyle = 'rgba(20,22,25,0.35)'; shx.fillRect(0, r * 16 + 14, 64, 2); for (let k = 0; k < 4; k++) { shx.fillStyle = (r + k) % 3 ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.08)'; shx.fillRect(k * 16 + (r % 2) * 8, r * 16, 15, 14); } }
+    const roofM = lam('cn-roof', { map: texOf(shc, true), side: THREE.DoubleSide, emissive: '#121315' });
+    function hip(x0, x1, z0, z1, y, pitch, mat) {
+      const t = Math.tan(pitch * Math.PI / 180), P = [], UV = [], wx = x1 - x0, dz = z1 - z0, alongZ = dz >= wx, h = (alongZ ? wx : dz) / 2, r = y + h * t;
+      const cx_ = (x0 + x1) / 2, cz_ = (z0 + z1) / 2, sl = 1 / Math.cos(Math.atan(t));
+      const tri = (a, b, c, uv) => { P.push(...a, ...b, ...c); UV.push(...uv); };
+      if (alongZ) { const ra = [cx_, r, z0 + h], rb = [cx_, r, z1 - h];
+        tri([x1, y, z0], [x1, y, z1], rb, [z0, 0, z1, 0, z1 - h, h * sl]); tri([x1, y, z0], rb, ra, [z0, 0, z1 - h, h * sl, z0 + h, h * sl]);
+        tri([x0, y, z1], [x0, y, z0], ra, [z1, 0, z0, 0, z0 + h, h * sl]); tri([x0, y, z1], ra, rb, [z1, 0, z0 + h, h * sl, z1 - h, h * sl]);
+        tri([x0, y, z0], [x1, y, z0], ra, [x0, 0, x1, 0, cx_, h * sl]); tri([x1, y, z1], [x0, y, z1], rb, [x1, 0, x0, 0, cx_, h * sl]);
+      } else { const ra = [x0 + h, r, cz_], rb = [x1 - h, r, cz_];
+        tri([x0, y, z1], [x1, y, z1], rb, [x0, 0, x1, 0, x1 - h, h * sl]); tri([x0, y, z1], rb, ra, [x0, 0, x1 - h, h * sl, x0 + h, h * sl]);
+        tri([x1, y, z0], [x0, y, z0], ra, [x1, 0, x0, 0, x0 + h, h * sl]); tri([x1, y, z0], ra, rb, [x1, 0, x0 + h, h * sl, x1 - h, h * sl]);
+        tri([x0, y, z0], [x0, y, z1], ra, [z0, 0, z1, 0, cz_, h * sl]); tri([x1, y, z1], [x1, y, z0], rb, [z1, 0, z0, 0, cz_, h * sl]); }
+      const ge = new THREE.BufferGeometry(); ge.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); ge.setAttribute('uv', new THREE.Float32BufferAttribute(UV, 2)); ge.computeVertexNormals();
+      return new THREE.Mesh(ge, mat || roofM);
+    }
+    const R = q => { const a = toEN(q[0][0], q[0][1]), b = toEN(q[1][0], q[1][1]); return { x0: a[0], y0: a[1], x1: b[0], y1: b[1], W: b[0] - a[0], D: b[1] - a[1], cx: (a[0] + b[0]) / 2, cz: -(a[1] + b[1]) / 2 }; };
+    const H = B.h, ov = 0.45;
+    for (const p of B.parts) { const r = R(p.r);
+      const mats = [p.e ? facade(p.k + 'e', r.D, H, p.e) : M('hid', { visible: false }), p.w ? facade(p.k + 'w', r.D, H, p.w) : M('hid', { visible: false }), dark, dark,
+        p.s ? facade(p.k + 's', r.W, H, p.s) : M('hid', { visible: false }), p.n ? facade(p.k + 'n', r.W, H, p.n) : M('hid', { visible: false })];
+      const m = new THREE.Mesh(new THREE.BoxGeometry(r.W, H, r.D), mats); m.position.set(r.cx, H / 2, r.cz); g.add(m);
+      g.add(box(r.W + 2 * ov, 0.32, r.D + 2 * ov, r.cx, H - 0.3, r.cz, white));
+      g.add(hip(r.x0 - ov, r.x1 + ov, -r.y1 - ov, -r.y0 + ov, H + 0.02, B.pitch, roofM)); }
+    for (const v of B.vents) { const c = toEN(v[0], v[1]); g.add(box(0.5, 0.5, 0.5, c[0], H + 1.2, -c[1], M('vent', { color: '#3a3d42' }))); }
+    // pediment porch on the south face: deck, 2 round columns + pilasters, entablature, gable roof (ridge N-S) with white tympanum, glass doors
+    { const c = toEN(B.porch.c[0], B.porch.c[1]), W = B.porch.w, D = B.porch.d, Hp = B.porch.deck, top = H - 0.2, x0 = c[0], zF = -c[1] + D;   // c = centre on the wall line
+      g.add(box(W, Hp, D, x0, 0, -c[1] + D / 2, conc));
+      for (let i = 0; i < B.porch.risers; i++) g.add(box(W - 0.6, Hp * (B.porch.risers - i) / (B.porch.risers + 1), 0.33, x0, 0, zF + 0.165 + i * 0.33, conc));
+      for (const s of [-1, 1]) { const cl = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.2, top - Hp - 0.5, 14), white); cl.position.set(x0 + s * (W / 2 - 0.35), Hp + (top - Hp - 0.5) / 2, zF - 0.35); g.add(cl);
+        g.add(box(0.4, top - Hp - 0.5, 0.15, x0 + s * (W / 2 - 0.35), Hp, -c[1] + 0.08, white)); g.add(box(0.5, 0.15, 0.5, x0 + s * (W / 2 - 0.35), Hp, zF - 0.35, white)); }
+      g.add(box(W + 0.3, 0.5, D + 0.2, x0, top - 0.5, -c[1] + D / 2, white));
+      const ph = 1.25, sh = new THREE.Shape(); sh.moveTo(-W / 2 - 0.2, 0); sh.lineTo(W / 2 + 0.2, 0); sh.lineTo(0, ph); sh.lineTo(-W / 2 - 0.2, 0);
+      const tg = new THREE.ExtrudeGeometry(sh, { depth: 0.2, bevelEnabled: false }); const t = new THREE.Mesh(tg, white); t.position.set(x0, top, zF - 0.1); g.add(t);
+      const sl = Math.hypot(W / 2 + 0.35, ph), an = Math.atan2(ph, W / 2 + 0.35);
+      for (const s of [-1, 1]) { const rf = new THREE.Mesh(new THREE.BoxGeometry(sl, 0.1, D + 0.8), roofM); rf.position.set(x0 + s * (W / 4 + 0.1), top + ph / 2 + 0.05, -c[1] + D / 2); rf.rotation.z = -s * an; g.add(rf); }
+      g.add(box(1.8, 2.4, 0.12, x0, Hp, -c[1] + 0.06, M('glass', { color: '#3a4a58', emissive: '#10161c' })));
+      g.add(box(0.06, 2.4, 0.14, x0, Hp, -c[1] + 0.07, white));
+      // black rails both sides of the steps
+      for (const s of [-1, 1]) { const xr = x0 + s * (W / 2 - 0.45), L_ = Math.hypot(B.porch.risers * 0.33, Hp);
+        const r = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, L_ + 0.3), rail); r.position.set(xr, Hp / 2 + 0.9, zF + B.porch.risers * 0.165); r.rotation.x = -Math.atan2(Hp, B.porch.risers * 0.33); g.add(r);
+        g.add(box(0.05, 0.9, 0.05, xr, Hp, zF, rail)); g.add(box(0.05, 0.9, 0.05, xr, 0, zF + B.porch.risers * 0.33, rail)); } }
+    // accessible ramp along the front (porch deck height -> grade), black rails both sides
+    { const a = toEN(B.ramp[0][0], B.ramp[0][1]), b = toEN(B.ramp[1][0], B.ramp[1][1]), Ls = Math.hypot(b[0] - a[0], b[1] - a[1]), ry = Math.atan2(b[1] - a[1], b[0] - a[0]), hR = B.porch.deck, w = B.ramp_w;
+      const grp = new THREE.Group(); grp.position.set(a[0], 0, -a[1]); grp.rotation.y = ry; g.add(grp);
+      const sh = new THREE.Shape(); sh.moveTo(0, 0); sh.lineTo(Ls, 0); sh.lineTo(0, hR); sh.lineTo(0, 0);
+      const rg = new THREE.ExtrudeGeometry(sh, { depth: w, bevelEnabled: false }); const rm = new THREE.Mesh(rg, conc); rm.position.z = -w / 2; grp.add(rm);
+      const sl = Math.atan2(hR, Ls), RL = Math.hypot(Ls, hR);
+      for (const s of [-1, 1]) { for (const hh of [0.9, 0.45]) { const r = new THREE.Mesh(new THREE.BoxGeometry(RL, 0.05, 0.05), rail); r.position.set(Ls / 2, hR / 2 + hh, s * (w / 2 - 0.05)); r.rotation.z = -sl; grp.add(r); }
+        for (let k = 0; k <= 4; k++) { const u = Ls * k / 4; grp.add(box(0.05, 0.95, 0.05, u, hR * (1 - u / Ls), s * (w / 2 - 0.05), rail)); } }
+      grp.add(box(0.25, 0.5, w + 0.3, Ls * 0.5, 0, -w / 2 - 0.6, brk)); }
+    // brick planter walls in front
+    for (const q of B.planters) { const a = toEN(q[0][0], q[0][1]), b = toEN(q[1][0], q[1][1]);
+      g.add(box(b[0] - a[0], q[2], b[1] - a[1], (a[0] + b[0]) / 2, 0, -(a[1] + b[1]) / 2, brk)); g.add(box(b[0] - a[0] + 0.1, 0.08, b[1] - a[1] + 0.1, (a[0] + b[0]) / 2, q[2], -(a[1] + b[1]) / 2, white));
+      g.add(box(b[0] - a[0] - 0.4, 0.06, b[1] - a[1] - 0.4, (a[0] + b[0]) / 2, q[2] - 0.08, -(a[1] + b[1]) / 2, M('mulch', { color: '#5e4330' }))); }
+    return g;
+  }
+  // <<< CONN-56 build
+  root.add(buildSign()); root.add(buildPlaza()); if (L.nwdr) root.add(buildNwdr()); if (L.baseball) root.add(buildBaseball()); if (L.football) root.add(buildFootball()); if (L.softball) root.add(buildSoftball()); if (L.practice) root.add(buildPractice()); if (L.lamar) root.add(buildLamar()); if (L.rab31) root.add(buildRab31()); if (L.benton) root.add(buildBenton()); if (L.heindl) root.add(buildHeindl()); if (L.lafayette) root.add(buildLafayette()); if (L.yalobusha) root.add(buildYalobusha()); if (L.mccormick) root.add(buildMcCormick()); if (L.tate) root.add(buildTate()); if (L.lib53) root.add(buildLib53()); if (L.conn56) root.add(buildConn56());
   root.traverse(o => { o.frustumCulled = false; });
   return root;
 };
@@ -1462,5 +1646,13 @@ window.NWCC_LANDMARKS.mccormick = {"east":[[-89.9696595,34.6253998],[-89.9695263
 /* <<< MCCORMICK-52 data */
 /* TATE-56 data >>> */
 // #56 Tate Hall (2026-10-12). Coordinates [lng,lat]; lengths/heights in m.
-window.NWCC_LANDMARKS.tate = {"parts":[{"k":"s","c":[-89.9694477,34.6249024],"a":0,"L":40.0,"W":13.0,"h":8.0,"pitch":30.0},{"k":"n","c":[-89.9695569,34.6250878],"a":90,"L":30.0,"W":20.0,"h":8.0,"pitch":30.0},{"k":"ne","c":[-89.9693986,34.6250245],"a":45,"L":23.0,"W":16.0,"h":8.0,"pitch":30.0},{"k":"c","c":[-89.9696933,34.6248753],"a":90,"L":21.0,"W":5.0,"h":4.6,"pitch":26,"low":1}],"portico":{"c":[-89.9693986,34.6250245],"a":45,"L":23.0,"depth":3.4,"pw":11.0,"h":8.0,"ph":2.6},"porch":{"c":[-89.9693385,34.6249024],"a":-90,"L":13.0,"depth":2.4,"pw":6.0,"h":4.4,"ph":1.4},"cupola":[-89.9695001,34.6249658],"cupola_y":11.85,"cupola_a":0,"walls":[{"pts":[[-89.9692376,34.6248262],[-89.9692284,34.6248294],[-89.9692196,34.6248333],[-89.9692113,34.6248379],[-89.9692036,34.6248431],[-89.9691966,34.6248489],[-89.9691902,34.6248553],[-89.9691846,34.6248621],[-89.9691798,34.6248693],[-89.9691759,34.6248769],[-89.9691729,34.6248847],[-89.9691708,34.6248928],[-89.9691696,34.624901],[-89.9691694,34.6249092],[-89.9691701,34.6249174],[-89.9691718,34.6249256],[-89.9691744,34.6249335],[-89.9691779,34.6249412],[-89.9691823,34.6249486],[-89.9691876,34.6249556],[-89.9691936,34.6249622],[-89.9692003,34.6249682],[-89.9692078,34.6249737],[-89.9692158,34.6249786],[-89.9692243,34.6249828]],"h":0.5},{"pts":[[-89.969306,34.6247973],[-89.9692903,34.6247948],[-89.9692742,34.6247939],[-89.9692582,34.6247946],[-89.9692423,34.6247968],[-89.9692269,34.6248006],[-89.9692121,34.6248058],[-89.9691982,34.6248124],[-89.9691853,34.6248204],[-89.9691736,34.6248295],[-89.9691633,34.6248397],[-89.9691546,34.6248509],[-89.9691474,34.6248628],[-89.969142,34.6248753],[-89.9691385,34.6248883],[-89.9691367,34.6249015],[-89.9691369,34.6249149],[-89.969139,34.6249281],[-89.9691429,34.624941],[-89.9691486,34.6249534],[-89.9691561,34.6249652],[-89.9691651,34.6249762],[-89.9691757,34.6249862],[-89.9691876,34.6249951],[-89.9692007,34.6250028]],"h":1.2,"rail":1},{"pts":[[-89.9694013,34.6248683],[-89.9693981,34.6248617],[-89.9693943,34.6248552],[-89.9693902,34.624849],[-89.9693855,34.6248429],[-89.9693804,34.6248372],[-89.9693748,34.6248317],[-89.9693689,34.6248265],[-89.9693626,34.6248217]],"h":1.2,"rail":1},{"pts":[[-89.9693111,34.6247806],[-89.9692929,34.6247778],[-89.9692744,34.6247767],[-89.9692559,34.6247775],[-89.9692377,34.6247801],[-89.9692199,34.6247844],[-89.9692029,34.6247904],[-89.9691868,34.6247981],[-89.969172,34.6248072],[-89.9691585,34.6248177],[-89.9691467,34.6248295],[-89.9691366,34.6248423],[-89.9691283,34.6248561],[-89.9691221,34.6248705],[-89.969118,34.6248855],[-89.969116,34.6249007],[-89.9691162,34.6249161],[-89.9691186,34.6249313],[-89.9691231,34.6249461],[-89.9691297,34.6249605],[-89.9691383,34.624974],[-89.9691487,34.6249867],[-89.9691609,34.6249982],[-89.9691746,34.6250085],[-89.9691897,34.6250174]],"h":0.18,"conc":1},{"pts":[[-89.9694208,34.6248624],[-89.9694171,34.6248548],[-89.9694128,34.6248473],[-89.969408,34.6248401],[-89.9694026,34.6248332],[-89.9693967,34.6248266],[-89.9693903,34.6248202],[-89.9693835,34.6248143],[-89.9693762,34.6248087]],"h":0.18,"conc":1}],"sign":{"c":[-89.9692633,34.6251366],"a":45},"lamps":[[-89.9692496,34.6251045],[-89.9693021,34.625148],[-89.969221,34.6251077],[-89.9692982,34.6251716]]};
+window.NWCC_LANDMARKS.tate = {"parts":[{"k":"s","c":[-89.9694477,34.6249024],"a":0,"L":40.0,"W":13.0,"h":8.0,"pitch":30.0},{"k":"n","c":[-89.9695569,34.6250878],"a":90,"L":30.0,"W":20.0,"h":8.0,"pitch":30.0},{"k":"ne","c":[-89.9693986,34.6250245],"a":45,"L":23.0,"W":16.0,"h":8.0,"pitch":30.0}],"portico":{"c":[-89.9693986,34.6250245],"a":45,"L":23.0,"depth":3.4,"pw":11.0,"h":8.0,"ph":2.6},"porch":{"c":[-89.9693385,34.6249024],"a":-90,"L":13.0,"depth":2.4,"pw":6.0,"h":4.4,"ph":1.4},"cupola":[-89.9695001,34.6249658],"cupola_y":11.85,"cupola_a":0,"walls":[{"pts":[[-89.9692376,34.6248262],[-89.9692284,34.6248294],[-89.9692196,34.6248333],[-89.9692113,34.6248379],[-89.9692036,34.6248431],[-89.9691966,34.6248489],[-89.9691902,34.6248553],[-89.9691846,34.6248621],[-89.9691798,34.6248693],[-89.9691759,34.6248769],[-89.9691729,34.6248847],[-89.9691708,34.6248928],[-89.9691696,34.624901],[-89.9691694,34.6249092],[-89.9691701,34.6249174],[-89.9691718,34.6249256],[-89.9691744,34.6249335],[-89.9691779,34.6249412],[-89.9691823,34.6249486],[-89.9691876,34.6249556],[-89.9691936,34.6249622],[-89.9692003,34.6249682],[-89.9692078,34.6249737],[-89.9692158,34.6249786],[-89.9692243,34.6249828]],"h":0.5},{"pts":[[-89.969306,34.6247973],[-89.9692903,34.6247948],[-89.9692742,34.6247939],[-89.9692582,34.6247946],[-89.9692423,34.6247968],[-89.9692269,34.6248006],[-89.9692121,34.6248058],[-89.9691982,34.6248124],[-89.9691853,34.6248204],[-89.9691736,34.6248295],[-89.9691633,34.6248397],[-89.9691546,34.6248509],[-89.9691474,34.6248628],[-89.969142,34.6248753],[-89.9691385,34.6248883],[-89.9691367,34.6249015],[-89.9691369,34.6249149],[-89.969139,34.6249281],[-89.9691429,34.624941],[-89.9691486,34.6249534],[-89.9691561,34.6249652],[-89.9691651,34.6249762],[-89.9691757,34.6249862],[-89.9691876,34.6249951],[-89.9692007,34.6250028]],"h":1.2,"rail":1},{"pts":[[-89.9694013,34.6248683],[-89.9693981,34.6248617],[-89.9693943,34.6248552],[-89.9693902,34.624849],[-89.9693855,34.6248429],[-89.9693804,34.6248372],[-89.9693748,34.6248317],[-89.9693689,34.6248265],[-89.9693626,34.6248217]],"h":1.2,"rail":1},{"pts":[[-89.9693111,34.6247806],[-89.9692929,34.6247778],[-89.9692744,34.6247767],[-89.9692559,34.6247775],[-89.9692377,34.6247801],[-89.9692199,34.6247844],[-89.9692029,34.6247904],[-89.9691868,34.6247981],[-89.969172,34.6248072],[-89.9691585,34.6248177],[-89.9691467,34.6248295],[-89.9691366,34.6248423],[-89.9691283,34.6248561],[-89.9691221,34.6248705],[-89.969118,34.6248855],[-89.969116,34.6249007],[-89.9691162,34.6249161],[-89.9691186,34.6249313],[-89.9691231,34.6249461],[-89.9691297,34.6249605],[-89.9691383,34.624974],[-89.9691487,34.6249867],[-89.9691609,34.6249982],[-89.9691746,34.6250085],[-89.9691897,34.6250174]],"h":0.18,"conc":1},{"pts":[[-89.9694208,34.6248624],[-89.9694171,34.6248548],[-89.9694128,34.6248473],[-89.969408,34.6248401],[-89.9694026,34.6248332],[-89.9693967,34.6248266],[-89.9693903,34.6248202],[-89.9693835,34.6248143],[-89.9693762,34.6248087]],"h":0.18,"conc":1}],"sign":{"c":[-89.9692633,34.6251366],"a":45},"lamps":[[-89.9692496,34.6251045],[-89.9693021,34.625148],[-89.969221,34.6251077],[-89.9692982,34.6251716]]};
 /* <<< TATE-56 data */
+/* LIB-53 data >>> */
+// #53 R.C. Pugh Library (2026-10-12). Coordinates [lng,lat]; lengths/heights in m.
+window.NWCC_LANDMARKS.lib53 = {"parts":[{"k":"s","ring":[[-89.9697561,34.6247202],[-89.969756,34.624763],[-89.969721,34.624761],[-89.969721,34.624968],[-89.969758,34.62497],[-89.969752,34.6250443],[-89.9699471,34.6250474],[-89.969947,34.625047],[-89.969958,34.6250476],[-89.9700252,34.6250486],[-89.970051,34.624737],[-89.9697561,34.6247202]],"h":7.2,"rust":1,"rtu":2,"skip":{"10":[10.00006842373122,19.40006842373122]}},{"k":"n","ring":[[-89.970045,34.625309],[-89.9699471,34.6250474],[-89.969752,34.6250443],[-89.969746,34.625119],[-89.969837,34.625362],[-89.970045,34.625309]],"h":6.4,"rtu":2}],"pav":{"c":[-89.9698909,34.6247278],"a":-3.9213988876780914,"w":8.6,"d":3.0,"h":7.6},"yard":[[-89.9700328,34.6250553],[-89.9699542,34.6250517],[-89.9699728,34.6251114],[-89.9700437,34.6251068],[-89.9700328,34.6250553]],"yard_open":3,"units":[[-89.9700154,34.6250698],[-89.9699957,34.6250698],[-89.9700132,34.6250906],[-89.9699913,34.6250906]],"lamps":[[-89.969952,34.6247116],[-89.9698298,34.6247116],[-89.9699302,34.624623],[-89.9698516,34.624623],[-89.9701464,34.6247116],[-89.9696333,34.6247116]],"bollards":[[-89.9699127,34.6246149],[-89.9698986,34.6246155],[-89.9698833,34.6246161],[-89.9698691,34.6246167],[-89.9701835,34.6246899],[-89.9695787,34.6246899],[-89.9699979,34.6247044],[-89.9697839,34.6247044]],"oll":[-89.9698909,34.6246718],"plaza_w":8.799999999999999,"plaza_d":3.2,"plaza_h":0.6,"risers":3,"step_w":5.0,"steps_pl":[[3.0,-0.6,1.0,0.75,1.6],[4.8,0.4,1.6,0.6,1.4],[6.6,1.2,1.6,0.45,1.2]],"urn":[3.3,0.9,1.15],"o":[0,0]};
+/* <<< LIB-53 data */
+/* CONN-56 data >>> */
+// Tate Hall (#56) west connector (2026-10-12).
+window.NWCC_LANDMARKS.conn56 = {"h":4.2,"pitch":26.0,"parts":[{"k":"n","r":[[-89.9697206,34.6248391],[-89.969666,34.6249703]]},{"k":"s","r":[[-89.9697206,34.6247758],[-89.9696114,34.6248437]],"s":[6.6,8.6],"e":[2.2,5.2],"w":[]}],"vents":[[-89.9696933,34.624907],[-89.9696606,34.6248075]],"porch":{"c":[-89.9696846,34.6247758],"w":3.6,"d":2.0,"deck":0.75,"risers":3},"ramp":[[-89.9696617,34.6247659],[-89.9695459,34.6247659]],"ramp_w":1.3,"planters":[[[-89.9697184,34.624746],[-89.9697064,34.6247749],0.7],[[-89.9696617,34.6247433],[-89.9696049,34.6247532],0.6]]};
+/* <<< CONN-56 data */

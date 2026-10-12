@@ -1591,7 +1591,53 @@ window.NWCCLandmarks = function (THREE, toEN, onTexture) {
     return g;
   }
   // <<< CONN-56 build
-  root.add(buildSign()); root.add(buildPlaza()); if (L.nwdr) root.add(buildNwdr()); if (L.baseball) root.add(buildBaseball()); if (L.football) root.add(buildFootball()); if (L.softball) root.add(buildSoftball()); if (L.practice) root.add(buildPractice()); if (L.lamar) root.add(buildLamar()); if (L.rab31) root.add(buildRab31()); if (L.benton) root.add(buildBenton()); if (L.heindl) root.add(buildHeindl()); if (L.lafayette) root.add(buildLafayette()); if (L.yalobusha) root.add(buildYalobusha()); if (L.mccormick) root.add(buildMcCormick()); if (L.tate) root.add(buildTate()); if (L.lib53) root.add(buildLib53()); if (L.conn56) root.add(buildConn56());
+  // W58 build >>>
+  // #58 Strategic Communications site (2026-10-12): flagpoles, light poles, hydrant, sign post, walled courtyard with curved
+  // planters NE of #58 + the low garden wall running east. NO ground shadows.
+  function buildW58() {
+    const D = L.w58, g = new THREE.Group(); g.name = 'w58-site';
+    const EN = c => toEN(c[0], c[1]);
+    const brick = lam('w58-brick', { color: '#a5503a' }), cap = lam('w58-cap', { color: '#ece8de' }), soil = lam('w58-mulch', { color: '#6e4a33' });
+    const pole = lam('w58-pole', { color: '#f4f4f1', emissive: '#3c3c3a' }), dark = lam('w58-dark', { color: '#33363a' }), red = lam('w58-red', { color: '#b8322a' });
+    function wall(a, b, h, t, m) {
+      const dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy), ry = Math.atan2(dy, dx);
+      const w = box(len + t, h, t, (a[0] + b[0]) / 2, 0, -(a[1] + b[1]) / 2, m); w.rotation.y = ry; g.add(w);
+      const c = box(len + t + 0.08, 0.08, t + 0.1, (a[0] + b[0]) / 2, h, -(a[1] + b[1]) / 2, cap); c.rotation.y = ry; g.add(c);
+    }
+    for (const W of D.walls) { const P = W.pts.map(EN); for (let i = 0; i < P.length - 1; i++) wall(P[i], P[i + 1], W.h, W.t || 0.3, brick); }
+    for (const pl of D.planters) {   // curved planter: wall along the arc + mulch fill
+      const P = pl.map(EN); for (let i = 0; i < P.length - 1; i++) wall(P[i], P[i + 1], 0.55, 0.25, brick);
+    }
+    for (const c of D.flags) {
+      const [x, y] = EN(c);
+      g.add(cyl(0.11, 0.05, D.flag_h, x, 0, -y, pole, 12)); g.add(cyl(0.25, 0.25, 0.2, x, 0, -y, cap, 12));
+      const ball = new THREE.Mesh(new THREE.SphereGeometry(0.13, 10, 8), lam('w58-gold', { color: '#d9b44a' })); ball.position.set(x, D.flag_h + 0.1, -y); g.add(ball);
+    }
+    for (const c of D.lamps) {
+      const [x, y] = EN(c);
+      g.add(cyl(0.09, 0.07, 6.5, x, 0, -y, dark, 10));
+      g.add(box(0.5, 0.3, 0.5, x, 6.5, -y, dark)); g.add(box(0.36, 0.08, 0.36, x, 6.42, -y, lam('w58-led', { color: '#fffbe8', emissive: '#8a856c' })));
+    }
+    { const [x, y] = EN(D.hydrant); g.add(cyl(0.14, 0.14, 0.6, x, 0, -y, red, 12)); g.add(cyl(0.17, 0.05, 0.16, x, 0.6, -y, red, 12));
+      g.add(box(0.46, 0.1, 0.1, x, 0.38, -y, red)); }
+    { const [x, y] = EN(D.sign); g.add(box(0.07, 1.2, 0.07, x, 0, -y, dark)); g.add(box(0.5, 0.3, 0.04, x, 1.0, -y, dark)); }
+    for (const c of (D.bollards || [])) { const [x, y] = EN(c); g.add(cyl(0.1, 0.1, 0.95, x, 0, -y, dark, 10)); }
+    for (const c of (D.acc || [])) { const [x, y] = EN(c); g.add(box(1.2, 0.02, 1.2, x, 0.02, -y, lam('w58-acc', { color: '#2f6fb8' })));
+      const w = box(0.5, 0.025, 0.5, x, 0.03, -y, lam('w58-accw', { color: '#f4f6f8' })); g.add(w); }
+    if (D.rsign) {   // RANGER CENTRAL sign: white panel, blue frame, red/blue lettering, two blue posts
+      const [x, y] = EN(D.rsign), sg = new THREE.Group(); sg.position.set(x, 0, -y); sg.rotation.y = (D.rsign_rot || 0) * Math.PI / 180;
+      const cv = document.createElement('canvas'); cv.width = 256; cv.height = 128; const c2 = cv.getContext('2d');
+      c2.fillStyle = '#ffffff'; c2.fillRect(0, 0, 256, 128); c2.strokeStyle = '#1f4f9c'; c2.lineWidth = 10; c2.strokeRect(5, 5, 246, 118);
+      c2.textAlign = 'center'; c2.font = 'bold 46px "DejaVu Sans", Arial'; c2.fillStyle = '#1f4f9c'; c2.fillText('RANGER', 128, 58); c2.fillStyle = '#c4262e'; c2.fillText('CENTRAL', 128, 106);
+      const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace;
+      const face = new THREE.MeshLambertMaterial({ map: t, emissive: '#333333' }), blue = lam('w58-blue', { color: '#1f4f9c' });
+      const panel = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.2, 0.1), [blue, blue, blue, blue, face, face]); panel.position.set(0, 1.25, 0); sg.add(panel);
+      sg.add(box(0.1, 1.9, 0.1, -1.15, 0, 0, blue)); sg.add(box(0.1, 1.9, 0.1, 1.15, 0, 0, blue)); g.add(sg);
+    }
+    return g;
+  }
+  // <<< W58 build
+  root.add(buildSign()); root.add(buildPlaza()); if (L.nwdr) root.add(buildNwdr()); if (L.baseball) root.add(buildBaseball()); if (L.football) root.add(buildFootball()); if (L.softball) root.add(buildSoftball()); if (L.practice) root.add(buildPractice()); if (L.lamar) root.add(buildLamar()); if (L.rab31) root.add(buildRab31()); if (L.benton) root.add(buildBenton()); if (L.heindl) root.add(buildHeindl()); if (L.lafayette) root.add(buildLafayette()); if (L.yalobusha) root.add(buildYalobusha()); if (L.mccormick) root.add(buildMcCormick()); if (L.tate) root.add(buildTate()); if (L.lib53) root.add(buildLib53()); if (L.conn56) root.add(buildConn56()); if (L.w58) root.add(buildW58());
   root.traverse(o => { o.frustumCulled = false; });
   return root;
 };
@@ -1656,3 +1702,7 @@ window.NWCC_LANDMARKS.lib53 = {"parts":[{"k":"s","ring":[[-89.9697561,34.6247202
 // Tate Hall (#56) west connector (2026-10-12).
 window.NWCC_LANDMARKS.conn56 = {"h":4.2,"pitch":26.0,"parts":[{"k":"n","r":[[-89.9697206,34.6248391],[-89.969666,34.6249703]]},{"k":"s","r":[[-89.9697206,34.6247758],[-89.9696114,34.6248437]],"s":[6.6,8.6],"e":[2.2,5.2],"w":[]}],"vents":[[-89.9696933,34.624907],[-89.9696606,34.6248075]],"porch":{"c":[-89.9696846,34.6247758],"w":3.6,"d":2.0,"deck":0.75,"risers":3},"ramp":[[-89.9696617,34.6247659],[-89.9695459,34.6247659]],"ramp_w":1.3,"planters":[[[-89.9697184,34.624746],[-89.9697064,34.6247749],0.7],[[-89.9696617,34.6247433],[-89.9696049,34.6247532],0.6]]};
 /* <<< CONN-56 data */
+/* W58 data >>> */
+// #58 Strategic Communications site (2026-10-12). Coordinates [lng,lat]; heights in m.
+window.NWCC_LANDMARKS.w58 = {"flags":[[-89.9698462,34.6259],[-89.9698298,34.6259036],[-89.9698134,34.6259072]],"flag_h":11.0,"lamps":[[-89.9697752,34.6258963],[-89.9693429,34.6259181]],"hydrant":[-89.9699324,34.6259253],"sign":[-89.9698931,34.6259036],"walls":[{"pts":[[-89.9696748,34.6260754],[-89.9695569,34.6261152],[-89.9695612,34.6261677],[-89.9696311,34.6261731],[-89.9696748,34.6260754]],"h":1.0,"t":0.3},{"pts":[[-89.9695569,34.6261152],[-89.9694641,34.6261369],[-89.9693713,34.6261568]],"h":0.9,"t":0.3}],"planters":[[[-89.969585,34.6261652],[-89.9695938,34.6261616],[-89.9696017,34.6261567],[-89.9696083,34.6261507],[-89.9696133,34.6261436],[-89.9696166,34.6261359],[-89.9696179,34.6261279],[-89.9696174,34.6261197],[-89.969615,34.6261118]],[[-89.969579,34.6261516],[-89.9695848,34.6261493],[-89.9695899,34.6261461],[-89.9695942,34.6261421],[-89.9695975,34.6261375],[-89.9695996,34.6261325],[-89.9696005,34.6261272],[-89.9696001,34.6261219],[-89.9695986,34.6261168]]],"bollards":[[-89.9692892,34.6259568],[-89.9692566,34.6259872],[-89.9692327,34.6260054],[-89.9692088,34.6260235],[-89.9691849,34.6260417],[-89.9691418,34.6260743],[-89.9690627,34.6261136],[-89.9689851,34.6261338]],"rsign":[-89.9693298,34.6258674],"rsign_rot":-45,"acc":[[-89.9692683,34.6259358],[-89.9692206,34.6259785],[-89.9691965,34.6259969]]};
+/* <<< W58 data */

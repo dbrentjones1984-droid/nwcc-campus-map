@@ -87,7 +87,7 @@ function basemapLayers(sat) {
   if (!sat) {
     L.push({ id: 'bm-campus', type: 'fill', source: 'basemap', filter: lay('campus'), paint: { 'fill-color': LAWN } });
     L.push({ id: 'bm-pitch', type: 'fill', source: 'basemap', filter: lay('pitch'), paint: { 'fill-color': FIELD, 'fill-outline-color': '#7c9f5c' } });
-    L.push({ id: 'bm-parking', type: 'fill', source: 'basemap', filter: lay('parking'), paint: { 'fill-color': PAVE, 'fill-outline-color': '#b4b7a8' } });
+    L.push({ id: 'bm-parking', type: 'fill', source: 'basemap', filter: lay('parking'), paint: { 'fill-color': ['match', ['get', 'kind'], 'asphalt', '#3d4148', PAVE], 'fill-outline-color': ['match', ['get', 'kind'], 'asphalt', '#2c2f34', '#b4b7a8'] } });
     L.push({ id: 'bm-water', type: 'fill', source: 'basemap', filter: lay('water'), paint: { 'fill-color': '#a8cbe6' } });
   } else {
     L.push({ id: 'bm-mask', type: 'fill', source: 'basemap', filter: lay('mask'), paint: { 'fill-color': '#1d2431', 'fill-opacity': 1 } });
@@ -95,6 +95,11 @@ function basemapLayers(sat) {
   // sidewalks (2 m) in both styles: light walk on the lawn, translucent white over the imagery
   L.push({ id: 'bm-path', type: 'line', source: 'basemap', filter: lay('path'), layout: { 'line-join': 'round' },
     paint: { 'line-color': sat ? '#ffffff' : '#f3f2ea', 'line-width': mw(0, 0.7), 'line-opacity': sat ? 0.55 : 1 } });
+  // W58-WALKAREA >>>
+  // #58 walks as one unioned concrete polygon (2026-10-12): seamless joins + the SE junction plaza; asphalt lots stay dark in satellite too
+  L.push({ id: 'bm-walkarea', type: 'fill', source: 'basemap', filter: lay('walkarea'), paint: { 'fill-color': sat ? '#ffffff' : '#f3f2ea', 'fill-opacity': sat ? 0.55 : 1, 'fill-outline-color': sat ? 'rgba(255,255,255,.6)' : '#d4d2c6' } });
+  if (sat) L.push({ id: 'bm-parking-sat', type: 'fill', source: 'basemap', filter: ['all', lay('parking'), ['==', ['get', 'kind'], 'asphalt']], paint: { 'fill-color': '#3d4148', 'fill-opacity': 0.35 } });
+  // <<< W58-WALKAREA
   // LANDMARK mockup 2026-10-09: Seal Plaza brick circle (flat fallback; landmarks.js draws the herringbone + medallion on top)
   if (!sat) L.push({ id: 'bm-plaza', type: 'fill', source: 'basemap', filter: lay('plaza'), paint: { 'fill-color': '#b0604a', 'fill-outline-color': '#e3dfd3' } });
   const casing = sat ? 'rgba(20,24,32,.55)' : '#a7aa9b';

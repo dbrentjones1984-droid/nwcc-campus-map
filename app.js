@@ -511,36 +511,78 @@ function showCard(it) { // card UI simplified 2026-10-08
   card.classList.add('show');
   card.querySelector('.x').onclick = closeCard;
   card.querySelectorAll('.parts button').forEach(bt => bt.onclick = () => select(bt.dataset.k, true));
-  const ph = card.querySelector('.photo'); if (ph) ph.onclick = () => openLightbox(it, ph);   // CARD-PHOTO
+  wirePhotos(it);   // CARD-PHOTO
 }
 // CARD-PHOTO >>>
-// Building photos (2026-10-09): any item with `photo` {src, srcset, full, w, h, alt} gets a banner on its card; tap = lightbox.
+// Building photos (2026-10-09, multi-photo 2026-10-11): an item's `photo` is one {src, srcset, full, w, h, fw, fh, alt, caption?}
+// or an array of them. One photo = tappable banner; several = swipeable banner with dots (+ arrows on mouse devices).
+// Tap = lightbox (prev/next, arrow keys, swipe).
+const photoList = (it) => !it || !it.photo ? [] : Array.isArray(it.photo) ? it.photo : [it.photo];
+const ZOOM_ICO = `<span class="zoom" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></span>`;
+const CHEV = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="${d < 0 ? 'M15 5l-7 7 7 7' : 'M9 5l7 7-7 7'}"/></svg>`;
+const photoImg = (p, it, i) => `<img src="${p.src}" ${p.srcset ? `srcset="${p.srcset}" sizes="(max-width: 719px) 100vw, 330px"` : ''} width="${p.w}" height="${p.h}" alt="${esc(p.alt || title(it))}"${p.pos ? ` style="object-position:${p.pos}"` : ''} loading="lazy" decoding="async"${i ? ' fetchpriority="low"' : ''}>`;
 function cardPhotoHtml(it) {
-  const p = it.photo; if (!p) return '';
-  return `<button class="photo" type="button" aria-label="View larger photo of ${esc(title(it))}">
-    <img src="${p.src}" ${p.srcset ? `srcset="${p.srcset}" sizes="(max-width: 719px) 100vw, 330px"` : ''} width="${p.w}" height="${p.h}" alt="${esc(p.alt || title(it))}" loading="lazy" decoding="async">
-    <span class="zoom" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></span></button>`;
+  const L = photoList(it); if (!L.length) return '';
+  if (L.length === 1) return `<button class="photo" type="button" aria-label="View larger photo of ${esc(title(it))}">${photoImg(L[0], it, 0)}${ZOOM_ICO}</button>`;
+  return `<div class="photo multi" role="group" aria-roledescription="carousel" aria-label="${L.length} photos of ${esc(title(it))}">
+    <div class="track">${L.map((p, i) => `<button class="slide" type="button" data-i="${i}" aria-label="View larger photo ${i + 1} of ${L.length}${p.caption ? ' (' + esc(p.caption) + ')' : ''}">${photoImg(p, it, i)}</button>`).join('')}</div>
+    <button class="nav prev" type="button" aria-label="Previous photo">${CHEV(-1)}</button><button class="nav next" type="button" aria-label="Next photo">${CHEV(1)}</button>
+    <div class="dots">${L.map((p, i) => `<button type="button" data-i="${i}" class="${i ? '' : 'on'}" aria-label="Show photo ${i + 1}${p.caption ? ' (' + esc(p.caption) + ')' : ''}"></button>`).join('')}</div>${ZOOM_ICO}</div>`;
 }
-let lbEl = null, lbReturn = null;
-function openLightbox(it, from) {
-  const p = it.photo; if (!p) return; lbReturn = from || null;
+function wirePhotos(it) {
+  const ph = card.querySelector('.photo'); if (!ph) return;
+  if (!ph.classList.contains('multi')) { ph.onclick = () => openLightbox(it, ph, 0); return; }
+  const tr = ph.querySelector('.track'), dots = [...ph.querySelectorAll('.dots button')], n = dots.length;
+  const cur = () => Math.round(tr.scrollLeft / Math.max(1, tr.clientWidth));
+  const go = (i, smooth = true) => tr.scrollTo({ left: ((i + n) % n) * tr.clientWidth, behavior: smooth ? 'smooth' : 'auto' });
+  const sync = () => { const c = cur(); dots.forEach((d, j) => { d.classList.toggle('on', j === c); d.setAttribute('aria-current', j === c ? 'true' : 'false'); }); };
+  tr.addEventListener('scroll', () => requestAnimationFrame(sync), { passive: true });
+  dots.forEach((d, j) => d.onclick = (e) => { e.stopPropagation(); go(j); });
+  ph.querySelector('.prev').onclick = () => go(cur() - 1);
+  ph.querySelector('.next').onclick = () => go(cur() + 1);
+  ph.querySelectorAll('.slide').forEach(s => s.onclick = () => openLightbox(it, s, +s.dataset.i));
+  ph._go = go;
+}
+let lbEl = null, lbReturn = null, lbIt = null, lbI = 0;
+function openLightbox(it, from, i) {
+  const L = photoList(it); if (!L.length) return; lbReturn = from || null; lbIt = it;
   if (!lbEl) {
     lbEl = document.createElement('div'); lbEl.id = 'lightbox'; lbEl.setAttribute('role', 'dialog'); lbEl.setAttribute('aria-modal', 'true');
     lbEl.innerHTML = `<figure><img alt=""><figcaption></figcaption></figure>
+      <button class="lbnav prev" type="button" aria-label="Previous photo">${CHEV(-1)}</button><button class="lbnav next" type="button" aria-label="Next photo">${CHEV(1)}</button>
       <button class="x" type="button" aria-label="Close photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>`;
     document.body.appendChild(lbEl);
-    lbEl.addEventListener('click', e => { if (e.target === lbEl || e.target.closest('.x')) closeLightbox(); });
-    document.addEventListener('keydown', e => { if (e.key === 'Escape' && lbEl.classList.contains('show')) { e.stopPropagation(); closeLightbox(); } }, true);
+    lbEl.addEventListener('click', e => {
+      if (e.target.closest('.lbnav')) { lbShow(lbI + (e.target.closest('.prev') ? -1 : 1)); return; }
+      if (e.target === lbEl || e.target.closest('.x')) closeLightbox();
+    });
+    document.addEventListener('keydown', e => {
+      if (!lbEl.classList.contains('show')) return;
+      if (e.key === 'Escape') { e.stopPropagation(); closeLightbox(); }
+      else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); lbShow(lbI + (e.key === 'ArrowLeft' ? -1 : 1)); }
+    }, true);
+    let x0 = null;
+    lbEl.addEventListener('touchstart', e => { x0 = e.touches.length === 1 ? e.touches[0].clientX : null; }, { passive: true });
+    lbEl.addEventListener('touchend', e => { if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0; x0 = null; if (Math.abs(dx) > 40) lbShow(lbI + (dx > 0 ? -1 : 1)); }, { passive: true });
   }
-  const img = lbEl.querySelector('img');
-  img.src = p.full || p.src; img.alt = p.alt || title(it); if (p.fw) { img.width = p.fw; img.height = p.fh; }
-  lbEl.querySelector('figcaption').textContent = title(it);
-  lbEl.setAttribute('aria-label', 'Photo: ' + title(it));
+  lbShow(i || 0);
   lbEl.classList.add('show'); lbEl.querySelector('.x').focus();
+}
+function lbShow(i) {
+  const L = photoList(lbIt), n = L.length; lbI = ((i % n) + n) % n; const p = L[lbI], it = lbIt;
+  const img = lbEl.querySelector('img');
+  img.removeAttribute('width'); img.removeAttribute('height');
+  img.src = p.full || p.src; img.alt = p.alt || title(it); if (p.fw) { img.width = p.fw; img.height = p.fh; }
+  if (n > 1) { const q = L[(lbI + 1) % n]; const pre = new Image(); pre.src = q.full || q.src; }   // warm the next one
+  lbEl.querySelector('figcaption').textContent = title(it) + (p.caption ? ' · ' + p.caption : '') + (n > 1 ? `  (${lbI + 1} / ${n})` : '');
+  lbEl.classList.toggle('multi', n > 1);
+  lbEl.setAttribute('aria-label', 'Photo: ' + title(it) + (n > 1 ? `, ${lbI + 1} of ${n}` : ''));
 }
 function closeLightbox() {
   if (!lbEl) return; lbEl.classList.remove('show');
-  if (lbReturn && document.body.contains(lbReturn)) lbReturn.focus(); lbReturn = null;
+  const ph = card.querySelector('.photo.multi'); if (ph && ph._go) ph._go(lbI, false);
+  const back = ph ? ph.querySelector(`.slide[data-i="${lbI}"]`) : lbReturn;
+  if (back && document.body.contains(back)) back.focus({ preventScroll: true }); lbReturn = null;
 }
 // <<< CARD-PHOTO
 function closeCard() {

@@ -302,6 +302,31 @@ button{touch-action:manipulation;-webkit-user-select:none;user-select:none}
 #lightbox .x svg{width:16px;height:16px}
 #lightbox .x:hover{background:var(--field-hover)}
 /* <<< CARD-PHOTO */
+/* CARD-PHOTO2 >>> */
+/* multi-photo banner: native horizontal scroll-snap track, dots, arrows on mouse devices; lightbox prev/next */
+#card .photo.multi{cursor:default}
+#card .photo.multi .track{display:flex;width:100%;height:100%;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}
+#card .photo.multi .track::-webkit-scrollbar{display:none}
+#card .photo.multi .slide{flex:0 0 100%;height:100%;padding:0;border:0;background:none;scroll-snap-align:start;cursor:zoom-in;overflow:hidden}
+#card .photo.multi .slide:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+#card .photo.multi .dots{position:absolute;left:50%;bottom:9px;transform:translateX(-50%);display:flex;gap:2px;padding:3px 5px;border-radius:999px;background:rgba(12,18,52,.55)}
+#card .photo.multi .dots button{width:16px;height:16px;padding:0;border:0;background:none;cursor:pointer;display:grid;place-items:center}
+#card .photo.multi .dots button::after{content:"";width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.5);transition:background .2s,transform .2s}
+#card .photo.multi .dots button.on::after{background:#fff;transform:scale(1.15)}
+#card .photo.multi .nav{position:absolute;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:50%;padding:0;display:grid;place-items:center;cursor:pointer;
+  border:1px solid rgba(255,255,255,.22);background:rgba(12,18,52,.6);color:#fff;opacity:0;transition:opacity .2s}
+#card .photo.multi .nav svg{width:15px;height:15px}
+#card .photo.multi .prev{left:8px} #card .photo.multi .next{right:8px}
+#card .photo.multi:hover .nav,#card .photo.multi .nav:focus-visible{opacity:1}
+@media(pointer:coarse){ #card .photo.multi .nav{display:none} }   /* touch: swipe + dots */
+#lightbox .lbnav{display:none;position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;padding:0;place-items:center;cursor:pointer;
+  border:1px solid var(--line);background:var(--panel-strong);color:var(--text)}
+#lightbox .lbnav svg{width:18px;height:18px}
+#lightbox .lbnav:hover{background:var(--field-hover)}
+#lightbox.multi .lbnav{display:grid}
+#lightbox .lbnav.prev{left:calc(12px + env(safe-area-inset-left))} #lightbox .lbnav.next{right:calc(12px + env(safe-area-inset-right))}
+@media(max-width:719px){ #lightbox .lbnav{top:auto;bottom:calc(14px + env(safe-area-inset-bottom));transform:none} }
+/* <<< CARD-PHOTO2 */
 </style>
 </head>
 <body>

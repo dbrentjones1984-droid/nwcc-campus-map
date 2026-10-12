@@ -902,7 +902,112 @@ window.NWCCLandmarks = function (THREE, toEN, onTexture) {
     return g;
   }
   // <<< HEINDL-50 build
-  root.add(buildSign()); root.add(buildPlaza()); if (L.nwdr) root.add(buildNwdr()); if (L.baseball) root.add(buildBaseball()); if (L.football) root.add(buildFootball()); if (L.softball) root.add(buildSoftball()); if (L.practice) root.add(buildPractice()); if (L.lamar) root.add(buildLamar()); if (L.rab31) root.add(buildRab31()); if (L.benton) root.add(buildBenton()); if (L.heindl) root.add(buildHeindl());
+  // LAFAYETTE-20 build >>>
+  // #20 Lafayette Humanities Building (3-story red brick box with projecting N and S bays, white fascia band and lower base, brick
+  // pilasters with narrow windows, glass stair strips beside the bays, north entrance with flat canopy + steps, teal standing-seam hip
+  // roof with cross-hipped bays and a small ridge vent) + the ground-level mechanical yard on the east side. NO ground shadows.
+  function buildLafayette() {
+    const B = L.lafayette, g = new THREE.Group(); g.name = 'lafayette-hall';
+    const EN = c => toEN(c[0], c[1]);
+    const M = (k, o) => lam('lf-' + k, Object.assign({ side: THREE.FrontSide }, o));
+    const hid = new THREE.MeshBasicMaterial({ visible: false });
+    const cvs = (w, h) => { const c = document.createElement('canvas'); c.width = Math.max(4, Math.round(w)); c.height = Math.max(4, Math.round(h)); return c; };
+    const texOf = (c, rep) => { const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; if (rep) t.wrapS = t.wrapT = THREE.RepeatWrapping; return t; };
+    const white = M('white', { color: '#f4f2ec', emissive: '#3a3935' }), conc = M('conc', { color: '#d8d4c9' }), rail = M('rail', { color: '#2a2d31' });
+    const PX = 20, H = B.eave, FB = B.fascia;   // fascia band from H - FB to H
+    function facade(key, len, o) {
+      const c = cvs(len * PX, H * PX), x = c.getContext('2d'), Y = h => (H - h) * PX, U = u => u * PX;
+      let s = 5 + key.length * 13; const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+      x.fillStyle = '#ad5a43'; x.fillRect(0, 0, c.width, c.height);
+      for (let r = 0, hh = 0; hh < H; r++, hh += 0.3) for (let u = (r % 2) * 0.3; u < len; u += 0.6) {
+        const t = rnd(); x.fillStyle = t < 0.3 ? '#a4523d' : t < 0.6 ? '#b6614a' : t < 0.82 ? '#ae5b45' : '#9a4c39'; x.fillRect(U(u), Y(hh + 0.3) + 1, 0.58 * PX, 0.3 * PX - 1); }
+      x.fillStyle = 'rgba(80,45,32,0.2)'; for (let hh = 0; hh < H; hh += 0.3) x.fillRect(0, Y(hh), c.width, 1);
+      for (const u of (o.pil || [])) {   // brick pilaster: lit edge + shadow edge, narrow dark window slot beside it
+        x.fillStyle = 'rgba(255,230,210,0.18)'; x.fillRect(U(u - 0.35), 0, 0.12 * PX, c.height); x.fillStyle = 'rgba(40,20,12,0.28)'; x.fillRect(U(u + 0.35), 0, 0.14 * PX, c.height);
+        if (o.slots) { const gr = x.createLinearGradient(0, Y(H - FB), 0, Y(o.base || 0.6)); gr.addColorStop(0, '#556673'); gr.addColorStop(1, '#2c3843'); x.fillStyle = gr; x.fillRect(U(u + 0.6), Y(H - FB - 0.4), 0.42 * PX, (H - FB - 0.4 - (o.base || 0.6) - 0.6) * PX); }
+      }
+      x.fillStyle = '#f3f1ea'; x.fillRect(0, Y(0.6), c.width, 0.6 * PX);                      // white base course
+      if (o.base) { x.fillStyle = '#eeece5'; x.fillRect(0, Y(o.base), c.width, o.base * PX); x.fillStyle = 'rgba(0,0,0,0.12)'; x.fillRect(0, Y(o.base), c.width, 2); }
+      x.fillStyle = '#f6f4ee'; x.fillRect(0, 0, c.width, FB * PX); x.fillStyle = 'rgba(0,0,0,0.10)'; x.fillRect(0, FB * PX - 2, c.width, 2);   // white fascia band
+      for (const u of (o.down || [])) { x.fillStyle = '#f1efe8'; x.fillRect(U(u) - 2, Y(H - FB), 4, (H - FB) * PX); }
+      for (const it of (o.items || [])) {
+        if (it.k === 'strip') {   // tall glass stair window
+          x.fillStyle = '#e9e7e0'; x.fillRect(U(it.u - 0.1), Y(it.z1 + 0.1), (it.w + 0.2) * PX, (it.z1 - it.z0 + 0.2) * PX);
+          const gr = x.createLinearGradient(0, Y(it.z1), 0, Y(it.z0)); gr.addColorStop(0, '#7d8f9c'); gr.addColorStop(1, '#2f3b46'); x.fillStyle = gr; x.fillRect(U(it.u), Y(it.z1), it.w * PX, (it.z1 - it.z0) * PX);
+          x.fillStyle = '#c9c4b4'; for (let h = it.z0 + 1.0; h < it.z1; h += 3.3) x.fillRect(U(it.u), Y(h + 0.9), it.w * PX, 0.9 * PX);   // tan spandrels at the floor lines
+          x.fillStyle = '#dcd9d0'; x.fillRect(U(it.u + it.w / 2) - 1, Y(it.z1), 2, (it.z1 - it.z0) * PX);
+        } else if (it.k === 'door') {
+          x.fillStyle = '#2b333b'; x.fillRect(U(it.u), Y(it.h), it.w * PX, it.h * PX); x.fillStyle = '#9aa3a8'; x.fillRect(U(it.u + it.w / 2) - 1, Y(it.h), 2, it.h * PX);
+        } else if (it.k === 'text') {
+          x.fillStyle = '#f2efe6'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = 'bold ' + Math.round(0.34 * PX) + 'px "DejaVu Sans", Arial, sans-serif';
+          x.fillText(it.t1.split('').join(' '), U(it.u), Y(it.z + 0.55)); x.fillText(it.t2, U(it.u), Y(it.z));
+        }
+      }
+      return M('fac-' + key, { map: texOf(c), emissive: '#1c1410' });
+    }
+    // ---------- teal standing-seam roof texture (1 m tile, seams every 0.5 m running down the slope)
+    const rc = cvs(64, 64), rx = rc.getContext('2d'); rx.fillStyle = '#3f9a95'; rx.fillRect(0, 0, 64, 64);
+    for (const u of [0, 32]) { rx.fillStyle = '#5fb5ae'; rx.fillRect(u, 0, 2, 64); rx.fillStyle = '#2f7b77'; rx.fillRect(u + 2, 0, 2, 64); }
+    const roofM = lam('lf-roof', { map: texOf(rc, true), side: THREE.DoubleSide, emissive: '#0d1b1a' });
+    function hip(x0, x1, z0, z1, y, pitch) {   // as buildLamar(): ridge along the longer side, UV u = metres along the eave, v = up-slope
+      const t = Math.tan(pitch * Math.PI / 180), P = [], UV = [], wx = x1 - x0, dz = z1 - z0, alongZ = dz >= wx, h = (alongZ ? wx : dz) / 2, r = y + h * t;
+      const cx_ = (x0 + x1) / 2, cz_ = (z0 + z1) / 2, sl = 1 / Math.cos(Math.atan(t));
+      const tri = (a, b, c, uv) => { P.push(...a, ...b, ...c); UV.push(...uv); };
+      if (alongZ) { const ra = [cx_, r, z0 + h], rb = [cx_, r, z1 - h];
+        tri([x1, y, z0], [x1, y, z1], rb, [z0, 0, z1, 0, z1 - h, h * sl]); tri([x1, y, z0], rb, ra, [z0, 0, z1 - h, h * sl, z0 + h, h * sl]);
+        tri([x0, y, z1], [x0, y, z0], ra, [z1, 0, z0, 0, z0 + h, h * sl]); tri([x0, y, z1], ra, rb, [z1, 0, z0 + h, h * sl, z1 - h, h * sl]);
+        tri([x0, y, z0], [x1, y, z0], ra, [x0, 0, x1, 0, cx_, h * sl]); tri([x1, y, z1], [x0, y, z1], rb, [x1, 0, x0, 0, cx_, h * sl]);
+      } else { const ra = [x0 + h, r, cz_], rb = [x1 - h, r, cz_];
+        tri([x0, y, z1], [x1, y, z1], rb, [x0, 0, x1, 0, x1 - h, h * sl]); tri([x0, y, z1], rb, ra, [x0, 0, x1 - h, h * sl, x0 + h, h * sl]);
+        tri([x1, y, z0], [x0, y, z0], ra, [x1, 0, x0, 0, x0 + h, h * sl]); tri([x1, y, z0], ra, rb, [x1, 0, x0 + h, h * sl, x1 - h, h * sl]);
+        tri([x0, y, z0], [x0, y, z1], ra, [z0, 0, z1, 0, cz_, h * sl]); tri([x1, y, z1], [x1, y, z0], rb, [z1, 0, z0, 0, cz_, h * sl]); }
+      const ge = new THREE.BufferGeometry(); ge.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); ge.setAttribute('uv', new THREE.Float32BufferAttribute(UV, 2)); ge.computeVertexNormals();
+      return { mesh: new THREE.Mesh(ge, roofM), ridge: r };
+    }
+    // ---------- walls
+    const R = k => { const [a, b] = B[k].map(EN); return { x0: a[0], y0: a[1], x1: b[0], y1: b[1], W: b[0] - a[0], D: b[1] - a[1], cx: (a[0] + b[0]) / 2, cz: -(a[1] + b[1]) / 2 }; };
+    const mn = R('main'), nb = R('nbay'), sb = R('sbay');
+    const pils = (len, step) => { const o = []; for (let u = step / 2; u < len - 0.8; u += step) o.push(u); return o; };
+    const nU0 = mn.x1 - nb.x1, nU1 = mn.x1 - nb.x0;            // N bay span on the main north face (u from the east)
+    const sU0 = sb.x0 - mn.x0, sU1 = sb.x1 - mn.x0;            // S bay span on the main south face (u from the west)
+    const mainMats = [
+      facade('me', mn.D, { pil: pils(mn.D, 3.7), slots: true, base: 2.6, down: [0.3, mn.D - 0.3] }),
+      facade('mw', mn.D, { pil: pils(mn.D, 3.7), slots: true, down: [0.3, mn.D - 0.3] }), hid, hid,
+      facade('ms', mn.W, { pil: pils(sU0, 3.6).concat(pils(mn.W - sU1, 3.6).map(u => u + sU1)), slots: true, down: [0.3, mn.W - 0.3],
+        items: [{ k: 'strip', u: sU1 + 0.25, w: 1.7, z0: 0.6, z1: H - FB - 0.3 }] }),
+      facade('mn', mn.W, { base: 2.6, pil: pils(mn.W - nU1, 3.6).map(u => u + nU1), slots: true, down: [0.3, mn.W - 0.3],
+        items: [{ k: 'text', u: (nU0 - 2.3) / 2, z: 6.2, t1: 'LAFAYETTE', t2: 'HUMANITIES BUILDING' }, { k: 'strip', u: nU0 - 2.05, w: 1.8, z0: 3.4, z1: H - FB - 0.3 }, { k: 'door', u: nU0 - 1.95, w: 1.6, h: 2.5 }] })];
+    const wb = new THREE.Mesh(new THREE.BoxGeometry(mn.W, H, mn.D), mainMats); wb.position.set(mn.cx, H / 2, mn.cz); g.add(wb);
+    for (const [bx, k, faces] of [[nb, 'n', { n: 1, e: 1, w: 1 }], [sb, 's', { s: 1, e: 1, w: 1 }]]) {
+      const pm = s => facade('b' + k + s, s === 'n' || s === 's' ? bx.W : bx.D, { down: [0.25, (s === 'n' || s === 's' ? bx.W : bx.D) - 0.25] });
+      const m = new THREE.Mesh(new THREE.BoxGeometry(bx.W, H, bx.D), [faces.e ? pm('e') : hid, faces.w ? pm('w') : hid, hid, hid, faces.s ? pm('s') : hid, faces.n ? pm('n') : hid]);
+      m.position.set(bx.cx, H / 2, bx.cz); g.add(m); }
+    // ---------- eave soffit + roofs (main hip, cross-hipped bays tying into it), ridge vent
+    const ov = 0.6, yR = H + 0.02;
+    for (const bx of [mn, nb, sb]) g.add(box(bx.W + 2 * ov, 0.18, bx.D + 2 * ov, bx.cx, H - 0.16, bx.cz, white));
+    const main = hip(mn.x0 - ov, mn.x1 + ov, mn.cz - mn.D / 2 - ov, mn.cz + mn.D / 2 + ov, yR, B.pitch); g.add(main.mesh);
+    g.add(hip(nb.x0 - ov, nb.x1 + ov, nb.cz - nb.D / 2 - ov, nb.cz + nb.D / 2 + 8, yR, B.pitch).mesh);   // runs 8 m into the main roof
+    g.add(hip(sb.x0 - ov, sb.x1 + ov, sb.cz - sb.D / 2 - 8, sb.cz + sb.D / 2 + ov, yR, B.pitch).mesh);
+    const vent = M('vent', { color: '#e7e5df', emissive: '#2b2a27' });
+    g.add(box(1.2, 0.9, 1.6, mn.cx, main.ridge - 0.25, mn.cz, vent)); g.add(box(1.5, 0.12, 1.9, mn.cx, main.ridge + 0.6, mn.cz, vent));
+    // ---------- north entrance: flat canopy, steps, rails (re-entrant corner west of the N bay)
+    { const ex = nb.x1 + 1.15, ez = -mn.y1;
+      g.add(box(2.8, 0.22, 2.2, ex, 3.1, ez - 1.1, white)); g.add(box(0.12, 3.1, 0.12, ex - 1.3, 0, ez - 2.1, rail));
+      for (let i = 0; i < 4; i++) g.add(box(2.6, 0.17 * (4 - i), 0.32, ex, 0, ez - 0.2 - (3 - i) * 0.32 - 0.6, conc));
+      g.add(box(2.6, 0.7, 0.6, ex, 0, ez - 0.3, conc));
+      for (const sx of [-1.25, 1.25]) { g.add(box(0.05, 0.05, 1.6, ex + sx, 1.0, ez - 1.6, rail)); g.add(box(0.05, 1.0, 0.05, ex + sx, 0.0, ez - 2.4, rail)); } }
+    // ---------- ground-level mechanical yard (white screen walls; units kept as two plain boxes)
+    { const YP = B.yard.map(EN), wm = M('yardwall', { color: '#ecebe5', emissive: '#2c2b28', side: THREE.DoubleSide });
+      for (let i = 0; i < YP.length - 1; i++) { const a = YP[i], b = YP[i + 1], Ls = Math.hypot(b[0] - a[0], b[1] - a[1]);
+        const w = new THREE.Mesh(new THREE.BoxGeometry(Ls, 2.4, 0.25), wm); w.position.set((a[0] + b[0]) / 2, 1.2, -(a[1] + b[1]) / 2); w.rotation.y = Math.atan2(b[1] - a[1], b[0] - a[0]); g.add(w); }
+      const um = M('unit', { color: '#a9adb1', emissive: '#1a1b1c' });
+      for (const u of B.units) { const [x, y] = EN(u); g.add(box(2.0, 1.4, 2.4, x, 0, -y, um)); }
+      const [a, b] = [B.yard[0], B.yard[2]].map(EN); const pad = new THREE.Mesh(new THREE.PlaneGeometry(Math.abs(b[0] - a[0]), Math.abs(b[1] - a[1])), conc);
+      pad.rotation.x = -Math.PI / 2; pad.position.set((a[0] + b[0]) / 2, 0.04, -(a[1] + b[1]) / 2); g.add(pad); }
+    return g;
+  }
+  // <<< LAFAYETTE-20 build
+  root.add(buildSign()); root.add(buildPlaza()); if (L.nwdr) root.add(buildNwdr()); if (L.baseball) root.add(buildBaseball()); if (L.football) root.add(buildFootball()); if (L.softball) root.add(buildSoftball()); if (L.practice) root.add(buildPractice()); if (L.lamar) root.add(buildLamar()); if (L.rab31) root.add(buildRab31()); if (L.benton) root.add(buildBenton()); if (L.heindl) root.add(buildHeindl()); if (L.lafayette) root.add(buildLafayette());
   root.traverse(o => { o.frustumCulled = false; });
   return root;
 };
@@ -943,3 +1048,7 @@ window.NWCC_LANDMARKS.benton = {"shed":[[-89.9692719,34.623403],[-89.9692719,34.
 // #50 Heindl Center traced on Brent's 4 obliques + 2 street photos and Esri imagery (2026-10-11). Coordinates [lng,lat]; heights in m.
 window.NWCC_LANDMARKS.heindl = {"parts":{"ft":{"sw":[-89.9745042,34.6272222],"ne":[-89.9742029,34.6273442],"h":24.0},"au":{"sw":[-89.9745413,34.6269328],"ne":[-89.9741658,34.6272222],"h":15.5},"fl":{"sw":[-89.9745413,34.6268695],"ne":[-89.9741658,34.6269328],"h":12.0},"nb":{"sw":[-89.9745894,34.6273171],"ne":[-89.9739879,34.627696],"h":13.0},"ew":{"sw":[-89.9741658,34.6268704],"ne":[-89.9740435,34.6273171],"h":7.0},"wwm":{"sw":[-89.9746505,34.6269536],"ne":[-89.9745413,34.6272231],"h":7.0},"wws":{"sw":[-89.9746822,34.6268649],"ne":[-89.9745413,34.6269536],"h":7.0},"wwn":{"sw":[-89.9746854,34.6272231],"ne":[-89.9745413,34.6273171],"h":7.0}},"po":{"sw":[-89.9744344,34.6267926],"ne":[-89.9742717,34.6268695]},"ep":{"sw":[-89.9739879,34.627394],"ne":[-89.9739355,34.6275025]},"well":{"sw":[-89.9742684,34.6275523],"ne":[-89.9741516,34.6276789]},"yard":[[-89.9746505,34.6270594],[-89.9747149,34.6270594],[-89.9747149,34.6269554],[-89.9746505,34.6269554]],"equip":[{"c":[-89.9746942,34.6271534],"w":2.4,"d":3.2,"h":1.9},{"c":[-89.9746942,34.6271173],"w":1.8,"d":2.0,"h":1.5}],"bollards":[[-89.9744256,34.626694],[-89.9744038,34.626694],[-89.974382,34.626694],[-89.9743601,34.626694],[-89.9743383,34.626694],[-89.9743165,34.626694],[-89.9742946,34.626694],[-89.9742728,34.626694],[-89.9744256,34.6266144],[-89.9744038,34.6266144],[-89.974382,34.6266144],[-89.9743601,34.6266144],[-89.9743383,34.6266144],[-89.9743165,34.6266144],[-89.9742946,34.6266144],[-89.9742728,34.6266144]],"lamps":[[-89.9744606,34.6267338],[-89.9742466,34.6267338],[-89.9744606,34.6265801],[-89.9742466,34.6265801]],"sign":{"c":[-89.9738258,34.627299],"bearing":2.2,"len":4.4}};
 /* <<< HEINDL-50 data */
+/* LAFAYETTE-20 data >>> */
+// #20 Lafayette Humanities Building (2026-10-12). Coordinates [lng,lat]; heights in m.
+window.NWCC_LANDMARKS.lafayette = {"main":[[-89.9691049,34.6262255],[-89.9687927,34.6264987]],"nbay":[[-89.9690165,34.6264987],[-89.9689313,34.6265629]],"sbay":[[-89.9690045,34.6261604],[-89.9689215,34.6262255]],"eave":12.4,"fascia":1.2,"pitch":18.0,"yard":[[-89.9687927,34.6263702],[-89.968713,34.6263702],[-89.968713,34.6262436],[-89.9687927,34.6262436],[-89.9687927,34.6263702]],"units":[[-89.9687523,34.6263341],[-89.9687523,34.6262798]]};
+/* <<< LAFAYETTE-20 data */

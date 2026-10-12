@@ -342,8 +342,10 @@ function showSelection(key) {
   if (g && g.userData.ring) {
     const R = g.userData.ring; top = g.userData.topY || 8;
     if (g.userData.keys.length === 1 && g.userData.center) c = g.userData.center;
-    const H = (featByKey[g.userData.keys[0]].properties.ext.height) || top, pts = [];
-    for (let i = 0; i < R.length; i++) { const a = R[i], b = R[(i + 1) % R.length]; pts.push(a[0], 0.3, -a[1], b[0], 0.3, -b[1], a[0], H + 0.2, -a[1], b[0], H + 0.2, -b[1], a[0], 0.3, -a[1], a[0], H + 0.2, -a[1]); }
+    const ext0 = featByKey[g.userData.keys[0]].properties.ext, H = (ext0.height) || top, pts = [];
+    // SEL-PARTS (2026-10-12): multi-part landmark buildings outline each part at its own wall height
+    const parts = ext0.sel_parts ? ext0.sel_parts.map(q => ({ R: q.ring.slice(0, -1).map(c => toEN(c[0], c[1])), H: q.h })) : [{ R, H }];
+    for (const q of parts) for (let i = 0; i < q.R.length; i++) { const a = q.R[i], b = q.R[(i + 1) % q.R.length], h = q.H; pts.push(a[0], 0.3, -a[1], b[0], 0.3, -b[1], a[0], h + 0.2, -a[1], b[0], h + 0.2, -b[1], a[0], 0.3, -a[1], a[0], h + 0.2, -a[1]); }
     const lg = new THREE.BufferGeometry(); lg.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
     const ls = new THREE.LineSegments(lg, yellow); ls.renderOrder = 10; selGroup.add(ls);
     const halo = new THREE.Shape(EXT.offsetRing(R, 3).map(p => new THREE.Vector2(p[0], p[1])));

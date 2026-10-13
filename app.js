@@ -337,6 +337,14 @@ function refreshVisibility() {
   if (campus) campus.visible = !compare;
 }
 
+// MAP-COVER >>>
+// Navy cover over the map until the first Three.js frame (hides the flat Phase-2 placeholder buildings), then a .22 s fade.
+// Removed by: first 3D render, the Three.js-failed path, or a 10 s safety timeout. One boolean check per frame after that.
+let coverDone = false;
+function dropCover() { if (coverDone) return; coverDone = true; const c = document.getElementById('mapcover'); if (!c) return;
+  requestAnimationFrame(() => { c.classList.add('off'); setTimeout(() => c.remove(), 300); }); }
+setTimeout(dropCover, 10000);
+// <<< MAP-COVER
 const layer3d = {
   id: 'nwcc-3d', type: 'custom', renderingMode: '3d',
   onAdd(m, gl) {
@@ -356,6 +364,7 @@ const layer3d = {
     }
     renderer.resetState();
     renderer.render(scene, camera);
+    if (!coverDone) dropCover();   // MAP-COVER
     if (selGroup.children.length) map.triggerRepaint();
   }
 };
@@ -458,14 +467,13 @@ const loadThree = () => location.protocol === 'file:' ? import(THREE_CDN)
   : import(new URL('vendor/three.module.min.js', location.href).href).catch(() => import(THREE_CDN));
 let threeReady = loadThree().then(mod => {
   THREE = mod; EXT = window.NWCCExteriors(THREE); buildScene(); refreshVisibility();
-}).catch(err => { console.error('Three.js failed to load; falling back to Phase 2 extrusions', err); document.getElementById('loadingMsg').textContent = '3D exteriors unavailable (Three.js failed to load). Showing Phase 2 extrusions.'; });
+}).catch(err => { console.error('Three.js failed to load; falling back to Phase 2 extrusions', err); dropCover();   /* MAP-COVER */ { const t = document.getElementById('toast'); if (t) { t.textContent = '3D exteriors unavailable (Three.js failed to load). Showing Phase 2 extrusions.'; t.style.display = 'block'; } } /* NO-LOAD-SCREEN */ });
 
 let styleLoaded = false;
 map.on('style.load', () => { styleLoaded = true; addLayers(); refreshFilter(); applyLabels(); });
 Promise.all([threeReady, new Promise(r => map.once('load', r))]).then(() => {
   addLayers(); refreshFilter();
   ['p2-extrusion', 'p2-highlight'].forEach(id => map.getLayer(id) && map.setLayoutProperty(id, 'visibility', (compare || !THREE) ? 'visible' : 'none'));
-  hideSplash();
   if (!view) home2D(false);
   syncTilt();
   if (P.get('flat') === '1' && map.getPitch() >= 5) document.getElementById('tTilt').click();
@@ -478,18 +486,6 @@ Promise.all([threeReady, new Promise(r => map.once('load', r))]).then(() => {
   if (P.get('selftest') === '1') setTimeout(selftest, 1500);
 });
 
-// Splash hold: keep the icon on screen 1 s longer than the old instant removal, then fade (.4 s) and remove.
-// Map/3D are already live underneath; only the overlay waits. On Three.js failure it collapses to the bottom pill.
-const SPLASH_EXTRA_MS = 0;   // FAST-LOAD (2026-10-12): fade as soon as the base map is ready (was a 1 s hold)
-function hideSplash() {
-  const el = document.getElementById('loading'); if (!el) return;
-  setTimeout(() => {
-    if (!THREE) { el.classList.add('fallback'); return; }
-    el.classList.add('hide');
-    let done = false; const rm = () => { if (!done) { done = true; el.remove(); } };
-    el.addEventListener('transitionend', rm, { once: true }); setTimeout(rm, 600);
-  }, SPLASH_EXTRA_MS);
-}
 
 map.on('click', e => {
   const k = pickAt(e.point.x, e.point.y);

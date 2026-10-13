@@ -17,6 +17,20 @@
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png"/>
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png"/>
 <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png"/>
+<!-- STARTUP-IMAGES >>> -->
+<link rel="apple-touch-startup-image" media="screen and (device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="icons/startup/apple-startup-1320x2868.png"/><!-- iPhone 16 Pro Max -->
+<link rel="apple-touch-startup-image" media="screen and (device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="icons/startup/apple-startup-1206x2622.png"/><!-- iPhone 16 Pro -->
+<link rel="apple-touch-startup-image" media="screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="icons/startup/apple-startup-1290x2796.png"/><!-- iPhone 14/15 Pro Max, 15/16 Plus -->
+<link rel="apple-touch-startup-image" media="screen and (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="icons/startup/apple-startup-1179x2556.png"/><!-- iPhone 14/15 Pro, 15, 16 -->
+<link rel="apple-touch-startup-image" media="screen and (device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="icons/startup/apple-startup-1284x2778.png"/><!-- iPhone 12/13 Pro Max, 14 Plus -->
+<link rel="apple-touch-startup-image" media="screen and (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="icons/startup/apple-startup-1170x2532.png"/><!-- iPhone 12/13/14, 12/13 Pro -->
+<link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="icons/startup/apple-startup-1125x2436.png"/><!-- iPhone X/XS/11 Pro, 12/13 mini -->
+<link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="icons/startup/apple-startup-1242x2688.png"/><!-- iPhone XS Max, 11 Pro Max -->
+<link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="icons/startup/apple-startup-828x1792.png"/><!-- iPhone XR, 11 -->
+<link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="icons/startup/apple-startup-1242x2208.png"/><!-- iPhone 6+/7+/8 Plus -->
+<link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="icons/startup/apple-startup-750x1334.png"/><!-- iPhone SE 2/3, 6/7/8 -->
+<link rel="apple-touch-startup-image" media="screen and (device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="icons/startup/apple-startup-640x1136.png"/><!-- iPhone SE 1, 5s -->
+<!-- <<< STARTUP-IMAGES -->
 <!-- MapLibre GL 4.7.1, vendored so the app shell works offline -->
 <link href="vendor/maplibre-gl.css" rel="stylesheet"/>
 <link rel="modulepreload" href="vendor/three.module.min.js"/><!-- FAST-LOAD: fetch three.js in parallel -->
@@ -49,6 +63,8 @@ html,body{margin:0;height:100%;font-family:var(--font);background:var(--panel-so
   -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 button,input{font-family:inherit}
 #map{position:absolute;inset:0}
+#map{background:var(--navy)}  /* NO-LOAD-SCREEN: navy until the first map frame (no white flash) */
+/* MAP-COVER >>> */#mapcover{position:absolute;inset:0;z-index:1;pointer-events:none;background:radial-gradient(120% 80% at 50% 42%,#2b377a 0%,var(--navy) 55%,var(--navy-deep) 100%);opacity:1;transition:opacity .22s ease}#mapcover.off{opacity:0}/* <<< MAP-COVER */
 .glass{background:var(--panel);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
   border:1px solid var(--line);box-shadow:var(--shadow)}
 
@@ -191,27 +207,6 @@ button,input{font-family:inherit}
 #card .star{display:none}
 
 /* ---------- misc ---------- */
-/* splash / loading overlay: new app icon on NWCC navy; map keeps loading underneath. app.js fades it out
-   as soon as the base map is ready (FAST-LOAD 2026-10-12: no progress bar, no extra hold), then removes #loading. */
-#loading{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
-  padding:env(safe-area-inset-top) 24px env(safe-area-inset-bottom);
-  background:radial-gradient(120% 80% at 50% 42%,#2b377a 0%,var(--navy) 55%,var(--navy-deep) 100%);
-  color:var(--muted);font-size:13px;font-weight:550;letter-spacing:.01em;text-align:center;
-  opacity:1;transition:opacity .4s ease}
-#loading.hide{opacity:0;pointer-events:none}
-#loading .splash-icon{width:144px;height:144px;border-radius:32px;display:block;
-  box-shadow:0 18px 44px rgba(6,10,32,.55),0 0 0 1px rgba(255,255,255,.10);
-  animation:splashIn .6s cubic-bezier(.2,.8,.25,1) both}
-#loading .splash-msg{display:flex;flex-direction:column;align-items:center;gap:10px;animation:splashFade .6s .2s ease both}
-@keyframes splashIn{from{opacity:0;transform:scale(.86)}to{opacity:1;transform:none}}
-@keyframes splashFade{from{opacity:0}to{opacity:1}}
-@media(min-width:720px){#loading .splash-icon{width:160px;height:160px;border-radius:36px}}
-@media(prefers-reduced-motion:reduce){#loading .splash-icon,#loading .splash-msg{animation:none}}
-/* Three.js failed: overlay collapses back to the old bottom pill with the fallback message */
-#loading #loadingMsg:empty{display:none} /* NO-LOAD-TEXT (2026-10-12) */
-#loading.fallback{inset:auto auto 24px 50%;transform:translateX(-50%);z-index:2;display:block;padding:8px 14px;border-radius:var(--r-pill);
-  background:var(--panel);font-size:12px;bottom:calc(24px + env(safe-area-inset-bottom))}
-#loading.fallback .splash-icon{display:none}
 #toast{position:absolute;z-index:5;left:50%;transform:translateX(-50%);bottom:calc(24px + env(safe-area-inset-bottom));
   max-width:calc(100vw - 32px);border-radius:14px;padding:10px 14px;font-size:13px;color:var(--text);display:none;text-align:center}
 #toast.show{display:block}
@@ -331,6 +326,7 @@ button{touch-action:manipulation;-webkit-user-select:none;user-select:none}
 </head>
 <body>
 <div id="map"></div>
+<!-- MAP-COVER >>> --><div id="mapcover" aria-hidden="true"></div><!-- <<< MAP-COVER -->
 <div class="hud glass">
   <div class="titlerow">
     <div class="brand"><img class="logo" src="assets/logo.png" alt="Northwest Mississippi Community College" width="300" height="73"/><div class="rule"></div><div class="title">NWCC Senatobia Campus<span id="netdot" title="Online"></span></div></div>
@@ -352,10 +348,6 @@ button{touch-action:manipulation;-webkit-user-select:none;user-select:none}
   <button id="tLabels" title="Toggle labels" aria-label="Toggle labels">Aa</button>
 </div>
 <div id="card" role="dialog" aria-live="polite"></div>
-<div id="loading" role="status" aria-live="polite" aria-label="Loading campus map">
-  <img class="splash-icon" src="icons/icon-512.png" alt="NWCC Campus Map" width="160" height="160" decoding="async"/>
-  <div class="splash-msg"><span id="loadingMsg"></span></div>
-</div>
 <div id="toast" class="glass" role="status" aria-live="polite"></div>
 <pre id="selftest"></pre>
 <script src="app.js"></script>

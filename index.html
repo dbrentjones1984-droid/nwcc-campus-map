@@ -16,6 +16,7 @@
 <meta name="format-detection" content="telephone=no"/>
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png"/>
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png"/>
+<link rel="preload" as="image" href="icons/icon-512.png"/>
 <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png"/>
 <!-- STARTUP-IMAGES >>> -->
 <link rel="apple-touch-startup-image" media="screen and (device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="icons/startup/apple-startup-1320x2868.png"/><!-- iPhone 16 Pro Max -->
@@ -34,12 +35,12 @@
 <!-- MapLibre GL 4.7.1, vendored so the app shell works offline -->
 <link href="vendor/maplibre-gl.css" rel="stylesheet"/>
 <link rel="modulepreload" href="vendor/three.module.min.js"/><!-- FAST-LOAD: fetch three.js in parallel -->
-<script src="vendor/maplibre-gl.js"></script>
-<script src="data.js"></script>
-<script src="basemap.js"></script>
-<script src="trees.js"></script>
-<script src="exteriors.js"></script>
-<script src="landmarks.js"></script><!-- LANDMARK mockup 2026-10-09: entrance sign + Seal Plaza -->
+<script defer src="vendor/maplibre-gl.js"></script>
+<script defer src="data.js"></script>
+<script defer src="basemap.js"></script>
+<script defer src="trees.js"></script>
+<script defer src="exteriors.js"></script>
+<script defer src="landmarks.js"></script><!-- LANDMARK mockup 2026-10-09: entrance sign + Seal Plaza -->
 <style>
 /* ===== NWCC campus map · polished dark theme (mockup 2026-10-08) ===== */
 :root{
@@ -63,8 +64,8 @@ html,body{margin:0;height:100%;font-family:var(--font);background:var(--panel-so
   -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 button,input{font-family:inherit}
 #map{position:absolute;inset:0}
-#map{background:var(--navy)}  /* NO-LOAD-SCREEN: navy until the first map frame (no white flash) */
-/* MAP-COVER >>> */#mapcover{position:absolute;inset:0;z-index:1;pointer-events:none;background:radial-gradient(120% 80% at 50% 42%,#2b377a 0%,var(--navy) 55%,var(--navy-deep) 100%);opacity:1;transition:opacity .22s ease}#mapcover.off{opacity:0}/* <<< MAP-COVER */
+#map{background:#dfe6d4}  /* NO-COVER: style background colour until the first map frame (no white or navy flash) */
+/* BOOT-COVER >>> */#bootcover{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:radial-gradient(120% 80% at 50% 42%,#2b377a 0%,#222c62 55%,#1a2250 100%);opacity:1;transition:opacity .25s ease}#bootcover img{width:144px;height:144px;border-radius:32px;display:block;box-shadow:0 18px 44px rgba(6,10,32,.55),0 0 0 1px rgba(255,255,255,.10)}#bootcover.off{opacity:0;pointer-events:none}/* <<< BOOT-COVER */
 .glass{background:var(--panel);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
   border:1px solid var(--line);box-shadow:var(--shadow)}
 
@@ -325,8 +326,8 @@ button{touch-action:manipulation;-webkit-user-select:none;user-select:none}
 </style>
 </head>
 <body>
+<!-- BOOT-COVER >>> --><div id="bootcover" aria-hidden="true"><img src="icons/icon-512.png" alt="" width="144" height="144" decoding="sync" fetchpriority="high"/></div><!-- <<< BOOT-COVER -->
 <div id="map"></div>
-<!-- MAP-COVER >>> --><div id="mapcover" aria-hidden="true"></div><!-- <<< MAP-COVER -->
 <div class="hud glass">
   <div class="titlerow">
     <div class="brand"><img class="logo" src="assets/logo.png" alt="Northwest Mississippi Community College" width="300" height="73"/><div class="rule"></div><div class="title">NWCC Senatobia Campus<span id="netdot" title="Online"></span></div></div>
@@ -350,7 +351,7 @@ button{touch-action:manipulation;-webkit-user-select:none;user-select:none}
 <div id="card" role="dialog" aria-live="polite"></div>
 <div id="toast" class="glass" role="status" aria-live="polite"></div>
 <pre id="selftest"></pre>
-<script src="app.js"></script>
-<script src="pwa.js"></script>
+<script defer src="app.js"></script>
+<script defer src="pwa.js"></script>
 </body>
 </html>

@@ -337,14 +337,23 @@ function refreshVisibility() {
   if (campus) campus.visible = !compare;
 }
 
-// MAP-COVER >>>
-// Navy cover over the map until the first Three.js frame (hides the flat Phase-2 placeholder buildings), then a .22 s fade.
-// Removed by: first 3D render, the Three.js-failed path, or a 10 s safety timeout. One boolean check per frame after that.
-let coverDone = false;
-function dropCover() { if (coverDone) return; coverDone = true; const c = document.getElementById('mapcover'); if (!c) return;
-  requestAnimationFrame(() => { c.classList.add('off'); setTimeout(() => c.remove(), 300); }); }
-setTimeout(dropCover, 10000);
-// <<< MAP-COVER
+// P2-HOLD >>>
+// Flat Phase-2 placeholder buildings stay hidden until 3D is known to have failed (import error / no 3D frame in 10 s).
+let first3D = false, p2Fallback = false;
+const p2Vis = () => (compare || p2Fallback) ? 'visible' : 'none';
+function applyP2() { ['p2-extrusion', 'p2-highlight'].forEach(id => map.getLayer(id) && map.setLayoutProperty(id, 'visibility', p2Vis())); }
+function on3DFrame() { first3D = true; if (p2Fallback) { p2Fallback = false; applyP2(); } }
+function p2Fail() { if (first3D) return; p2Fallback = true; applyP2(); bootCheck();   /* BOOT-COVER */ }
+setTimeout(p2Fail, 10000);
+// <<< P2-HOLD
+// BOOT-COVER >>>
+let bootLifted = false;
+function liftBoot() { if (bootLifted) return; bootLifted = true; const c = document.getElementById('bootcover'); if (!c) return;
+  requestAnimationFrame(() => { c.classList.add('off'); setTimeout(() => c.remove(), 320); }); }
+function bootCheck() { if (bootLifted || !map.isStyleLoaded() || !map.areTilesLoaded()) return; if (first3D || p2Fallback) liftBoot(); }
+map.on('render', bootCheck);   // cheap: returns at once after lift
+setTimeout(liftBoot, 10000);
+// <<< BOOT-COVER
 const layer3d = {
   id: 'nwcc-3d', type: 'custom', renderingMode: '3d',
   onAdd(m, gl) {
@@ -364,7 +373,8 @@ const layer3d = {
     }
     renderer.resetState();
     renderer.render(scene, camera);
-    if (!coverDone) dropCover();   // MAP-COVER
+    if (!first3D) on3DFrame();   // P2-HOLD
+    if (!bootLifted) bootCheck();   // BOOT-COVER
     if (selGroup.children.length) map.triggerRepaint();
   }
 };
@@ -432,11 +442,11 @@ function addLayers() {
     // Phase 2 comparison layer (hidden unless "P2" is on); also the fallback if Three.js fails to load.
     map.addLayer({ id: 'p2-extrusion', type: 'fill-extrusion', source: 'buildings',
       filter: ['all', catFilter(), ['!=', ['get', 'arch'], 'shared']],
-      layout: { visibility: (compare || !THREE) ? 'visible' : 'none' },
+      layout: { visibility: p2Vis() },
       paint: { 'fill-extrusion-color': ['match', ['get', 'category'], 'residence', '#2f6fd6', 'instructional', '#c8453a', 'athletic', '#2e8b57', 'support', '#c99a06', '#888'],
         'fill-extrusion-height': ['get', 'height'], 'fill-extrusion-base': 0, 'fill-extrusion-opacity': 0.88 } });
     map.addLayer({ id: 'p2-highlight', type: 'fill-extrusion', source: 'buildings', filter: ['==', ['get', 'key'], selKey || ''],
-      layout: { visibility: (compare || !THREE) ? 'visible' : 'none' },
+      layout: { visibility: p2Vis() },
       paint: { 'fill-extrusion-color': '#ffffff', 'fill-extrusion-height': ['+', ['get', 'height'], 1.5], 'fill-extrusion-opacity': 0.55 } });
   }
   if (THREE && !map.getLayer('nwcc-3d')) map.addLayer(layer3d);
@@ -467,13 +477,13 @@ const loadThree = () => location.protocol === 'file:' ? import(THREE_CDN)
   : import(new URL('vendor/three.module.min.js', location.href).href).catch(() => import(THREE_CDN));
 let threeReady = loadThree().then(mod => {
   THREE = mod; EXT = window.NWCCExteriors(THREE); buildScene(); refreshVisibility();
-}).catch(err => { console.error('Three.js failed to load; falling back to Phase 2 extrusions', err); dropCover();   /* MAP-COVER */ { const t = document.getElementById('toast'); if (t) { t.textContent = '3D exteriors unavailable (Three.js failed to load). Showing Phase 2 extrusions.'; t.style.display = 'block'; } } /* NO-LOAD-SCREEN */ });
+}).catch(err => { console.error('Three.js failed to load; falling back to Phase 2 extrusions', err); p2Fail();   /* P2-HOLD */ { const t = document.getElementById('toast'); if (t) { t.textContent = '3D exteriors unavailable (Three.js failed to load). Showing Phase 2 extrusions.'; t.style.display = 'block'; } } /* NO-LOAD-SCREEN */ });
 
 let styleLoaded = false;
 map.on('style.load', () => { styleLoaded = true; addLayers(); refreshFilter(); applyLabels(); });
 Promise.all([threeReady, new Promise(r => map.once('load', r))]).then(() => {
   addLayers(); refreshFilter();
-  ['p2-extrusion', 'p2-highlight'].forEach(id => map.getLayer(id) && map.setLayoutProperty(id, 'visibility', (compare || !THREE) ? 'visible' : 'none'));
+  ['p2-extrusion', 'p2-highlight'].forEach(id => map.getLayer(id) && map.setLayoutProperty(id, 'visibility', p2Vis()));
   if (!view) home2D(false);
   syncTilt();
   if (P.get('flat') === '1' && map.getPitch() >= 5) document.getElementById('tTilt').click();

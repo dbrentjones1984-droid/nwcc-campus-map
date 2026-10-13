@@ -145,6 +145,48 @@ window.NWCCLandmarks = function (THREE, toEN, onTexture) {
     return g;
   }
 
+  // MAIN-ENTRANCE build >>>
+  // Low-poly monument: brick base + white cap, navy panel lettered "NWCC / MAIN ENTRANCE" on both faces, white top cap,
+  // mulch bed + 4 shrubs. Everything is merged into 3 meshes (brick, white, panel) + 1 shrub mesh.
+  function buildMainEntrance() {
+    const M = L.mainEntrance, k = M.size, [e, n] = toEN(M.lng, M.lat);
+    const parts = { brick: [], white: [], panel: [], shrub: [], mulch: [] };
+    const put = (key, geo, x, y, z) => { geo.translate(x, y, z); parts[key].push(geo); };
+    const bx = (key, w, h, d, x, y, z) => put(key, new THREE.BoxGeometry(w * k, h * k, d * k), x * k, (y + h / 2) * k, z * k);
+    bx('mulch', 6.2, 0.1, 2.6, 0, 0, 0);
+    bx('brick', 5.0, 0.18, 1.3, 0, 0.1, 0);           // footing
+    bx('brick', 4.6, 0.9, 1.0, 0, 0.28, 0);           // brick base
+    bx('white', 4.8, 0.1, 1.15, 0, 1.18, 0);          // cap
+    for (const sx of [-1, 1]) { bx('brick', 0.55, 2.2, 1.1, sx * 2.35, 0.28, 0); bx('white', 0.68, 0.1, 1.2, sx * 2.35, 2.48, 0); }   // end piers
+    bx('white', 4.1, 1.05, 0.5, 0, 1.28, 0);          // panel frame
+    bx('white', 4.3, 0.1, 0.62, 0, 2.33, 0);          // top cap
+    for (const sz of [1, -1]) { const p = new THREE.PlaneGeometry(3.9 * k, 0.92 * k); if (sz < 0) p.rotateY(Math.PI); put('panel', p, 0, 1.805 * k, sz * 0.2525 * k); }
+    const sg = new THREE.IcosahedronGeometry(0.42 * k, 1);
+    [[-2.95, 0.7], [-2.95, -0.7], [2.95, 0.7], [2.95, -0.7]].forEach(([x, z]) => { const s = sg.clone(); s.scale(1, 0.8, 1); put('shrub', s, x * k, 0.42 * k, z * k); });
+    const cv = document.createElement('canvas'); cv.width = 1024; cv.height = 242; const c = cv.getContext('2d');
+    c.fillStyle = '#222c62'; c.fillRect(0, 0, 1024, 242);
+    c.strokeStyle = '#f2f0ea'; c.lineWidth = 8; c.strokeRect(18, 18, 988, 206);
+    c.fillStyle = '#cd2230'; c.fillRect(380, 98, 264, 6);
+    c.fillStyle = '#ffffff'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.font = 'bold 72px "Noto Sans", Arial, sans-serif'; c.fillText('NWCC', 512, 62);
+    c.font = 'bold 84px "Noto Sans", Arial, sans-serif'; c.fillText('MAIN ENTRANCE', 512, 162);
+    const pt = new THREE.CanvasTexture(cv); pt.colorSpace = THREE.SRGBColorSpace; pt.anisotropy = 8;
+    const bt = brickTex(['#9c4632', '#a84e38', '#8f3f2d', '#b0573e']); bt.repeat.set(3, 2);
+    const MAT = { brick: lam('me-brick', { map: bt }), white: WHITE, panel: new THREE.MeshLambertMaterial({ map: pt, emissive: '#2a2a2a' }),
+      shrub: lam('shrub', { color: '#4f8a43', flatShading: true }), mulch: lam('mulch', { color: '#5e4330' }) };
+    const g = new THREE.Group(); g.name = 'main-entrance';
+    for (const key in parts) if (parts[key].length) g.add(new THREE.Mesh(mergeGeo(parts[key]), MAT[key]));
+    g.rotation.y = (90 - M.bearing) * Math.PI / 180; g.position.set(e, 0, -n);
+    return g;
+  }
+  function mergeGeo(list) {   // tiny mergeGeometries: position/normal/uv, non-indexed
+    const A = { position: [], normal: [], uv: [] };
+    for (const g0 of list) { const g = g0.index ? g0.toNonIndexed() : g0; for (const a in A) { const at = g.attributes[a]; for (let i = 0; i < at.array.length; i++) A[a].push(at.array[i]); } }
+    const out = new THREE.BufferGeometry();
+    out.setAttribute('position', new THREE.Float32BufferAttribute(A.position, 3)); out.setAttribute('normal', new THREE.Float32BufferAttribute(A.normal, 3)); out.setAttribute('uv', new THREE.Float32BufferAttribute(A.uv, 2));
+    out.computeBoundingSphere(); return out;
+  }
+  // <<< MAIN-ENTRANCE build
   // NWDR-ENTRANCE build >>>
   function buildNwdr() {
     const N = L.nwdr, g = new THREE.Group(); g.name = 'nwdr-entrance';
@@ -1767,7 +1809,7 @@ window.NWCCLandmarks = function (THREE, toEN, onTexture) {
     return g;
   }
   // <<< N22 build
-  root.add(buildSign()); root.add(buildPlaza()); if (L.nwdr) root.add(buildNwdr()); if (L.baseball) root.add(buildBaseball()); if (L.football) root.add(buildFootball()); if (L.softball) root.add(buildSoftball()); if (L.practice) root.add(buildPractice()); if (L.lamar) root.add(buildLamar()); if (L.rab31) root.add(buildRab31()); if (L.benton) root.add(buildBenton()); if (L.heindl) root.add(buildHeindl()); if (L.lafayette) root.add(buildLafayette()); if (L.yalobusha) root.add(buildYalobusha()); if (L.mccormick) root.add(buildMcCormick()); if (L.tate) root.add(buildTate()); if (L.lib53) root.add(buildLib53()); if (L.conn56) root.add(buildConn56()); if (L.w58) root.add(buildW58()); if (L.n22) root.add(buildN22());
+  root.add(buildSign()); root.add(buildPlaza()); if (L.nwdr) root.add(buildNwdr()); if (L.mainEntrance && L.mainEntrance.size) root.add(buildMainEntrance()); if (L.baseball) root.add(buildBaseball()); if (L.football) root.add(buildFootball()); if (L.softball) root.add(buildSoftball()); if (L.practice) root.add(buildPractice()); if (L.lamar) root.add(buildLamar()); if (L.rab31) root.add(buildRab31()); if (L.benton) root.add(buildBenton()); if (L.heindl) root.add(buildHeindl()); if (L.lafayette) root.add(buildLafayette()); if (L.yalobusha) root.add(buildYalobusha()); if (L.mccormick) root.add(buildMcCormick()); if (L.tate) root.add(buildTate()); if (L.lib53) root.add(buildLib53()); if (L.conn56) root.add(buildConn56()); if (L.w58) root.add(buildW58()); if (L.n22) root.add(buildN22());
   root.traverse(o => { o.frustumCulled = false; });
   return root;
 };
@@ -1840,3 +1882,7 @@ window.NWCC_LANDMARKS.w58 = {"flags":[[-89.9698462,34.6259],[-89.9698298,34.6259
 // #22A/#22B Gary Lee Spears Center (2026-10-12). Coordinates [lng,lat]; lengths/heights in m.
 window.NWCC_LANDMARKS.n22 = {"parts":[{"k":"hip","r":[[-89.9703134,34.624141],[-89.9698407,34.6244457]],"h":7.4,"roof":"hip","pitch":20,"inset":null,"ax":null,"rtu":0},{"k":"gable","r":[[-89.9703865,34.6241717],[-89.9703134,34.6243399]],"h":7.4,"roof":"gable","pitch":28,"inset":null,"ax":"x","rtu":0},{"k":"gable","r":[[-89.9698407,34.6241518],[-89.9697534,34.6243879]],"h":7.4,"roof":"gable","pitch":28,"inset":null,"ax":"y","rtu":0},{"k":"gable","r":[[-89.9701464,34.6244457],[-89.9700154,34.6244729]],"h":7.4,"roof":"gable","pitch":28,"inset":null,"ax":"y","rtu":0},{"k":"gable","r":[[-89.9702555,34.6241165],[-89.9701682,34.624141]],"h":7.4,"roof":"gable","pitch":28,"inset":null,"ax":"y","rtu":0},{"k":"gable","r":[[-89.9699935,34.6241165],[-89.9699062,34.624141]],"h":7.4,"roof":"gable","pitch":28,"inset":null,"ax":"y","rtu":0},{"k":"phip","r":[[-89.9697162,34.6242739],[-89.9689401,34.624491]],"h":7.4,"roof":"phip","pitch":30,"inset":5.0,"ax":null,"rtu":3},{"k":"lhip","r":[[-89.9695165,34.6241373],[-89.9691573,34.6242739]],"h":7.4,"roof":"lhip","pitch":14,"inset":5.0,"ax":null,"rtu":2},{"k":"hip","r":[[-89.9696278,34.6242296],[-89.9695165,34.6242739]],"h":7.4,"roof":"hip","pitch":28,"inset":null,"ax":null,"rtu":0},{"k":"hip","r":[[-89.9691584,34.6242287],[-89.9690165,34.6242739]],"h":7.4,"roof":"hip","pitch":28,"inset":null,"ax":null,"rtu":0},{"k":"gable","r":[[-89.9694695,34.624491],[-89.969404,34.6245127]],"h":7.4,"roof":"gable","pitch":30,"inset":null,"ax":"y","rtu":0},{"k":"gable","r":[[-89.9692185,34.624491],[-89.969142,34.6245127]],"h":7.4,"roof":"gable","pitch":30,"inset":null,"ax":"y","rtu":0},{"k":"gable","r":[[-89.9693604,34.624491],[-89.969273,34.6245054]],"h":7.4,"roof":"gable","pitch":30,"inset":null,"ax":"y","rtu":0},{"k":"hip","r":[[-89.9697545,34.6243291],[-89.9697162,34.6243879]],"h":4.0,"roof":"hip","pitch":26,"inset":null,"ax":null,"rtu":0}],"porches":[{"c":[-89.9693167,34.6245054],"a":180,"w":9.0,"d":2.8,"h":3.6,"piers":4},{"c":[-89.9700809,34.6244729],"a":180,"w":8.0,"d":2.6,"h":3.6,"piers":4},{"c":[-89.9690875,34.6242287],"a":0,"w":12.0,"d":2.8,"h":3.6,"piers":5},{"c":[-89.9703505,34.6241717],"a":0,"w":6.0,"d":2.4,"h":3.6,"piers":3}],"covers":[{"r":[[-89.9697545,34.6243879],[-89.9697162,34.6244412]],"h":3.4}],"rwalls":[{"p":[[-89.9703647,34.6244873],[-89.9702162,34.6244873]],"h":0.8},{"p":[[-89.9703647,34.6245072],[-89.9702293,34.6245072]],"h":0.45},{"p":[[-89.9698996,34.6244873],[-89.9698298,34.6244873]],"h":0.8},{"p":[[-89.9700896,34.6245154],[-89.970011,34.6245154],[-89.970011,34.6245217],[-89.9700896,34.6245217],[-89.9700896,34.6245154]],"h":0.5},{"p":[[-89.9697381,34.6241744],[-89.9697381,34.6242151],[-89.9696606,34.6242151]],"h":0.7},{"p":[[-89.9696114,34.6242151],[-89.9695307,34.6242151]],"h":0.7}],"stairs":[{"c":[-89.9700809,34.6244995],"a":0,"w":3.2,"n":2,"rise":0.35},{"c":[-89.9691682,34.6245217],"a":0,"w":2.4,"n":5,"rise":0.9},{"c":[-89.969636,34.624207],"a":180,"w":3.6,"n":3,"rise":0.5}],"signs":[{"c":[-89.9692512,34.6245235],"a":180,"w":6.0,"h":1.5,"ext":6.0}],"lamps":[[-89.9698887,34.6245235],[-89.9697686,34.6245235],[-89.97019,34.6245235],[-89.9693167,34.6245362],[-89.9695787,34.6242504],[-89.9696879,34.6240967],[-89.9690329,34.6241383]],"bollards":[[-89.9698669,34.6245271],[-89.9698472,34.6245271],[-89.9698276,34.6245271],[-89.9698079,34.6245271]]};
 /* <<< N22 data */
+/* MAIN-ENTRANCE data >>> */
+// Campus main entrance (Alumni Dr at Wilson Dr, east of #50 Heindl). Option B.
+window.NWCC_LANDMARKS.mainEntrance = {"lng": -89.97329, "lat": 34.62764, "bearing": 45, "size": 0, "label": [-89.973526, 34.627815], "labelOn": true, "minzoom": 14.5, "option": "B"};
+/* <<< MAIN-ENTRANCE data */

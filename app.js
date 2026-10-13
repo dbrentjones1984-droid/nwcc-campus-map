@@ -437,6 +437,7 @@ function addLayers() {
   }
   // road-name badges (HWY 51 / Wilson Dr) sit above the 3D buildings so they are never hidden behind a roof
   if (map.getLayer('bm-conn-badge')) map.moveLayer('bm-conn-badge');
+  addMainEntrance();   // MAIN-ENTRANCE
   if (map.getLayer('building-labels')) map.moveLayer('building-labels');
   else map.addLayer({ id: 'building-labels', type: 'symbol', source: 'labels', filter: catFilter(),
     layout: { 'text-field': ['concat', '#', ['get', 'label']],   // NO-LANDMARK-LABELS (2026-10-12): no gold ★ name labels on landmark buildings
@@ -612,6 +613,7 @@ const WALK = (() => {
 // <<< PHASE-WALK
 const card = document.getElementById('card');
 function select(key, animate) {
+  if (key === '__me') { flyMainEntrance(); return; }   // MAIN-ENTRANCE
   const it = byKey[key]; if (!it) return;
   if (!active[it.category]) { active[it.category] = true; const chip = chipsEl.querySelector(`[data-k="${it.category}"]`); if (chip) chip.classList.remove('off'); refreshFilter(); }
   selKey = key;
@@ -731,6 +733,38 @@ if (lmEl) LANDMARKS.forEach(k => { const it = byKey[k]; if (!it) return; const b
 // search (same behavior as Phase 1/2)
 const qEl = document.getElementById('q'), resEl = document.getElementById('results'), clr = document.getElementById('clr');
 let act = -1, hits = [];
+// MAIN-ENTRANCE >>>
+// Campus main entrance (Alumni Dr at Wilson Dr): optional floating pin + label (symbol layer) and a search result.
+const ME = (window.NWCC_LANDMARKS || {}).mainEntrance;
+function meIcon() {   // navy map pin with a white gate glyph, drawn once at 2x
+  const W = 56, H = 72, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const c = cv.getContext('2d');
+  c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(28, 68, 9, 3, 0, 0, 7); c.fill();
+  c.fillStyle = '#1f3b8a'; c.strokeStyle = '#ffffff'; c.lineWidth = 4;
+  c.beginPath(); c.arc(28, 26, 22, Math.PI * 0.82, Math.PI * 2.18); c.lineTo(28, 66); c.closePath(); c.fill(); c.stroke();
+  c.fillStyle = '#ffffff';   // gate: two posts + arch
+  c.fillRect(16, 18, 5, 20); c.fillRect(35, 18, 5, 20); c.fillRect(14, 37, 28, 3);
+  c.beginPath(); c.moveTo(16, 19); c.quadraticCurveTo(28, 6, 40, 19); c.lineTo(40, 23); c.quadraticCurveTo(28, 11, 16, 23); c.closePath(); c.fill();
+  return c.getImageData(0, 0, W, H);
+}
+function addMainEntrance() {
+  if (!ME || !ME.labelOn || map.getLayer('me-label')) return;
+  if (!map.hasImage('me-pin')) map.addImage('me-pin', meIcon(), { pixelRatio: 2 });
+  if (!map.getSource('me')) map.addSource('me', { type: 'geojson', data: { type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: ME.label } } });
+  map.addLayer({ id: 'me-label', type: 'symbol', source: 'me', minzoom: ME.minzoom || 0,
+    layout: { 'icon-image': 'me-pin', 'icon-anchor': 'bottom', 'icon-allow-overlap': true, 'text-allow-overlap': true, 'icon-ignore-placement': true,
+      'text-field': 'Main Entrance', 'text-font': ['Noto Sans Medium'], 'text-size': 14, 'text-anchor': 'bottom', 'text-offset': [0, -3.0],
+      'icon-pitch-alignment': 'viewport', 'text-pitch-alignment': 'viewport', 'icon-rotation-alignment': 'viewport', 'text-rotation-alignment': 'viewport' },
+    paint: { 'text-color': '#1f3b8a', 'text-halo-color': '#ffffff', 'text-halo-width': 2.2 } });
+  map.on('click', 'me-label', () => flyMainEntrance());
+}
+function flyMainEntrance() {
+  if (!ME) return; try { closeCard(); } catch (e) {}
+  const flat = map.getPitch() < 5;
+  map.flyTo({ center: ME.label, zoom: 18.7, pitch: flat ? 0 : 58, bearing: flat ? 0 : 10, duration: 1400, essential: true });
+}
+const meHits = (q) => ME && q.length >= 3 && ['main entrance', 'entrance', 'front entrance', 'main gate', 'wilson'].some(s => s.includes(q) || q.includes(s)) ? [{ key: '__me', place: true }] : [];
+const meLi = (it, i) => `<li role="option" class="${i === act ? 'act' : ''}" data-k="__me"><span class="pinb" style="background:#1f3b8a"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M5 21V9M19 21V9M4 9q8-7 16 0M4 21h16"/></svg></span><div><div class="n">Main Entrance</div><div class="s">Alumni Dr at Wilson Dr</div></div></li>`;
+// <<< MAIN-ENTRANCE
 function search() {
   const q = norm(qEl.value); act = -1;
   if (!q) { hits = []; resEl.classList.remove('show'); resEl.innerHTML = ''; return; }
@@ -738,8 +772,10 @@ function search() {
     const hay = norm([it.label, it.number, it.name, it.parent_name, CATS[it.category].label, it.notes].join(' '));
     return hay.includes(q) || ('#' + it.label).toLowerCase().includes(q) || String(it.number) === q.replace(/^#/, '');
   }).sort((a, b) => (String(b.number) === q.replace(/^#/, '')) - (String(a.number) === q.replace(/^#/, '')) || b.landmark - a.landmark).slice(0, 12);
+  hits = meHits(q).concat(hits).slice(0, 12);   // MAIN-ENTRANCE
   resEl.classList.toggle('show', hits.length > 0);
   resEl.innerHTML = hits.map((it, i) => {
+    if (it.place) return meLi(it, i);   // MAIN-ENTRANCE
     const c = CATS[it.category];
     return `<li role="option" class="${i === act ? 'act' : ''}" data-k="${it.key}"><span class="pinb" style="background:${c.color}">${esc(it.label)}</span>
       <div><div class="n">${esc(title(it))}</div><div class="s">${it.parent_name ? esc(it.parent_name) + ' · ' : ''}${c.label}${active[it.category] ? '' : ' (hidden)'}</div></div></li>`;

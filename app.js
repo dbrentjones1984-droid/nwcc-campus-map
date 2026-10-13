@@ -350,9 +350,12 @@ setTimeout(p2Fail, 10000);
 let bootLifted = false;
 function liftBoot() { if (bootLifted) return; bootLifted = true; const c = document.getElementById('bootcover'); if (!c) return;
   requestAnimationFrame(() => { c.classList.add('off'); setTimeout(() => c.remove(), 320); }); }
-function bootCheck() { if (bootLifted || !map.isStyleLoaded() || !map.areTilesLoaded()) return; if (first3D || p2Fallback) liftBoot(); }
+// COVER-FIX: 'base map ready' = MapLibre's load event (style + initial tiles drawn). The old isStyleLoaded()/areTilesLoaded()
+// test stayed false until idle because the app adds label sources after load (cover held ~3 s longer, sometimes to the timeout).
+let baseReady = false;
+function bootCheck() { if (bootLifted || !baseReady) return; if (first3D || p2Fallback) liftBoot(); }
 map.on('render', bootCheck);   // cheap: returns at once after lift
-map.on('load', bootCheck); map.on('idle', bootCheck);   // COVER-FIX: also check when loading finishes without a new frame
+map.once('load', () => { baseReady = true; bootCheck(); }); map.on('idle', () => { baseReady = true; bootCheck(); });
 setTimeout(liftBoot, 10000);
 // <<< BOOT-COVER
 const layer3d = {

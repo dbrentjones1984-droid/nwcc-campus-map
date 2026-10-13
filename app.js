@@ -352,6 +352,7 @@ function liftBoot() { if (bootLifted) return; bootLifted = true; const c = docum
   requestAnimationFrame(() => { c.classList.add('off'); setTimeout(() => c.remove(), 320); }); }
 function bootCheck() { if (bootLifted || !map.isStyleLoaded() || !map.areTilesLoaded()) return; if (first3D || p2Fallback) liftBoot(); }
 map.on('render', bootCheck);   // cheap: returns at once after lift
+map.on('load', bootCheck); map.on('idle', bootCheck);   // COVER-FIX: also check when loading finishes without a new frame
 setTimeout(liftBoot, 10000);
 // <<< BOOT-COVER
 const layer3d = {

@@ -1809,7 +1809,115 @@ window.NWCCLandmarks = function (THREE, toEN, onTexture) {
     return g;
   }
   // <<< N22 build
-  root.add(buildSign()); root.add(buildPlaza()); if (L.nwdr) root.add(buildNwdr()); if (L.mainEntrance && L.mainEntrance.size) root.add(buildMainEntrance()); if (L.baseball) root.add(buildBaseball()); if (L.football) root.add(buildFootball()); if (L.softball) root.add(buildSoftball()); if (L.practice) root.add(buildPractice()); if (L.lamar) root.add(buildLamar()); if (L.rab31) root.add(buildRab31()); if (L.benton) root.add(buildBenton()); if (L.heindl) root.add(buildHeindl()); if (L.lafayette) root.add(buildLafayette()); if (L.yalobusha) root.add(buildYalobusha()); if (L.mccormick) root.add(buildMcCormick()); if (L.tate) root.add(buildTate()); if (L.lib53) root.add(buildLib53()); if (L.conn56) root.add(buildConn56()); if (L.w58) root.add(buildW58()); if (L.n22) root.add(buildN22());
+  // B21 build >>>
+  // #21 Tunica Building (2026-10-13, from Brent's 5 obliques + street front): 2-story tan brick block, white floor/eave bands, tall
+  // window strips in recessed bays between brick pilasters; gray shingle hip roof with a raised central hip monitor (clerestory),
+  // triangular dormer vents, rooftop box, small hip bump; centered glass storefront under a front gable with a gray louvered
+  // triangle, TUNICA BUILDING sign; brick stoop + shrub beds. NO ground shadows.
+  function buildB21() {
+    const B = L.b21, g = new THREE.Group(); g.name = 'b21';
+    const M = (k, o) => lam('b21-' + k, Object.assign({ side: THREE.DoubleSide }, o));
+    const cvs = (w, h) => { const c = document.createElement('canvas'); c.width = Math.max(4, Math.round(w)); c.height = Math.max(4, Math.round(h)); return c; };
+    const texOf = c => { const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; };
+    const cream = M('cream', { color: '#f0eadc', emissive: '#3a3730' }), tan = M('tan', { color: '#c4ab86', emissive: '#2a2219' });
+    const tanD = M('tand', { color: '#ad9472', emissive: '#211a12' }), shing = M('shingle', { color: '#6b6e73', emissive: '#16181b' });
+    const dark = M('dark', { color: '#2a2e33' }), glass = M('glass', { color: '#34495a', emissive: '#0e151c' }), louv = M('louver', { color: '#8a8d90', emissive: '#202224' });
+    const rbrick = M('rbrick', { color: '#9c5a45', emissive: '#1d110c' }), shrub = M('shrub', { color: '#3f6232', emissive: '#0c140a' }), mulch = M('mulch', { color: '#6e4a33' });
+    const PX = 16, FM = {};
+    // facade: tan brick, white bands at water table / floor line / eave; window strips (tall, both floors) in recessed (darker) bays
+    function facade(len, H, bays) {
+      const key = Math.round(len * 4) + ':' + bays.join(','); if (FM[key]) return FM[key];
+      const c = cvs(len * PX, H * PX), x = c.getContext('2d'), Y = h => (H - h) * PX, U = u => u * PX;
+      let s = 11 + Math.round(len * 7); const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+      const base = ['#c6ad88', '#bba07b', '#cfb793', '#b39874'];
+      x.fillStyle = base[0]; x.fillRect(0, 0, c.width, c.height);
+      for (let r = 0, hh = 0; hh < H; r++, hh += 0.3) for (let u = (r % 2) * 0.3; u < len; u += 0.6) { const t = rnd(); x.fillStyle = base[t < 0.35 ? 1 : t < 0.7 ? 2 : t < 0.9 ? 0 : 3]; x.fillRect(U(u), Y(hh + 0.3) + 1, 0.58 * PX, 0.3 * PX - 1); }
+      for (const [u0, w] of bays) {                                      // recessed bay shade + vertical window strip
+        x.fillStyle = 'rgba(60,40,20,0.16)'; x.fillRect(U(u0), 0, w * PX, c.height);
+        const ww = Math.min(1.5, w - 0.9), wu = u0 + (w - ww) / 2;
+        x.fillStyle = '#f3efe6'; x.fillRect(U(wu - 0.1), Y(H - 1.0), (ww + 0.2) * PX, (H - 1.9) * PX);
+        const gr = x.createLinearGradient(0, Y(H - 1.1), 0, Y(1.0)); gr.addColorStop(0, '#6d8396'); gr.addColorStop(1, '#2a3540'); x.fillStyle = gr; x.fillRect(U(wu), Y(H - 1.1), ww * PX, (H - 2.1) * PX);
+        x.fillStyle = '#e8e2d4'; x.fillRect(U(wu), Y(H / 2 + 0.35), ww * PX, 0.6 * PX);                  // spandrel at the floor line
+        x.fillStyle = '#f0ece2'; x.fillRect(U(wu + ww / 2) - 1, Y(H - 1.1), 3, (H - 2.1) * PX);
+      }
+      x.fillStyle = '#efe9db';                                            // cream bands: water table, floor line, eave frieze
+      x.fillRect(0, Y(0.6), c.width, 0.18 * PX); x.fillRect(0, Y(H / 2 + 0.5), c.width, 0.3 * PX); x.fillRect(0, Y(H - 0.05), c.width, 0.55 * PX);
+      return (FM[key] = M('fac' + key, { map: texOf(c), emissive: '#1f1a12' }));
+    }
+    function addTris(arr, m, grp) { const ge = new THREE.BufferGeometry(); ge.setAttribute('position', new THREE.Float32BufferAttribute(arr, 3)); ge.computeVertexNormals(); (grp || g).add(new THREE.Mesh(ge, m)); }
+    const Q = (A, a, b, c, d) => A.push(...a, ...b, ...c, ...a, ...c, ...d);
+    function hip(x0, n0, x1, n1, y, pitch, inset, m, ov) {
+      ov = ov == null ? 0.6 : ov; x0 -= ov; n0 -= ov; x1 += ov; n1 += ov;
+      const w = x1 - x0, d = n1 - n0, h2 = Math.min(w, d) / 2, i = Math.min(inset == null ? h2 : inset + ov, h2), r = i * Math.tan(pitch * Math.PI / 180), Y = y + r;
+      const P = (e, n, yy) => [e, yy, -n];
+      const b = [P(x0, n0, y), P(x1, n0, y), P(x1, n1, y), P(x0, n1, y)], t = [P(x0 + i, n0 + i, Y), P(x1 - i, n0 + i, Y), P(x1 - i, n1 - i, Y), P(x0 + i, n1 - i, Y)];
+      const A = []; for (let k = 0; k < 4; k++) Q(A, b[k], b[(k + 1) % 4], t[(k + 1) % 4], t[k]); addTris(A, m);
+      if (w - 2 * i > 0.05 && d - 2 * i > 0.05) { const T = []; Q(T, t[0], t[1], t[2], t[3]); addTris(T, m); }
+      g.add(box(w, 0.25, d, (x0 + x1) / 2, y - 0.25, -(n0 + n1) / 2, cream));   // fascia / soffit edge
+      return Y;
+    }
+    const en = q => toEN(q[0], q[1]);
+    const R = r => { const a = en(r[0]), b = en(r[1]); return [Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[0], b[0]), Math.max(a[1], b[1])]; };
+    // side frames: local x along the edge (left->right seen from outside), +z outward
+    function sides(x0, n0, x1, n1) { return [
+      { c: [(x0 + x1) / 2, n0], len: x1 - x0, d: n1 - n0, ry: 0, nm: 'S' }, { c: [x1, (n0 + n1) / 2], len: n1 - n0, d: x1 - x0, ry: Math.PI / 2, nm: 'E' },
+      { c: [(x0 + x1) / 2, n1], len: x1 - x0, d: n1 - n0, ry: Math.PI, nm: 'N' }, { c: [x0, (n0 + n1) / 2], len: n1 - n0, d: x1 - x0, ry: -Math.PI / 2, nm: 'W' }]; }
+    const frame = (s, y) => { const f = new THREE.Group(); f.position.set(s.c[0], y || 0, -s.c[1]); f.rotation.y = s.ry; g.add(f); return f; };
+    const [x0, n0, x1, n1] = R(B.main.r), H = B.main.h, PIL = 1.0, BAY = 3.2;
+    // ---- walls with pilasters
+    for (const s of sides(x0, n0, x1, n1)) {
+      const f = frame(s), n = Math.floor((s.len - PIL) / (BAY + PIL)), off = (s.len - (n * (BAY + PIL) + PIL)) / 2, bays = [];
+      const front = s.nm === B.front, ew = B.entry.w;
+      for (let k = 0; k < n; k++) { const u0 = off + PIL + k * (BAY + PIL); if (front && Math.abs(u0 + BAY / 2 - s.len / 2) < ew / 2 + 1) continue;
+        if (front && k > 0 && k < n - 1 && Math.abs(u0 + BAY / 2 - s.len / 2) < s.len / 4) continue;       // front: solid brick panels flank the entry
+        bays.push([u0, BAY]); }
+      const w = new THREE.Mesh(new THREE.PlaneGeometry(s.len, H), facade(s.len, H, bays)); w.position.set(0, H / 2, 0); f.add(w);
+      for (let k = 0; k <= n; k++) { const u = off + k * (BAY + PIL) + PIL / 2 - s.len / 2; f.add(box(PIL, H - 0.6, 0.3, u, 0.0, 0.15, tan)); f.add(box(PIL + 0.06, 0.2, 0.36, u, H / 2 - 0.5, 0.15, cream)); }
+      f.add(box(s.len + 0.3, 0.55, 0.42, 0, H - 0.55, 0.12, cream)); f.add(box(s.len + 0.3, 0.45, 0.4, 0, 0, 0.12, tanD));
+      // dormer vents on the main roof slope (triangular louvered faces, little gable roofs)
+      const pr = Math.tan(B.main.pitch * Math.PI / 180);
+      for (let k = 0; k < B.dormers; k++) { if (front && k === (B.dormers - 1) / 2) continue;
+        const u = (k + 1) / (B.dormers + 1) * s.len - s.len / 2, dz = 2.6, yy = H + (dz + 0.6) * pr - 0.12, dv = new THREE.Group(); dv.position.set(u, yy, -dz); f.add(dv);
+        const sh = new THREE.Shape([new THREE.Vector2(-0.7, 0), new THREE.Vector2(0.7, 0), new THREE.Vector2(0, 0.8)]);
+        const pg = new THREE.ExtrudeGeometry(sh, { depth: 1.6, bevelEnabled: false }); pg.translate(0, -0.05, -1.6); const pm = new THREE.Mesh(pg, shing); dv.add(pm);
+        const fm = new THREE.Mesh(new THREE.ShapeGeometry(new THREE.Shape([new THREE.Vector2(-0.55, 0.05), new THREE.Vector2(0.55, 0.05), new THREE.Vector2(0, 0.66)])), dark); fm.position.z = 0.01; dv.add(fm); }
+    }
+    { const fl = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, n1 - n0), dark); fl.rotation.x = -Math.PI / 2; fl.position.set((x0 + x1) / 2, H - 0.05, -(n0 + n1) / 2); g.add(fl); }
+    // ---- main roof (frustum hip up to the monitor) + raised hip monitor with a dark clerestory band + bump + roof box
+    const [mx0, mn0, mx1, mn1] = R(B.mon.r), yM = hip(x0, n0, x1, n1, H, B.main.pitch, Math.min(mx0 - x0, mn0 - n0, x1 - mx1, n1 - mn1), shing);
+    const mw = B.mon.wall, yb = yM - 0.3;
+    for (const s of sides(mx0, mn0, mx1, mn1)) { const f = frame(s, yb); f.add(box(s.len, mw, 0.25, 0, 0, -0.12, tan));
+      const nb = Math.floor(s.len / 2.2); for (let k = 0; k < nb; k++) f.add(box(1.4, mw * 0.55, 0.05, (k + 0.5) * s.len / nb - s.len / 2, mw * 0.25, 0.02, glass)); }
+    const yT = hip(mx0, mn0, mx1, mn1, yb + mw, B.mon.pitch, null, shing, 0.5);
+    { const [bx0, bn0, bx1, bn1] = R(B.bump.r); g.add(box(bx1 - bx0, B.bump.h - yb + 0.2, bn1 - bn0, (bx0 + bx1) / 2, yb - 0.2, -(bn0 + bn1) / 2, tan)); hip(bx0, bn0, bx1, bn1, B.bump.h, B.mon.pitch, null, shing, 0.35); }
+    { const c = en(B.rbox.c); g.add(box(1.8, 0.9, 1.8, c[0], B.rbox.y, -c[1], M('rbox', { color: '#d6c7a6', emissive: '#2c2619' }))); }
+    // ---- entrance: glass storefront bay (both floors) under a front gable pediment with a gray louvered triangle + sign
+    { const s = sides(x0, n0, x1, n1).find(q => q.nm === B.front), f = frame(s), ew = B.entry.w, pr = Math.tan(B.entry.pitch * Math.PI / 180);
+      f.add(box(ew + 0.2, H - 0.7, 0.2, 0, 0.1, 0.32, M('mull', { color: '#d9dcdc' })));
+      for (let k = 0; k < 4; k++) f.add(box(ew / 4 - 0.18, H / 2 - 1.0, 0.06, -ew / 2 + (k + 0.5) * ew / 4, 0.25, 0.44, glass), box(ew / 4 - 0.18, H / 2 - 1.4, 0.06, -ew / 2 + (k + 0.5) * ew / 4, H / 2 + 0.3, 0.44, glass));
+      f.add(box(ew + 0.3, 0.35, 0.5, 0, H / 2 - 0.4, 0.4, cream));
+      for (const sx of [-1, 1]) f.add(box(1.2, H, 0.9, sx * (ew / 2 + 0.6), 0, 0.3, tan));
+      const W = ew + 2.4, r = W / 2 * pr, D = B.entry.d, y = H, P = (e, z, yy) => [e, yy, z], A = [];
+      Q(A, P(-W / 2 - 0.3, 1.0, y), P(-W / 2 - 0.3, -D, y), P(0, -D, y + r), P(0, 1.0, y + r)); Q(A, P(W / 2 + 0.3, 1.0, y), P(W / 2 + 0.3, -D, y), P(0, -D, y + r), P(0, 1.0, y + r)); addTris(A, shing, f);
+      f.add(box(W + 0.4, 0.6, 1.3, 0, H - 0.6, 0.35, cream));
+      const tri = (w, h, m, z) => { const t = new THREE.Mesh(new THREE.ShapeGeometry(new THREE.Shape([new THREE.Vector2(-w / 2, 0), new THREE.Vector2(w / 2, 0), new THREE.Vector2(0, h)])), m); t.position.set(0, y, z); f.add(t); };
+      tri(W, r, cream, 0.98); tri(W - 1.4, r - 0.55, louv, 1.0);
+      { const lc = cvs(256, 128), lx = lc.getContext('2d'); lx.fillStyle = '#8a8d90'; lx.fillRect(0, 0, 256, 128); lx.fillStyle = '#5d6064'; for (let i = 6; i < 128; i += 9) lx.fillRect(0, i, 256, 3);
+        const t = new THREE.Mesh(new THREE.ShapeGeometry(new THREE.Shape([new THREE.Vector2(-(W - 1.4) / 2, 0), new THREE.Vector2((W - 1.4) / 2, 0), new THREE.Vector2(0, r - 0.55)])), M('louvt', { map: texOf(lc), emissive: '#1d1f21' }));
+        const uv = t.geometry.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) / (W - 1.4) + 0.5, uv.getY(i) / (r - 0.55)); t.position.set(0, y + 0.25, 1.01); f.add(t); }
+      { const lc = cvs(512, 64), lx = lc.getContext('2d'); lx.fillStyle = '#efe9db'; lx.fillRect(0, 0, 512, 64); lx.fillStyle = '#4b4136'; lx.textAlign = 'center';
+        lx.font = 'bold 40px "DejaVu Serif", Georgia, serif'; lx.fillText('TUNICA BUILDING', 256, 47);
+        const sm = new THREE.Mesh(new THREE.PlaneGeometry(W - 1.0, 0.5), M('sign', { map: texOf(lc), emissive: '#3a3730' })); sm.position.set(0, H - 0.3, 1.01); f.add(sm); }
+      // brick stoop + shrub beds along the front
+      f.add(box(ew + 4.0, 0.18, B.entry.stoop, 0, 0, B.entry.stoop / 2 + 0.3, rbrick));
+      for (const sx of [-1, 1]) { const bw = s.len / 2 - ew / 2 - 3.2, bc = sx * (ew / 2 + 2.2 + bw / 2);
+        f.add(box(bw, 0.1, 1.5, bc, 0, 1.05, mulch));
+        for (let u = -bw / 2 + 0.7; u < bw / 2 - 0.4; u += 1.3) { const sp = new THREE.Mesh(new THREE.SphereGeometry(0.55, 10, 7), shrub); sp.scale.set(1, 0.85, 0.9); sp.position.set(bc + u, 0.45, 1.05); f.add(sp); } } }
+    { const pm = M('bollard', { color: '#2a2d31' }); for (const q of (B.bollards || [])) { const c = en(q), p = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.95, 10), pm); p.position.set(c[0], 0.47, -c[1]); g.add(p); } }
+    return g;
+  }
+  // <<< B21 build
+  root.add(buildSign()); root.add(buildPlaza()); if (L.nwdr) root.add(buildNwdr()); if (L.mainEntrance && L.mainEntrance.size) root.add(buildMainEntrance()); if (L.baseball) root.add(buildBaseball()); if (L.football) root.add(buildFootball()); if (L.softball) root.add(buildSoftball()); if (L.practice) root.add(buildPractice()); if (L.lamar) root.add(buildLamar()); if (L.rab31) root.add(buildRab31()); if (L.benton) root.add(buildBenton()); if (L.heindl) root.add(buildHeindl()); if (L.lafayette) root.add(buildLafayette()); if (L.yalobusha) root.add(buildYalobusha()); if (L.mccormick) root.add(buildMcCormick()); if (L.tate) root.add(buildTate()); if (L.lib53) root.add(buildLib53()); if (L.conn56) root.add(buildConn56()); if (L.w58) root.add(buildW58()); if (L.n22) root.add(buildN22()); if (L.b21) root.add(buildB21());
   root.traverse(o => { o.frustumCulled = false; });
   return root;
 };
@@ -1886,3 +1994,7 @@ window.NWCC_LANDMARKS.n22 = {"parts":[{"k":"hip","r":[[-89.9703134,34.624141],[-
 // Campus main entrance (Alumni Dr at Wilson Dr, east of #50 Heindl). Option B.
 window.NWCC_LANDMARKS.mainEntrance = {"lng": -89.97329, "lat": 34.62764, "bearing": 45, "size": 0, "label": [-89.973526, 34.627815], "labelOn": true, "minzoom": 14.5, "option": "B"};
 /* <<< MAIN-ENTRANCE data */
+/* B21 data >>> */
+// #21 Tunica Building (2026-10-13). Coordinates [lng,lat]; lengths/heights in m.
+window.NWCC_LANDMARKS.b21 = {"main":{"r":[[-89.9706916,34.6247202],[-89.9703292,34.625015]],"h":7.32,"pitch":20},"mon":{"r":[[-89.9706196,34.6247772],[-89.9704013,34.6249581]],"pitch":22,"wall":1.8},"bump":{"r":[[-89.9705503,34.6249581],[-89.9704629,34.6249866]],"h":10.93},"rbox":{"c":[-89.9704793,34.6248301],"y":13.45},"entry":{"w":6.0,"pitch":26,"d":4.0,"stoop":2.2},"front":"S","dormers":3,"bollards":[[-89.9709804,34.6246696],[-89.9709596,34.6246696],[-89.9709389,34.6246696],[-89.9709182,34.6246696],[-89.9708974,34.6246696],[-89.9708767,34.6246696],[-89.9708559,34.6246696],[-89.9708319,34.6246682],[-89.9708221,34.6246587],[-89.9708123,34.6246492],[-89.9708024,34.6246397],[-89.9707926,34.6246302],[-89.9706725,34.6246592],[-89.9706534,34.6246592],[-89.9706343,34.6246592],[-89.9706152,34.6246592]]};
+/* <<< B21 data */

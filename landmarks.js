@@ -2374,7 +2374,92 @@ window.NWCCLandmarks = function (THREE, toEN, onTexture) {
     return root;
   }
   // <<< B31W build
-  root.add(buildSign()); root.add(buildPlaza()); if (L.nwdr) root.add(buildNwdr()); if (L.mainEntrance && L.mainEntrance.size) root.add(buildMainEntrance()); if (L.baseball) root.add(buildBaseball()); if (L.football) root.add(buildFootball()); if (L.softball) root.add(buildSoftball()); if (L.practice) root.add(buildPractice()); if (L.lamar) root.add(buildLamar()); if (L.rab31) root.add(buildRab31()); if (L.benton) root.add(buildBenton()); if (L.heindl) root.add(buildHeindl()); if (L.lafayette) root.add(buildLafayette()); if (L.yalobusha) root.add(buildYalobusha()); if (L.mccormick) root.add(buildMcCormick()); if (L.tate) root.add(buildTate()); if (L.lib53) root.add(buildLib53()); if (L.conn56) root.add(buildConn56()); if (L.w58) root.add(buildW58()); if (L.n22) root.add(buildN22()); if (L.b21) root.add(buildB21()); if (L.b23) root.add(buildB23()); if (L.b24) root.add(buildB24()); if (L.b27) root.add(buildB27()); if (L.b25) root.add(buildB25()); if (L.b31w) root.add(buildB31W());
+  // B28 build >>>
+  // #28 Berry Building (2026-10-14, from Brent's street views + oblique satellite): flat-roof ~2-story red-brown brick box read as two blocks
+  // joined by a slightly lower centre link; light gray membrane roof with white coping, skylight strips, small RTUs; low cream clerestory
+  // window band + thin cream band higher up; big glass-panel windows on the upper S walls; S notch: curved metal barrel canopy over the entry,
+  // wide steps, raised concrete walkway/ramp with metal railings along the S face; N notch: small canopy (Union Blvd); BERRY BUILDING sign + bollards.
+  // Frame: u east, v north (m), rotated B.th deg CCW about B.o.
+  function buildB28() {
+    const B = L.b28, root = new THREE.Group(); root.name = 'b28';
+    const M = (k, o) => lam('b28-' + k, Object.assign({ side: THREE.DoubleSide }, o));
+    const cvs = (w, h) => { const c = document.createElement('canvas'); c.width = Math.max(4, Math.round(w)); c.height = Math.max(4, Math.round(h)); return c; };
+    const texOf = c => { const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; };
+    const wht = M('white', { color: '#f1eee6', emissive: '#3b3a36' }), roofM = M('roof', { color: '#c4c7c8', emissive: '#2a2c2d' }), brick = M('brick', { color: '#9a5a44' });
+    const conc = M('conc', { color: '#c9c5bb', emissive: '#262522' }), metal = M('metal', { color: '#d7dadc', emissive: '#3a3c3e' }), rail = M('rail', { color: '#9ea3a6' });
+    const sky = M('sky', { color: '#a9c3cf', emissive: '#1d2a30' }), rtu = M('rtu', { color: '#b3b5b3', emissive: '#242524' }), dk = M('dk', { color: '#2d2f31' });
+    const RED = ['#9a5a44', '#8f523d', '#a3624a', '#88503c'], PX = 12, FM = {};
+    function facade(len, H, glass, doors) {
+      const key = Math.round(len * 4) + ':' + H + ':' + JSON.stringify(glass || []) + JSON.stringify(doors || []); if (FM[key]) return FM[key];
+      const c = cvs(len * PX, H * PX), x = c.getContext('2d'), Y = h => (H - h) * PX, U = u => u * PX;
+      let s = 11 + Math.round(len * 7); const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+      x.fillStyle = RED[0]; x.fillRect(0, 0, c.width, c.height);
+      for (let r = 0, hh = 0; hh < H; r++, hh += 0.25) for (let u = (r % 2) * 0.25; u < len; u += 0.5) { x.fillStyle = RED[1 + Math.floor(rnd() * 3)]; x.fillRect(U(u), Y(hh + 0.25) + 1, 0.48 * PX, 0.25 * PX - 1); }
+      x.fillStyle = '#ece7da'; x.fillRect(0, Y(H - 0.05), c.width, 0.05 * PX); x.fillRect(0, Y(6.35), c.width, 0.22 * PX);          // thin upper cream band
+      x.fillRect(0, Y(2.35), c.width, 1.05 * PX);                                                                                   // low clerestory band
+      for (let u = 0.6; u < len - 1.0; u += 1.5) { x.fillStyle = '#b9c2c4'; x.fillRect(U(u), Y(2.22), 1.2 * PX, 0.8 * PX); x.fillStyle = '#e9e6dd'; x.fillRect(U(u + 0.58), Y(2.22), 0.05 * PX, 0.8 * PX); }
+      x.fillStyle = '#7d6d60'; x.fillRect(0, Y(0.3), c.width, 0.3 * PX);
+      for (const [gc, gw] of (glass || [])) { x.fillStyle = '#ece7da'; x.fillRect(U(gc - gw / 2 - 0.15), Y(6.0), (gw + 0.3) * PX, 3.6 * PX);
+        const nx = Math.max(2, Math.round(gw / 1.1)), ny = 4, cw = gw / nx, chh = 3.3 / ny;
+        for (let i = 0; i < nx; i++) for (let j = 0; j < ny; j++) { x.fillStyle = (i + j) % 3 ? '#dfe3e2' : '#c9d2d4'; x.fillRect(U(gc - gw / 2 + i * cw + 0.05), Y(5.85 - j * chh), (cw - 0.1) * PX, (chh - 0.1) * PX); } }
+      for (const d of (doors || [])) { x.fillStyle = '#d9d5cc'; x.fillRect(U(d - 1.2), Y(2.5), 2.4 * PX, 2.5 * PX); x.fillStyle = '#3b4752'; x.fillRect(U(d - 1.05), Y(2.35), 2.1 * PX, 2.35 * PX); x.fillStyle = '#c7c9c8'; x.fillRect(U(d - 0.03), Y(2.35), 0.06 * PX, 2.35 * PX); }
+      return (FM[key] = M('fac' + key, { map: texOf(c), emissive: '#1b130e' }));
+    }
+    const c0 = toEN(B.o[0], B.o[1]), g = new THREE.Group(); g.position.set(c0[0], 0, -c0[1]); g.rotation.y = B.th * Math.PI / 180; root.add(g);
+    const at = (o, u, v, y) => { o.position.set(u, y, -v); g.add(o); return o; };
+    // masses: brick box + roof cap + coping
+    for (const [u0, v0, u1, v1, H] of B.blocks) {
+      g.add(box(u1 - u0 - 0.1, H, v1 - v0 - 0.1, (u0 + u1) / 2, 0, -(v0 + v1) / 2, brick));
+      const cap = new THREE.Mesh(new THREE.PlaneGeometry(u1 - u0, v1 - v0), roofM); cap.rotation.x = -Math.PI / 2; at(cap, (u0 + u1) / 2, (v0 + v1) / 2, H + 0.02);
+      const w = 0.35, hh = 0.45;
+      g.add(box(u1 - u0 + 0.1, hh, w, (u0 + u1) / 2, H, -(v0 + w / 2 - 0.05), wht)); g.add(box(u1 - u0 + 0.1, hh, w, (u0 + u1) / 2, H, -(v1 - w / 2 + 0.05), wht));
+      g.add(box(w, hh, v1 - v0, u0 + w / 2 - 0.05, H, -(v0 + v1) / 2, wht)); g.add(box(w, hh, v1 - v0, u1 - w / 2 + 0.05, H, -(v0 + v1) / 2, wht));
+    }
+    for (const [u0, v0, u1, v1, H, glass, doors] of B.faces) {
+      const du = u1 - u0, dv = v1 - v0, len = Math.hypot(du, dv), nu = dv / len, nv = -du / len;
+      const w = new THREE.Mesh(new THREE.PlaneGeometry(len, H), facade(len, H, glass, doors));
+      w.position.set((u0 + u1) / 2 + nu * 0.03, H / 2, -((v0 + v1) / 2 + nv * 0.03)); w.rotation.y = Math.atan2(nu, -nv); g.add(w);
+    }
+    for (const [u0, v0, u1, v1, y] of B.sky) { g.add(box(u1 - u0, 0.35, v1 - v0, (u0 + u1) / 2, y, -(v0 + v1) / 2, sky)); }
+    for (const [u, v, y, sx, sz] of B.rtu) g.add(box(sx, 0.9, sz, u, y, -v, rtu));
+    // S entry: raised landing in the notch, barrel canopy, wide steps, ramp + railings along the S face
+    const S = B.south, ly = S.y;
+    g.add(box(S.u1 - S.u0, ly, S.v1 - S.v0, (S.u0 + S.u1) / 2, 0, -(S.v0 + S.v1) / 2, conc));
+    { const [bu, bv0, bv1, bw, by] = S.barrel, r = bw / 2, len = bv1 - bv0;
+      const ge = new THREE.CylinderGeometry(r, r, len, 20, 1, true, Math.PI / 2, Math.PI), m = new THREE.Mesh(ge, metal);
+      m.rotation.x = Math.PI / 2; m.scale.set(1, 1, 0.42); m.position.set(bu, by, -(bv0 + bv1) / 2); g.add(m);
+      for (const du of [-r + 0.15, r - 0.15]) for (const vv of [bv0 + 0.3]) g.add(box(0.18, by - ly, 0.18, bu + du, ly, -vv, metal));
+      g.add(box(bw, 0.15, 0.15, bu, by - 0.1, -(bv0 + 0.3), metal)); }
+    const nst = S.steps.n;
+    for (let i = 0; i < nst; i++) { const t = (i + 1) / nst, v0 = S.v0 - S.steps.d * (i + 1) / nst * 1.0;
+      g.add(box(S.steps.w, ly * (nst - i) / (nst + 1), S.steps.d / nst + 0.01, S.steps.u, 0, -(S.v0 - S.steps.d * (i + 0.5) / nst), conc)); }
+    for (const du of [-S.steps.w / 2, S.steps.w / 2]) { const a = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, Math.hypot(S.steps.d, ly)), rail);
+      a.position.set(S.steps.u + du, ly / 2 + 0.95, -(S.v0 - S.steps.d / 2)); a.rotation.x = -Math.atan2(ly, S.steps.d); g.add(a); }
+    { const R = S.ramp, len = R.u1 - R.u0, ang = Math.atan2(R.y0, len);          // ramp: high at the notch end (u0), down to grade at u1
+      const rm = new THREE.Mesh(new THREE.BoxGeometry(Math.hypot(len, R.y0), 0.25, R.w), conc); rm.position.set((R.u0 + R.u1) / 2, R.y0 / 2 - 0.1, -R.v); rm.rotation.z = -ang; g.add(rm);
+      const wall = new THREE.Mesh(new THREE.BoxGeometry(Math.hypot(len, R.y0), 0.9, 0.3), conc); wall.position.set((R.u0 + R.u1) / 2, R.y0 / 2 - 0.45, -(R.v - R.w / 2 - 0.15)); wall.rotation.z = -ang; g.add(wall);
+      for (const side of [-1, 1]) { const vv = R.v + side * (R.w / 2 - 0.05);
+        const top = new THREE.Mesh(new THREE.BoxGeometry(Math.hypot(len, R.y0), 0.05, 0.05), rail); top.position.set((R.u0 + R.u1) / 2, R.y0 / 2 + 1.0, -vv); top.rotation.z = -ang; g.add(top);
+        for (let u = R.u0 + 0.2; u < R.u1; u += 1.6) { const yy = R.y0 * (1 - (u - R.u0) / len); g.add(box(0.05, 1.05, 0.05, u, yy, -vv, rail)); } }
+      // balusters along the raised landing edge
+      for (let u = S.u0 + 0.2; u < S.steps.u - S.steps.w / 2; u += 0.8) g.add(box(0.04, 1.0, 0.04, u, ly, -(S.v0 + 0.1), rail));
+      g.add(box(S.steps.u - S.steps.w / 2 - S.u0, 0.05, 0.05, (S.u0 + S.steps.u - S.steps.w / 2) / 2, ly + 1.0, -(S.v0 + 0.1), rail)); }
+    // N notch: small flat canopy over the door
+    { const [u0, u1, v0, d, y] = B.ncan; g.add(box(u1 - u0, 0.3, d, (u0 + u1) / 2, y, -(v0 + d / 2), wht)); for (const u of [u0 + 0.2, u1 - 0.2]) g.add(box(0.15, y, 0.15, u, 0, -(v0 + d - 0.2), wht)); }
+    // corner sign + bollards (local EN frame)
+    { const gs = new THREE.Group(), cs = toEN(B.o0[0], B.o0[1]); gs.position.set(cs[0], 0, -cs[1]); root.add(gs);
+      const [sx, sy, rot] = B.sign, sg = new THREE.Group(); sg.position.set(sx, 0, -sy); sg.rotation.y = rot * Math.PI / 180; gs.add(sg);
+      for (const d of [-0.75, 0.75]) sg.add(box(0.1, 1.6, 0.1, d, 0, 0, dk));
+      const c = cvs(512, 360), x = c.getContext('2d'); x.fillStyle = '#fafafa'; x.fillRect(0, 0, 512, 360); x.strokeStyle = '#1d2a44'; x.lineWidth = 14; x.strokeRect(10, 10, 492, 340);
+      x.fillStyle = '#111'; x.font = 'bold 116px "DejaVu Sans", Arial, sans-serif'; x.textAlign = 'center'; x.fillText('BERRY', 256, 160); x.fillText('BUILDING', 256, 290);
+      const pm = M('signface', { map: texOf(c), emissive: '#3c3c3c' });
+      const pl = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.0, 0.08), [dk, dk, dk, dk, pm, pm]); pl.position.set(0, 1.0, 0); sg.add(pl);
+      for (const [bx, by] of B.bollards) gs.add(cyl(0.12, 0.12, 1.0, bx, 0, -by, dk, 10));
+    }
+    return root;
+  }
+  // <<< B28 build
+  root.add(buildSign()); root.add(buildPlaza()); if (L.nwdr) root.add(buildNwdr()); if (L.mainEntrance && L.mainEntrance.size) root.add(buildMainEntrance()); if (L.baseball) root.add(buildBaseball()); if (L.football) root.add(buildFootball()); if (L.softball) root.add(buildSoftball()); if (L.practice) root.add(buildPractice()); if (L.lamar) root.add(buildLamar()); if (L.rab31) root.add(buildRab31()); if (L.benton) root.add(buildBenton()); if (L.heindl) root.add(buildHeindl()); if (L.lafayette) root.add(buildLafayette()); if (L.yalobusha) root.add(buildYalobusha()); if (L.mccormick) root.add(buildMcCormick()); if (L.tate) root.add(buildTate()); if (L.lib53) root.add(buildLib53()); if (L.conn56) root.add(buildConn56()); if (L.w58) root.add(buildW58()); if (L.n22) root.add(buildN22()); if (L.b21) root.add(buildB21()); if (L.b23) root.add(buildB23()); if (L.b24) root.add(buildB24()); if (L.b27) root.add(buildB27()); if (L.b25) root.add(buildB25()); if (L.b31w) root.add(buildB31W()); if (L.b28) root.add(buildB28());
   root.traverse(o => { o.frustumCulled = false; });
   return root;
 };
@@ -2475,3 +2560,7 @@ window.NWCC_LANDMARKS.b25 = {"b":{"o":[-89.9715331,34.6263092],"th":52.0,"r":[0.
 // #31 Marilyn R. Spears Building (2026-10-14). o=[lng,lat] of local (0,0); th=frame deg; ring/parts/canopy in (a,b) m; play/b107 in local EN m.
 window.NWCC_LANDMARKS.b31w = {"o":[-89.9715,34.6245],"th":45.84,"o0":[-89.9715,34.6245],"ring":[[-47.72,-244.83],[-47.72,-225.6],[-62.71,-225.52],[-62.68,-228.28],[-80.64,-228.16],[-80.65,-238.76],[-89.35,-238.71],[-89.38,-250.16],[-81.24,-250.07],[-81.2,-261.32],[-63.59,-261.36],[-63.45,-266.24],[-53.62,-266.18],[-53.65,-254.08],[-60.66,-254.19],[-60.73,-244.78],[-47.72,-244.83]],"h":4.0,"pitch":24.0,"ov":0.6,"parts":[[-89.4,-250.1,-60.7,-238.7],[-62.7,-244.85,-47.7,-225.55],[-80.6,-238.7,-60.7,-228.25],[-81.2,-261.3,-60.7,-250.1],[-63.6,-266.2,-53.6,-254.15]],"vents":[[-81.36,-242.35,1.69],[-69.31,-246.68,1.59],[-58.5,-231.73,1.94],[-52.2,-239.06,2.07],[-75.03,-231.59,1.56],[-66.67,-235.56,1.46],[-75.46,-253.68,1.66],[-66.85,-257.94,1.56],[-60.8,-258.01,1.31],[-56.6,-262.59,1.4]],"doors":{"0":[9.62],"1":[7.5],"6":[3.73,7.73],"11":[4.92]},"canopy":[-95.95,-89.35,-248.44,-240.44,3.6],"cols":[-248.03,-245.63,-243.23,-240.84],"hedges":[[-81.74,-229.36,-81.75,-237.56],[-88.17,-251.25,-82.43,-251.18],[-82.34,-251.27,-82.3,-260.12],[-80.0,-262.42,-64.79,-262.46],[-62.24,-267.33,-54.81,-267.29],[-59.53,-245.88,-48.92,-245.93]],"play":[[155.0,-194.8],[147.0,-199.0],[146.0,-207.0],[150.0,-212.0],[156.0,-221.0],[155.08,-221.85],[156.04,-223.37],[155.83,-225.03],[151.08,-230.15],[152.0,-232.0],[159.0,-233.0],[166.0,-229.0],[168.0,-218.0],[167.5,-204.0],[163.0,-196.5],[155.0,-194.8]],"equip":[151.5,-203.0],"swing":[162.0,-224.5],"b107":[159.5,-209.5,6.0,9.0,-20.0],"hedgeEN":[[114.5,-251.7,149.0,-251.7],[161.8,-251.7,166.5,-251.7]]};
 /* <<< B31W data */
+/* B28 data >>> */
+// #28 Berry Building (2026-10-14). o=[lng,lat] frame origin, th=deg; blocks/faces/... in (u east, v north) m; sign/bollards in local EN m.
+window.NWCC_LANDMARKS.b28 = {"o":[-89.9707904,34.6235866],"th":1.2,"o0":[-89.9715,34.6245],"blocks":[[-23.0,-24.2,-6.15,16.6,8.6],[-6.15,-13.8,2.8,14.5,7.8],[2.8,-24.2,22.9,23.8,8.6]],"faces":[[-23.0,-24.2,-6.15,-24.2,8.6,[[12.650000000000002,6.0]],[]],[-6.15,-24.2,-6.15,-13.8,8.6,[],[]],[-6.15,-13.8,2.8,-13.8,7.8,[],[4.475]],[2.8,-13.8,2.8,-24.2,8.6,[],[]],[2.8,-24.2,22.9,-24.2,8.6,[[3.8,5.0],[9.6,5.0]],[]],[22.9,-24.2,22.9,23.8,8.6,[],[]],[22.9,23.8,2.8,23.8,8.6,[],[]],[2.8,23.8,2.8,14.5,8.6,[],[]],[2.8,14.5,-6.15,14.5,7.8,[],[4.475]],[-6.15,14.5,-6.15,16.6,8.6,[],[]],[-6.15,16.6,-23.0,16.6,8.6,[],[]],[-23.0,16.6,-23.0,-24.2,8.6,[],[]],[-6.15,-13.8,-6.15,14.5,8.6,[],[]],[2.8,14.5,2.8,-13.8,8.6,[],[]]],"sky":[[-7.75,-6.0,-7.050000000000001,8.0,8.6],[3.6999999999999997,-9.0,4.4,10.0,8.6],[-3.0,-4.0,-2.4,6.0,7.8]],"rtu":[[-15.0,2.0,8.6,1.6,1.2],[-9.5,-8.0,8.6,1.2,1.2],[12.0,9.0,8.6,1.6,1.2],[16.0,-14.0,8.6,1.2,1.2],[-1.0,9.0,7.8,1.0,1.0]],"south":{"u0":-6.15,"u1":2.8,"v0":-24.2,"v1":-13.8,"y":1.0,"barrel":[-1.6750000000000003,-20.599999999999998,-13.8,6.4,4.4],"steps":{"u":-1.6750000000000003,"w":6.0,"d":3.0,"n":6},"ramp":{"u0":2.8,"u1":17.8,"v":-25.4,"w":1.8,"y0":1.0}},"ncan":[-3.6750000000000003,0.32499999999999973,14.5,2.2,3.0],"sign":[85.5,-131.0,-35.0],"bollards":[[89.6,-129.6],[89.6,-132.2],[88.2,-133.8],[86.0,-134.0]]};
+/* <<< B28 data */

@@ -2076,7 +2076,90 @@ window.NWCCLandmarks = function (THREE, toEN, onTexture) {
     return g;
   }
   // <<< B24 build
-  root.add(buildSign()); root.add(buildPlaza()); if (L.nwdr) root.add(buildNwdr()); if (L.mainEntrance && L.mainEntrance.size) root.add(buildMainEntrance()); if (L.baseball) root.add(buildBaseball()); if (L.football) root.add(buildFootball()); if (L.softball) root.add(buildSoftball()); if (L.practice) root.add(buildPractice()); if (L.lamar) root.add(buildLamar()); if (L.rab31) root.add(buildRab31()); if (L.benton) root.add(buildBenton()); if (L.heindl) root.add(buildHeindl()); if (L.lafayette) root.add(buildLafayette()); if (L.yalobusha) root.add(buildYalobusha()); if (L.mccormick) root.add(buildMcCormick()); if (L.tate) root.add(buildTate()); if (L.lib53) root.add(buildLib53()); if (L.conn56) root.add(buildConn56()); if (L.w58) root.add(buildW58()); if (L.n22) root.add(buildN22()); if (L.b21) root.add(buildB21()); if (L.b23) root.add(buildB23()); if (L.b24) root.add(buildB24());
+  // B27 build >>>
+  // #27 McGhee Building (2026-10-13, from Brent's 3 Google 3D aerials + 2 street views + front photo): 2-story tan/orange brick,
+  // tall beige stucco fascia band under a wide boxed eave, white downspouts, rows of small white-framed windows; light gray
+  // standing-seam metal cross-hip roof (main hip + lower hip wings over the NE and SE bump-outs), brick chimney, small vents;
+  // centred glass double door with a flat canopy on the NW wall facing the parking lot, walk to the lot, hedges, 2 crape myrtles; side: MCGHEE BUILDING letters, ramp with black rail,
+  // stairs down to a basement door, AC units. Local frame: u/v metres along/across the OSM outline, rotated B.th deg.
+  function buildB27() {
+    const B = L.b27, g = new THREE.Group(); g.name = 'b27';
+    const M = (k, o) => lam('b27-' + k, Object.assign({ side: THREE.DoubleSide }, o));
+    const c0 = toEN(B.o[0], B.o[1]); g.position.set(c0[0], 0, -c0[1]); g.rotation.y = B.th * Math.PI / 180;
+    const cvs = (w, h) => { const c = document.createElement('canvas'); c.width = Math.max(4, Math.round(w)); c.height = Math.max(4, Math.round(h)); return c; };
+    const texOf = c => { const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; };
+    const wht = M('white', { color: '#f4f2ec', emissive: '#3d3c38' }), seam = M('seam', { color: '#b9bcbd', emissive: '#2a2c2d' }), seamL = M('seaml', { color: '#c6c8c8', emissive: '#2d2e2e' });
+    const fasc = M('fascia', { color: '#c9b393', emissive: '#2a241c' }), soff = M('soffit', { color: '#b8a382' }), dark = M('dark', { color: '#2e3236' });
+    const glass = M('glass', { color: '#2f3d48', emissive: '#0c1116' }), blk = M('black', { color: '#202224' }), conc = M('conc', { color: '#c9c5bc', emissive: '#1f1e1b' });
+    const brick = M('brickc', { color: '#a5583c', emissive: '#1d0f0a' }), shrub = M('shrub', { color: '#3c6330', emissive: '#0c140a' }), leaf = M('leaf', { color: '#5f8a3e', emissive: '#121a0c' });
+    const bark = M('bark', { color: '#8a7a68' }), mulch = M('mulch', { color: '#6e4a33' }), acm = M('ac', { color: '#a9adb0', emissive: '#232527' });
+    const H = B.h, FB = B.fb, PR = Math.tan(B.pitch * Math.PI / 180), PX = 14;
+    const P = (u, v, y) => [u, y, -v];
+    const put = (o, u, v, y, ry) => { o.position.set(u, y || 0, -v); if (ry != null) o.rotation.y = ry; g.add(o); return o; };
+    const bx = (w, h, d, u, v, y, m, ry) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(u, (y || 0) + h / 2, -v); if (ry) o.rotation.y = ry; g.add(o); return o; };
+    function facade(len, door) {
+      const BH = H - FB, c = cvs(len * PX, BH * PX), x = c.getContext('2d'), Y = h => (BH - h) * PX, U = u => u * PX;
+      let s = 11 + Math.round(len * 17); const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+      const C = ['#cf9a68', '#c88f5c', '#d7a673', '#c08452', '#d29f6c'];
+      x.fillStyle = '#d8c7aa'; x.fillRect(0, 0, c.width, c.height);
+      for (let r = 0, hh = 0; hh < BH; r++, hh += 0.25) for (let u = (r % 2) * 0.28; u < len; u += 0.56) { x.fillStyle = C[Math.floor(rnd() * C.length)]; x.fillRect(U(u), Y(hh + 0.25) + 1, 0.54 * PX, 0.25 * PX - 1); }
+      const n = Math.max(1, Math.floor((len - 2) / 2.6)), st = (len - (n - 1) * 2.6) / 2;
+      for (let f = 0; f < 2; f++) for (let k = 0; k < n; k++) { const u = st + k * 2.6; if (door && Math.abs(u - len / 2) < 1.9 && f === 0) continue;
+        const y0 = f ? 3.9 : 0.9, wh = 1.45; x.fillStyle = '#f2f0ea'; x.fillRect(U(u - 0.5), Y(y0 + wh), 1.0 * PX, wh * PX);
+        x.fillStyle = '#4a5866'; x.fillRect(U(u - 0.4), Y(y0 + wh - 0.1), 0.8 * PX, (wh - 0.2) * PX); x.fillStyle = '#f2f0ea'; x.fillRect(U(u - 0.4), Y(y0 + wh * 0.55), 0.8 * PX, 2);
+        x.fillStyle = '#e9e3d6'; x.fillRect(U(u - 0.6), Y(y0 - 0.02), 1.2 * PX, 0.12 * PX); }
+      return M('fac' + Math.round(len * 10) + (door ? 'd' : ''), { map: texOf(c), emissive: '#1d1611' });
+    }
+    // walls along the outline (CCW): brick below, fascia band above, white downspouts at corners
+    const R = B.ring, N = R.length;
+    for (let k = 0; k < N; k++) { const a = R[k], b = R[(k + 1) % N], du = b[0] - a[0], dv = b[1] - a[1], len = Math.hypot(du, dv); if (len < 0.3) continue;
+      const nu = dv / len, nv = -du / len, ry = Math.atan2(nu, -nv), mu = (a[0] + b[0]) / 2, mv = (a[1] + b[1]) / 2, door = k === B.doorEdge;
+      put(new THREE.Mesh(new THREE.PlaneGeometry(len, H - FB), facade(len, door)), mu, mv, (H - FB) / 2, ry);
+      put(new THREE.Mesh(new THREE.PlaneGeometry(len + 0.02, FB), fasc), mu + nu * 0.02, mv + nv * 0.02, H - FB / 2, ry);
+      if (len > 8) for (const t of [0.12, 0.88]) bx(0.14, H - FB, 0.14, a[0] + du * t + nu * 0.12, a[1] + dv * t + nv * 0.12, 0, wht); }
+    { const sh = new THREE.Shape(R.map(p => new THREE.Vector2(p[0], p[1]))); const m = new THREE.Mesh(new THREE.ShapeGeometry(sh), dark); m.rotation.x = -Math.PI / 2; m.position.y = H - 0.05; g.add(m); }
+    // roofs: main hip + lower hips over the bump-outs (overlapping -> cross-hip valleys)
+    function addTris(arr, m) { const ge = new THREE.BufferGeometry(); ge.setAttribute('position', new THREE.Float32BufferAttribute(arr, 3)); ge.computeVertexNormals(); g.add(new THREE.Mesh(ge, m)); }
+    const Q = (A, a, b, c, d) => A.push(...a, ...b, ...c, ...a, ...c, ...d);
+    function hip(r, y, m, ov, sk) {
+      const u0 = r[0] - ov, v0 = r[1] - ov, u1 = r[2] + ov, v1 = r[3] + ov, w = u1 - u0, d = v1 - v0, i = Math.min(w, d) / 2, Y = y + i * PR;
+      const bb = [P(u0, v0, y), P(u1, v0, y), P(u1, v1, y), P(u0, v1, y)], t = [P(u0 + i, v0 + i, Y), P(u1 - i, v0 + i, Y), P(u1 - i, v1 - i, Y), P(u0 + i, v1 - i, Y)];
+      const A = []; for (let k = 0; k < 4; k++) Q(A, bb[k], bb[(k + 1) % 4], t[(k + 1) % 4], t[k]); addTris(A, m);
+      // boxed eave: soffit slab + thin fascia edge
+      if (!sk) bx(w, 0.3, d, (u0 + u1) / 2, (v0 + v1) / 2, y - 0.3, soff);
+      return Y;
+    }
+    const TOP = hip(B.main, H, seam, B.ov);
+    for (const r of B.wings) hip(r, H, seamL, B.ov);
+    // chimney + vents (from aerials)
+    bx(1.0, TOP - H + 0.6, 1.0, B.chim[0], B.chim[1], H, brick); bx(1.2, 0.15, 1.2, B.chim[0], B.chim[1], TOP + 0.6, conc);
+    for (const [u, v] of B.vents) { const yy = H + Math.max(0.3, Math.min(u - B.main[0], B.main[2] - u, v - B.main[1], B.main[3] - v)) * PR; put(new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.45, 10), acm), u, v, yy + 0.1); }
+    // front entry: glass double door + flat canopy + walk, hedges, crape myrtles
+    { const [a, b] = [R[B.doorEdge], R[(B.doorEdge + 1) % N]], du = b[0] - a[0], dv = b[1] - a[1], len = Math.hypot(du, dv), eu = du / len, ev = dv / len, nu = ev, nv = -eu, ry = Math.atan2(nu, -nv);
+      const mu = (a[0] + b[0]) / 2, mv = (a[1] + b[1]) / 2, at = (s, o, y) => [mu + eu * s + nu * o, mv + ev * s + nv * o];
+      const dr = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 2.6), glass); put(dr, ...at(0, 0.05), 1.3, ry);
+      for (const s of [-1.3, 0, 1.3]) bx(0.1, 2.6, 0.1, ...at(s, 0.07), 0, blk, ry);
+      bx(3.4, 0.18, 1.5, ...at(0, 0.75), 2.95, wht, ry); bx(3.0, 0.12, 9.6, ...at(0, 4.8), 0, conc, ry);
+      for (const sg of [-1, 1]) { bx(len / 2 - 3.2, 0.9, 1.0, ...at(sg * (len / 4 + 0.8), 0.8), 0, shrub, ry);
+        for (const s0 of [2.6]) { const p = at(sg * s0, 0.9); put(new THREE.Mesh(new THREE.ConeGeometry(0.7, 3.4, 10), shrub), p[0], p[1], 1.7); }
+        const tp = at(sg * len * 0.3, 5.5); bx(2.2, 0.06, 2.2, tp[0], tp[1], 0, mulch);
+        for (const o of [[-0.3, 0], [0.3, 0.1], [0, -0.3]]) { const t = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.1, 3.6, 6), bark); t.position.set(tp[0] + o[0], 1.8, -(tp[1] + o[1])); t.rotation.z = o[0] * 0.4; g.add(t); }
+        const cr = new THREE.Mesh(new THREE.SphereGeometry(2.2, 12, 8), leaf); cr.scale.set(1, 0.75, 1); put(cr, tp[0], tp[1], 4.6); } }
+    // side (NE wall, next to the front): MCGHEE BUILDING letters, ramp with black rail, stairs down to a basement door, AC units
+    { const [a, b] = [R[B.sideEdge], R[(B.sideEdge + 1) % N]], du = b[0] - a[0], dv = b[1] - a[1], len = Math.hypot(du, dv), eu = du / len, ev = dv / len, nu = ev, nv = -eu, ry = Math.atan2(nu, -nv);
+      const at = (s, o) => [a[0] + eu * s + nu * o, a[1] + ev * s + nv * o];
+      const c = cvs(256, 128), cx = c.getContext('2d'); cx.fillStyle = '#e8e2d6'; cx.font = 'bold 40px "DejaVu Sans", Arial, sans-serif'; cx.textAlign = 'center'; cx.fillText('MCGHEE', 128, 52); cx.fillText('BUILDING', 128, 104);
+      const t = texOf(c); put(new THREE.Mesh(new THREE.PlaneGeometry(2.0, 1.0), lam('b27-sign', { map: t, transparent: true, side: THREE.DoubleSide })), ...at(len * 0.8, 0.04), 2.2, ry);
+      bx(len * 0.55, 0.5, 1.6, ...at(len * 0.45, 1.0), 0, conc, ry);
+      for (let s = len * 0.18; s <= len * 0.72; s += 1.2) bx(0.05, 1.0, 0.05, ...at(s, 1.75), 0.5, blk, ry);
+      { const p = at(len * 0.45, 1.75); bx(len * 0.55, 0.06, 0.06, p[0], p[1], 1.5, blk, ry); }
+      bx(1.5, 0.08, 3.2, ...at(len * 0.12, 1.2), -0.3, conc, ry); bx(1.0, 1.0, 0.06, ...at(len * 0.12, 0.04), -0.3, glass, ry);
+      for (const o of [-0.8, 0.8]) for (const d of [1.0, 2.4]) bx(0.05, 0.9, 0.05, ...at(len * 0.12 + o, d), 0, blk, ry);
+      for (const s of [len * 0.3, len * 0.36]) bx(1.0, 0.9, 1.0, ...at(s, 3.0), 0, acm, ry); }
+    return g;
+  }
+  // <<< B27 build
+  root.add(buildSign()); root.add(buildPlaza()); if (L.nwdr) root.add(buildNwdr()); if (L.mainEntrance && L.mainEntrance.size) root.add(buildMainEntrance()); if (L.baseball) root.add(buildBaseball()); if (L.football) root.add(buildFootball()); if (L.softball) root.add(buildSoftball()); if (L.practice) root.add(buildPractice()); if (L.lamar) root.add(buildLamar()); if (L.rab31) root.add(buildRab31()); if (L.benton) root.add(buildBenton()); if (L.heindl) root.add(buildHeindl()); if (L.lafayette) root.add(buildLafayette()); if (L.yalobusha) root.add(buildYalobusha()); if (L.mccormick) root.add(buildMcCormick()); if (L.tate) root.add(buildTate()); if (L.lib53) root.add(buildLib53()); if (L.conn56) root.add(buildConn56()); if (L.w58) root.add(buildW58()); if (L.n22) root.add(buildN22()); if (L.b21) root.add(buildB21()); if (L.b23) root.add(buildB23()); if (L.b24) root.add(buildB24()); if (L.b27) root.add(buildB27());
   root.traverse(o => { o.frustumCulled = false; });
   return root;
 };
@@ -2165,3 +2248,7 @@ window.NWCC_LANDMARKS.b23 = {"c":[-89.971108,34.6248515],"th":19.39,"len":37.97,
 // #24A Auditorium + #24B Instructional Wing (2026-10-13). o=[lng,lat] origin; rects [x0,y0,x1,y1] in m east/north of o.
 window.NWCC_LANDMARKS.b24 = {"o":[-89.9715,34.6245],"a":{"hall":[-13.4,-5.0,26.4,20.6],"front":[0.5,-5.0,26.4,20.6],"back":[-13.4,-4.4,0.5,20.0],"h":9.0,"pitch":24,"annex":[-24.3,-2.3,-13.4,8.4],"ah":5.2,"sky":[[-21.0,3.0],[-16.8,3.0]],"conn":[0.2,-9.9,6.1,-5.0],"ch":4.2,"lobby":[26.4,-0.7,35.8,16.5],"lh":8.2,"glassX":31.4,"ppitch":24,"sign":[38.6,4.5],"bollards":[[38.0,-1.0],[38.0,1.6],[38.0,7.9],[38.0,10.5],[38.0,13.1],[38.0,15.7]]},"b":{"wings":[[-24.6,-39.9,-10.8,-10.2],[-10.9,-47.2,6.7,-9.9]],"h":7.4,"pitch":24,"link":[6.6,-36.6,10.9,-33.1],"lk":3.6,"se":[10.9,-37.2,39.6,-17.5],"sh":4.3,"spitch":22,"porch":1.8}};
 /* <<< B24 data */
+/* B27 data >>> */
+// #27 McGhee Building (2026-10-13). o=[lng,lat] origin (OSM vertex 0); th=frame rotation deg; ring/rects in m along u/v.
+window.NWCC_LANDMARKS.b27 = {"o":[-89.970589,34.625488],"th":-39.033,"ring":[[0.0,0.0],[23.7,0.0],[23.6,-3.5],[28.74,-3.6],[28.94,15.21],[26.62,15.17],[26.74,26.95],[16.16,26.91],[16.2,30.5],[0.25,30.53]],"h":7.6,"fb":1.5,"pitch":16,"ov":0.9,"main":[0.0,0.0,26.7,26.9],"wings":[[0.0,20.0,16.1,30.5],[20.0,-3.7,28.9,15.2]],"doorEdge":9,"sideEdge":8,"chim":[9.0,15.5],"vents":[[6,8],[18,9],[11,21],[21,19],[24,4]]};
+/* <<< B27 data */

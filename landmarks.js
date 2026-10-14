@@ -1993,7 +1993,90 @@ window.NWCCLandmarks = function (THREE, toEN, onTexture) {
     return g;
   }
   // <<< B23 build
-  root.add(buildSign()); root.add(buildPlaza()); if (L.nwdr) root.add(buildNwdr()); if (L.mainEntrance && L.mainEntrance.size) root.add(buildMainEntrance()); if (L.baseball) root.add(buildBaseball()); if (L.football) root.add(buildFootball()); if (L.softball) root.add(buildSoftball()); if (L.practice) root.add(buildPractice()); if (L.lamar) root.add(buildLamar()); if (L.rab31) root.add(buildRab31()); if (L.benton) root.add(buildBenton()); if (L.heindl) root.add(buildHeindl()); if (L.lafayette) root.add(buildLafayette()); if (L.yalobusha) root.add(buildYalobusha()); if (L.mccormick) root.add(buildMcCormick()); if (L.tate) root.add(buildTate()); if (L.lib53) root.add(buildLib53()); if (L.conn56) root.add(buildConn56()); if (L.w58) root.add(buildW58()); if (L.n22) root.add(buildN22()); if (L.b21) root.add(buildB21()); if (L.b23) root.add(buildB23());
+  // B24 build >>>
+  // #24A Auditorium + #24B Instructional Wing (Theater Arts Complex; 2026-10-13 from Brent's street view, 3 obliques + auditorium front).
+  // 24A: salmon brick hall with an X (pyramid) hip over the front block + lower hip behind, flat W annex; E lobby: glass curtain wall
+  // behind a full-width 6-column white portico under a front gable pediment with a round oculus, AUDITORIUM sign, bollards.
+  // 24B: red brick 2-story cross wings with gray hip roofs + white band, flat link, low SE wing with a standing-seam hip roof and a
+  // covered porch on posts. Frame: metres east/north of B.o (axis-aligned, like the footprint).
+  function buildB24() {
+    const B = L.b24, g = new THREE.Group(); g.name = 'b24';
+    const M = (k, o) => lam('b24-' + k, Object.assign({ side: THREE.DoubleSide }, o));
+    const o = toEN(B.o[0], B.o[1]); g.position.set(o[0], 0, -o[1]);
+    const cvs = (w, h) => { const c = document.createElement('canvas'); c.width = Math.max(4, Math.round(w)); c.height = Math.max(4, Math.round(h)); return c; };
+    const texOf = c => { const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; };
+    const wht = M('white', { color: '#f4f2ec', emissive: '#3d3c38' }), shing = M('shingle', { color: '#6c6f74', emissive: '#16181b' }), shingL = M('shingl', { color: '#7d8085', emissive: '#191b1e' });
+    const seam = M('seam', { color: '#8e9295', emissive: '#1e2022' }), glass = M('glass', { color: '#3d5466', emissive: '#0e161d' }), dark = M('dark', { color: '#2e3236' });
+    const flat = M('flat', { color: '#9a9a96', emissive: '#1f1f1d' }), mull = M('mull', { color: '#d9dcdc', emissive: '#2c2d2d' }), boll = M('bollard', { color: '#2a2d31' });
+    const PX = 14, FM = {};
+    function facade(len, H, cols, floors, win) {           // brick + white band(s) + window rows
+      const key = cols.join('') + Math.round(len * 4) + ':' + H + ':' + floors + ':' + win; if (FM[key]) return FM[key];
+      const c = cvs(len * PX, H * PX), x = c.getContext('2d'), Y = h => (H - h) * PX, U = u => u * PX;
+      let s = 7 + Math.round(len * 13); const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+      x.fillStyle = cols[0]; x.fillRect(0, 0, c.width, c.height);
+      for (let r = 0, hh = 0; hh < H; r++, hh += 0.3) for (let u = (r % 2) * 0.3; u < len; u += 0.6) { x.fillStyle = cols[1 + Math.floor(rnd() * (cols.length - 1))]; x.fillRect(U(u), Y(hh + 0.3) + 1, 0.58 * PX, 0.3 * PX - 1); }
+      const fh = H / floors;
+      if (win) for (let f = 0; f < floors; f++) for (let u = 1.6; u < len - 1.4; u += win) {
+        x.fillStyle = '#efece4'; x.fillRect(U(u - 0.1), Y(f * fh + fh - 0.9), 1.4 * PX, (fh - 1.9) * PX);
+        x.fillStyle = '#34465a'; x.fillRect(U(u), Y(f * fh + fh - 1.0), 1.2 * PX, (fh - 2.1) * PX); x.fillStyle = '#efece4'; x.fillRect(U(u + 0.58), Y(f * fh + fh - 1.0), 2, (fh - 2.1) * PX); }
+      x.fillStyle = '#efebe1'; x.fillRect(0, Y(0.55), c.width, 0.16 * PX); if (floors > 1) x.fillRect(0, Y(fh + 0.15), c.width, 0.3 * PX); x.fillRect(0, Y(H - 0.02), c.width, 0.5 * PX);
+      return (FM[key] = M('fac' + key, { map: texOf(c), emissive: '#1d1611' }));
+    }
+    function walls(r, H, cols, floors, win, skip) {
+      const [x0, y0, x1, y1] = r, S = [[[(x0 + x1) / 2, y0], x1 - x0, 0, 'S'], [[x1, (y0 + y1) / 2], y1 - y0, Math.PI / 2, 'E'], [[(x0 + x1) / 2, y1], x1 - x0, Math.PI, 'N'], [[x0, (y0 + y1) / 2], y1 - y0, -Math.PI / 2, 'W']];
+      for (const [c, len, ry, nm] of S) { if (skip && skip.includes(nm)) continue; const w = new THREE.Mesh(new THREE.PlaneGeometry(len, H), facade(len, H, cols, floors, win)); w.position.set(c[0], H / 2, -c[1]); w.rotation.y = ry; g.add(w); }
+      g.add(box(x1 - x0 - 0.02, H - 0.05, y1 - y0 - 0.02, (x0 + x1) / 2, 0, -(y0 + y1) / 2, dark));
+    }
+    function addTris(arr, m, grp) { const ge = new THREE.BufferGeometry(); ge.setAttribute('position', new THREE.Float32BufferAttribute(arr, 3)); ge.computeVertexNormals(); (grp || g).add(new THREE.Mesh(ge, m)); }
+    const Q = (A, a, b, c, d) => A.push(...a, ...b, ...c, ...a, ...c, ...d);
+    function hip(r, y, pitch, m, ov) {
+      ov = ov == null ? 0.6 : ov; const x0 = r[0] - ov, n0 = r[1] - ov, x1 = r[2] + ov, n1 = r[3] + ov;
+      const w = x1 - x0, d = n1 - n0, i = Math.min(w, d) / 2, Y = y + i * Math.tan(pitch * Math.PI / 180), P = (e, n, yy) => [e, yy, -n];
+      const b = [P(x0, n0, y), P(x1, n0, y), P(x1, n1, y), P(x0, n1, y)], t = [P(x0 + i, n0 + i, Y), P(x1 - i, n0 + i, Y), P(x1 - i, n1 - i, Y), P(x0 + i, n1 - i, Y)];
+      const A = []; for (let k = 0; k < 4; k++) Q(A, b[k], b[(k + 1) % 4], t[(k + 1) % 4], t[k]); addTris(A, m);
+      g.add(box(w, 0.28, d, (x0 + x1) / 2, y - 0.28, -(n0 + n1) / 2, wht)); return Y;
+    }
+    function flatTop(r, H, par) { g.add(box(r[2] - r[0], 0.12, r[3] - r[1], (r[0] + r[2]) / 2, H - 0.1, -(r[1] + r[3]) / 2, flat));
+      for (const [w, d, x, y] of [[r[2] - r[0], 0.25, (r[0] + r[2]) / 2, r[1]], [r[2] - r[0], 0.25, (r[0] + r[2]) / 2, r[3]], [0.25, r[3] - r[1], r[0], (r[1] + r[3]) / 2], [0.25, r[3] - r[1], r[2], (r[1] + r[3]) / 2]]) g.add(box(w, par, d, x, H - 0.05, -y, wht)); }
+    const SAL = ['#dd9c80', '#d6927a', '#e3a68a', '#cf8a70'], RED = ['#a85a43', '#9c513c', '#b2634b', '#8f4a37'];
+    // ===== 24A Auditorium
+    const A = B.a;
+    walls(A.hall, A.h, SAL, 1, 0); hip(A.front, A.h, A.pitch, shing); hip(A.back, A.h - 0.6, A.pitch, shingL);
+    walls(A.annex, A.ah, SAL, 1, 3.4); flatTop(A.annex, A.ah, 0.5);
+    for (const [x, y] of A.sky) g.add(box(2.2, 0.5, 1.4, x, A.ah, -y, M('sky', { color: '#cfd6da', emissive: '#2c2f31' })));
+    walls(A.conn, A.ch, SAL, 1, 0); flatTop(A.conn, A.ch, 0.35);
+    { const [x0, y0, x1, y1] = A.lobby, H = A.lh, pw = y1 - y0, gx = A.glassX, pr = Math.tan(A.ppitch * Math.PI / 180), rise = (pw / 2 + 0.6) * pr;
+      walls([x0, y0, gx, y1], H, SAL, 1, 0, ['E']);
+      const gw = new THREE.Mesh(new THREE.PlaneGeometry(pw - 2.4, H - 0.6), glass); gw.position.set(gx + 0.05, (H - 0.6) / 2 + 0.1, -(y0 + y1) / 2); gw.rotation.y = Math.PI / 2; g.add(gw);
+      for (let k = 0; k <= 6; k++) g.add(box(0.12, H - 0.6, 0.14, gx + 0.1, 0.1, -(y0 + 1.2 + k * (pw - 2.4) / 6), mull));
+      for (const hh of [2.6, 5.2]) g.add(box(0.12, 0.12, pw - 2.4, gx + 0.1, hh, -(y0 + y1) / 2, mull));
+      for (const sy of [y0 + 0.6, y1 - 0.6]) g.add(box(1.2, H, 1.2, gx - 0.4, 0, -sy, M('salmon', { color: '#dd9c80', emissive: '#2a1a13' })));
+      g.add(box(x1 - gx + 0.4, 0.18, pw + 0.6, (gx + x1) / 2, 0, -(y0 + y1) / 2, M('pad', { color: '#d9d4c8' })));
+      for (let k = 0; k < 6; k++) { const y = y0 + 0.7 + k * (pw - 1.4) / 5; g.add(cyl(0.34, 0.28, H - 0.3, x1 - 0.6, 0.2, -y, wht, 18)); g.add(box(0.8, 0.25, 0.8, x1 - 0.6, 0.15, -y, wht)); }
+      g.add(box(x1 - gx + 0.6, 0.8, pw + 1.2, (gx + x1) / 2 + 0.1, H - 0.1, -(y0 + y1) / 2, wht));
+      const T = [], P = (e, n, yy) => [e, yy, -n], yb = H + 0.7, xe = x1 + 0.4, xb = A.hall[2] - 1.0;
+      Q(T, P(xe, y0 - 0.6, yb), P(xb, y0 - 0.6, yb), P(xb, (y0 + y1) / 2, yb + rise), P(xe, (y0 + y1) / 2, yb + rise));
+      Q(T, P(xe, y1 + 0.6, yb), P(xb, y1 + 0.6, yb), P(xb, (y0 + y1) / 2, yb + rise), P(xe, (y0 + y1) / 2, yb + rise)); addTris(T, shing);
+      const tri = (w, h, m, dx, dy) => { const t = new THREE.Mesh(new THREE.ShapeGeometry(new THREE.Shape([new THREE.Vector2(-w / 2, 0), new THREE.Vector2(w / 2, 0), new THREE.Vector2(0, h)])), m); t.rotation.y = Math.PI / 2; t.position.set(xe + dx, yb + dy, -(y0 + y1) / 2); g.add(t); };
+      tri(pw + 1.2, rise, wht, 0.02, 0); tri(pw - 0.6, rise - 0.75, M('salmon', { color: '#dd9c80', emissive: '#2a1a13' }), 0.06, 0.32);
+      const oc = new THREE.Mesh(new THREE.RingGeometry(0.42, 0.62, 24), wht); oc.rotation.y = Math.PI / 2; oc.position.set(xe + 0.08, yb + rise * 0.5, -(y0 + y1) / 2); g.add(oc);
+      const oi = new THREE.Mesh(new THREE.CircleGeometry(0.42, 24), M('ocul', { color: '#d8d2c6', emissive: '#2e2b26' })); oi.rotation.y = Math.PI / 2; oi.position.set(xe + 0.07, yb + rise * 0.5, -(y0 + y1) / 2); g.add(oi); }
+    { const [x, y] = A.sign, sg = new THREE.Group(); sg.position.set(x, 0, -y); sg.rotation.y = Math.PI / 2; g.add(sg);
+      const c = cvs(512, 96), cx = c.getContext('2d'); cx.fillStyle = '#f2f1ec'; cx.fillRect(0, 0, 512, 96); cx.fillStyle = '#2a2f3a'; cx.font = 'bold 54px "DejaVu Sans", Arial, sans-serif'; cx.textAlign = 'center'; cx.fillText('AUDITORIUM', 256, 68);
+      sg.add(box(2.6, 0.6, 0.12, 0, 0.35, 0, M('signA', { map: texOf(c), emissive: '#3a3a36' }))); sg.add(box(2.8, 0.35, 0.3, 0, 0, 0, dark)); }
+    for (const [x, y] of A.bollards) g.add(cyl(0.11, 0.11, 0.95, x, 0, -y, boll, 10));
+    // ===== 24B Instructional Wing
+    const W = B.b;
+    for (const r of W.wings) { walls(r, W.h, RED, 2, 3.0); }
+    for (const r of W.wings) hip(r, W.h, W.pitch, shing);
+    walls(W.link, W.lk, RED, 1, 0); flatTop(W.link, W.lk, 0.3);
+    walls(W.se, W.sh, RED, 1, 3.2); hip([W.se[0], W.se[1] - 0.4, W.se[2], W.se[3]], W.sh, W.spitch, seam, W.porch);
+    for (let y = W.se[1] - 0.2; y <= W.se[3] + 0.01; y += (W.se[3] - W.se[1]) / 6) g.add(box(0.28, W.sh, 0.28, W.se[2] + W.porch - 0.35, 0, -y, wht));
+    g.add(box(W.porch, 0.15, W.se[3] - W.se[1] + 1.0, W.se[2] + W.porch / 2, 0, -(W.se[1] + W.se[3]) / 2, M('pad', { color: '#d9d4c8' })));
+    return g;
+  }
+  // <<< B24 build
+  root.add(buildSign()); root.add(buildPlaza()); if (L.nwdr) root.add(buildNwdr()); if (L.mainEntrance && L.mainEntrance.size) root.add(buildMainEntrance()); if (L.baseball) root.add(buildBaseball()); if (L.football) root.add(buildFootball()); if (L.softball) root.add(buildSoftball()); if (L.practice) root.add(buildPractice()); if (L.lamar) root.add(buildLamar()); if (L.rab31) root.add(buildRab31()); if (L.benton) root.add(buildBenton()); if (L.heindl) root.add(buildHeindl()); if (L.lafayette) root.add(buildLafayette()); if (L.yalobusha) root.add(buildYalobusha()); if (L.mccormick) root.add(buildMcCormick()); if (L.tate) root.add(buildTate()); if (L.lib53) root.add(buildLib53()); if (L.conn56) root.add(buildConn56()); if (L.w58) root.add(buildW58()); if (L.n22) root.add(buildN22()); if (L.b21) root.add(buildB21()); if (L.b23) root.add(buildB23()); if (L.b24) root.add(buildB24());
   root.traverse(o => { o.frustumCulled = false; });
   return root;
 };
@@ -2078,3 +2161,7 @@ window.NWCC_LANDMARKS.b21 = {"main":{"r":[[-89.9706916,34.6247202],[-89.9703292,
 // #23 Art Building (2026-10-13). c=[lng,lat] of the main block centre, th=deg CCW from E of the long axis; u/v in m from the SW corner.
 window.NWCC_LANDMARKS.b23 = {"c":[-89.971108,34.6248515],"th":19.39,"len":37.97,"wid":19.47,"h":4.9,"pitch":26,"wing":11.0,"wingDrop":0.5,"bays":7,"port":{"u0":15.51,"u1":23.43,"d":2.84},"vents":[[15.5,6.0],[21.0,14.0],[28.5,5.5],[33.0,13.0],[25.0,8.5]],"dome":[22.5,12.0],"sign":[33.5,-4.6]};
 /* <<< B23 data */
+/* B24 data >>> */
+// #24A Auditorium + #24B Instructional Wing (2026-10-13). o=[lng,lat] origin; rects [x0,y0,x1,y1] in m east/north of o.
+window.NWCC_LANDMARKS.b24 = {"o":[-89.9715,34.6245],"a":{"hall":[-13.4,-5.0,26.4,20.6],"front":[0.5,-5.0,26.4,20.6],"back":[-13.4,-4.4,0.5,20.0],"h":9.0,"pitch":24,"annex":[-24.3,-2.3,-13.4,8.4],"ah":5.2,"sky":[[-21.0,3.0],[-16.8,3.0]],"conn":[0.2,-9.9,6.1,-5.0],"ch":4.2,"lobby":[26.4,-0.7,35.8,16.5],"lh":8.2,"glassX":31.4,"ppitch":24,"sign":[38.6,4.5],"bollards":[[38.0,-1.0],[38.0,1.6],[38.0,7.9],[38.0,10.5],[38.0,13.1],[38.0,15.7]]},"b":{"wings":[[-24.6,-39.9,-10.8,-10.2],[-10.9,-47.2,6.7,-9.9]],"h":7.4,"pitch":24,"link":[6.6,-36.6,10.9,-33.1],"lk":3.6,"se":[10.9,-37.2,39.6,-17.5],"sh":4.3,"spitch":22,"porch":1.8}};
+/* <<< B24 data */

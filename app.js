@@ -788,8 +788,8 @@ function meIcon() {   // navy map pin with a white gate glyph, drawn once at 2x
 function addMainEntrance() {
   if (!ME || !ME.labelOn || map.getLayer('me-label')) return;
   if (!map.hasImage('me-pin')) map.addImage('me-pin', meIcon(), { pixelRatio: 2 });
-  if (!map.getSource('me')) map.addSource('me', { type: 'geojson', data: { type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: ME.label } } });
-  map.addLayer({ id: 'me-label', type: 'symbol', source: 'me', minzoom: ME.minzoom || 0,
+  if (!map.getSource('main-entrance')) map.addSource('main-entrance', { type: 'geojson', data: { type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: ME.label } } });   // own source (was 'me', shared with the location dot)
+  map.addLayer({ id: 'me-label', type: 'symbol', source: 'main-entrance', minzoom: ME.minzoom || 0,
     layout: { 'icon-image': 'me-pin', 'icon-anchor': 'bottom', 'icon-allow-overlap': true, 'text-allow-overlap': true, 'icon-ignore-placement': true,
       'text-field': 'Main Entrance', 'text-font': ['Noto Sans Medium'], 'text-size': 14, 'text-anchor': 'bottom', 'text-offset': [0, -3.0],
       'icon-pitch-alignment': 'viewport', 'text-pitch-alignment': 'viewport', 'icon-rotation-alignment': 'viewport', 'text-rotation-alignment': 'viewport' },

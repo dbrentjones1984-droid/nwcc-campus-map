@@ -456,7 +456,7 @@ function addLayers() {
   if (THREE && !map.getLayer('nwcc-3d')) map.addLayer(layer3d);
   if (!map.getSource('labels')) {
     map.addSource('labels', { type: 'geojson', data: { type: 'FeatureCollection', features: ITEMS.map(it => ({ type: 'Feature',
-      properties: { key: it.key, label: it.label, name: it.name, category: it.category, lm: it.landmark ? 1 : 0 }, geometry: { type: 'Point', coordinates: [it.lng, it.lat] } })) } });
+      properties: { key: it.key, label: it.label, name: it.name, category: it.category, lm: it.landmark ? 1 : 0, h: it.lab_h || 0, hk: it.lab_h || 0 }, geometry: { type: 'Point', coordinates: [it.lab_lng || it.lng, it.lab_lat || it.lat] } })) } });   // NUM-CENTER: visual centre of the footprint + roof height
   }
   // road-name badges (HWY 51 / Wilson Dr) sit above the 3D buildings so they are never hidden behind a roof
   if (map.getLayer('bm-conn-badge')) map.moveLayer('bm-conn-badge');
@@ -464,10 +464,39 @@ function addLayers() {
   if (map.getLayer('building-labels')) map.moveLayer('building-labels');
   else map.addLayer({ id: 'building-labels', type: 'symbol', source: 'labels', filter: catFilter(),
     layout: { 'text-field': ['concat', '#', ['get', 'label']],   // NO-LANDMARK-LABELS (2026-10-12): no gold ★ name labels on landmark buildings
-      'text-size': 11, 'text-font': ['Noto Sans Regular'], 'text-anchor': 'bottom', 'text-offset': [0, -1.2],
+      'text-size': 11, 'text-font': ['Noto Sans Regular'], 'text-anchor': 'center', 'text-offset': roofOffsetExpr(), 'text-padding': 3,   /* NUM-CENTER: lifted to the roof (ROOF-LIFT) */
       'text-max-width': 12, 'text-allow-overlap': false, visibility: labelsOn ? 'visible' : 'none' },
     paint: { 'text-color': '#ffffff', 'text-halo-color': '#0b1220', 'text-halo-width': 1.6 } });
 }
+// ROOF-LIFT >>> (2026-10-13) building numbers sit on the roof centre in 3D. The label point is the footprint's visual centre on the
+// ground; text-offset lifts it by hk * K ems, where K = px per vertical metre at the screen centre (ppm * sin(pitch)) / text-size,
+// updated live but only when zoom/pitch change >2% (pure pans re-set nothing), and hk = roof height * the label's own perspective
+// factor (its px-per-metre vs the centre's, from the Three.js camera), refreshed once per moveend. Symbol collision works on the
+// lifted positions; labels stay a fixed 11 px above the 3D layer.
+let roofK = 0, roofT = 0;
+function roofOffsetExpr() { return ['interpolate', ['linear'], ['get', 'hk'], 0, ['literal', [0, 0]], 100, ['literal', [0, -100 * roofK]]]; }
+function roofUpdate() {
+  if (!map.getLayer('building-labels')) return;
+  const c = map.getCenter(), ppm = 512 * Math.pow(2, map.getZoom()) / (40075016.686 * Math.cos(c.lat * Math.PI / 180));
+  const k = ppm * Math.sin(map.getPitch() * Math.PI / 180) / 11;
+  if (Math.abs(k - roofK) <= Math.max(0.02 * Math.abs(roofK), 0.002)) return;
+  roofK = k; map.setLayoutProperty('building-labels', 'text-offset', roofOffsetExpr());
+}
+function roofPersp() {   // per-label perspective factor, once the camera settles
+  const src = map.getSource('labels'); if (!src || !camera || !camera.projectionMatrix) return;
+  const P = camera.projectionMatrix, up = (e, n) => { const a = new THREE.Vector4(e, 0, -n, 1).applyMatrix4(P), b = new THREE.Vector4(e, 10, -n, 1).applyMatrix4(P);
+    return a.w > 0 && b.w > 0 ? (a.y / a.w - b.y / b.w) : null; };
+  const cc = map.getCenter(), ce = toEN(cc.lng, cc.lat), u0 = up(ce[0], ce[1]); if (!u0) return;
+  const fc = { type: 'FeatureCollection', features: ITEMS.map(it => { const lng = it.lab_lng || it.lng, lat = it.lab_lat || it.lat, e = toEN(lng, lat), u = up(e[0], e[1]);
+    const f = u ? Math.max(0.3, Math.min(3, -u / -u0)) : 1;
+    return { type: 'Feature', properties: { key: it.key, label: it.label, name: it.name, category: it.category, lm: it.landmark ? 1 : 0, h: it.lab_h || 0, hk: Math.round((it.lab_h || 0) * f * 100) / 100 },
+      geometry: { type: 'Point', coordinates: [lng, lat] } }; }) };
+  src.setData(fc);
+}
+let roofRaf = 0; map.on('move', () => { if (!roofRaf) roofRaf = requestAnimationFrame(() => { roofRaf = 0; roofUpdate(); }); });
+map.on('moveend', () => { roofUpdate(); clearTimeout(roofT); roofT = setTimeout(roofPersp, 60); });
+map.on('styledata', () => { if (map.getLayer('building-labels')) roofUpdate(); });
+// <<< ROOF-LIFT
 function refreshFilter() {
   if (!map.getLayer('p2-extrusion')) return;
   map.setFilter('p2-extrusion', ['all', catFilter(), ['!=', ['get', 'arch'], 'shared']]);

@@ -2459,7 +2459,16 @@ window.NWCCLandmarks = function (THREE, toEN, onTexture) {
     return root;
   }
   // <<< B28 build
-  root.add(buildSign()); root.add(buildPlaza()); if (L.nwdr) root.add(buildNwdr()); if (L.mainEntrance && L.mainEntrance.size) root.add(buildMainEntrance()); if (L.baseball) root.add(buildBaseball()); if (L.football) root.add(buildFootball()); if (L.softball) root.add(buildSoftball()); if (L.practice) root.add(buildPractice()); if (L.lamar) root.add(buildLamar()); if (L.rab31) root.add(buildRab31()); if (L.benton) root.add(buildBenton()); if (L.heindl) root.add(buildHeindl()); if (L.lafayette) root.add(buildLafayette()); if (L.yalobusha) root.add(buildYalobusha()); if (L.mccormick) root.add(buildMcCormick()); if (L.tate) root.add(buildTate()); if (L.lib53) root.add(buildLib53()); if (L.conn56) root.add(buildConn56()); if (L.w58) root.add(buildW58()); if (L.n22) root.add(buildN22()); if (L.b21) root.add(buildB21()); if (L.b23) root.add(buildB23()); if (L.b24) root.add(buildB24()); if (L.b27) root.add(buildB27()); if (L.b25) root.add(buildB25()); if (L.b31w) root.add(buildB31W()); if (L.b28) root.add(buildB28());
+  // WF build >>>
+  // walkfix (2026-10-14): small green utility box in the lawn W of the Berry S plaza (Brent's close-up 8c5bb010, Esri).
+  function buildWalkfix() {
+    const W = L.walkfix, g = new THREE.Group(); g.name = 'walkfix'; const c = toEN(W.o[0], W.o[1]); g.position.set(c[0], 0, -c[1]); g.rotation.y = W.th * Math.PI / 180;
+    g.add(box(W.box[0], W.box[2], W.box[1], 0, 0, 0, lam('wf-ubox', { color: '#5f7d5a', emissive: '#121a11' })));
+    g.add(box(W.box[0] + 0.3, 0.12, W.box[1] + 0.3, 0, 0, 0, lam('wf-pad', { color: '#c9c5bb' })));
+    return g;
+  }
+  // <<< WF build
+  root.add(buildSign()); root.add(buildPlaza()); if (L.nwdr) root.add(buildNwdr()); if (L.mainEntrance && L.mainEntrance.size) root.add(buildMainEntrance()); if (L.baseball) root.add(buildBaseball()); if (L.football) root.add(buildFootball()); if (L.softball) root.add(buildSoftball()); if (L.practice) root.add(buildPractice()); if (L.lamar) root.add(buildLamar()); if (L.rab31) root.add(buildRab31()); if (L.benton) root.add(buildBenton()); if (L.heindl) root.add(buildHeindl()); if (L.lafayette) root.add(buildLafayette()); if (L.yalobusha) root.add(buildYalobusha()); if (L.mccormick) root.add(buildMcCormick()); if (L.tate) root.add(buildTate()); if (L.lib53) root.add(buildLib53()); if (L.conn56) root.add(buildConn56()); if (L.w58) root.add(buildW58()); if (L.n22) root.add(buildN22()); if (L.b21) root.add(buildB21()); if (L.b23) root.add(buildB23()); if (L.b24) root.add(buildB24()); if (L.b27) root.add(buildB27()); if (L.b25) root.add(buildB25()); if (L.b31w) root.add(buildB31W()); if (L.b28) root.add(buildB28()); if (L.walkfix) root.add(buildWalkfix());
   root.traverse(o => { o.frustumCulled = false; });
   return root;
 };
@@ -2564,3 +2573,6 @@ window.NWCC_LANDMARKS.b31w = {"o":[-89.9715,34.6245],"th":45.84,"o0":[-89.9715,3
 // #28 Berry Building (2026-10-14). o=[lng,lat] frame origin, th=deg; blocks/faces/... in (u east, v north) m; sign/bollards in local EN m.
 window.NWCC_LANDMARKS.b28 = {"o":[-89.9707904,34.6235866],"th":1.2,"o0":[-89.9715,34.6245],"blocks":[[-23.0,-24.2,-6.15,16.6,8.6],[-6.15,-13.8,2.8,14.5,7.8],[2.8,-24.2,22.9,23.8,8.6]],"faces":[[-23.0,-24.2,-6.15,-24.2,8.6,[[12.650000000000002,6.0]],[]],[-6.15,-24.2,-6.15,-13.8,8.6,[],[]],[-6.15,-13.8,2.8,-13.8,7.8,[],[4.475]],[2.8,-13.8,2.8,-24.2,8.6,[],[]],[2.8,-24.2,22.9,-24.2,8.6,[[3.8,5.0],[9.6,5.0]],[]],[22.9,-24.2,22.9,23.8,8.6,[],[]],[22.9,23.8,2.8,23.8,8.6,[],[]],[2.8,23.8,2.8,14.5,8.6,[],[]],[2.8,14.5,-6.15,14.5,7.8,[],[4.475]],[-6.15,14.5,-6.15,16.6,8.6,[],[]],[-6.15,16.6,-23.0,16.6,8.6,[],[]],[-23.0,16.6,-23.0,-24.2,8.6,[],[]],[-6.15,-13.8,-6.15,14.5,8.6,[],[]],[2.8,14.5,2.8,-13.8,8.6,[],[]]],"sky":[[-7.75,-6.0,-7.050000000000001,8.0,8.6],[3.6999999999999997,-9.0,4.4,10.0,8.6],[-3.0,-4.0,-2.4,6.0,7.8]],"rtu":[[-15.0,2.0,8.6,1.6,1.2],[-9.5,-8.0,8.6,1.2,1.2],[12.0,9.0,8.6,1.6,1.2],[16.0,-14.0,8.6,1.2,1.2],[-1.0,9.0,7.8,1.0,1.0]],"south":{"u0":-6.15,"u1":2.8,"v0":-24.2,"v1":-13.8,"y":1.0,"barrel":[-1.6750000000000003,-20.599999999999998,-13.8,6.4,4.4],"steps":{"u":-1.6750000000000003,"w":6.0,"d":3.0,"n":6},"ramp":{"u0":2.8,"u1":17.8,"v":-25.4,"w":1.8,"y0":1.0}},"ncan":[-3.6750000000000003,0.32499999999999973,14.5,2.2,3.0],"sign":[85.5,-131.0,-35.0],"bollards":[[89.6,-129.6],[89.6,-132.2],[88.2,-133.8],[86.0,-134.0]]};
 /* <<< B28 data */
+/* WF data >>> */
+window.NWCC_LANDMARKS.walkfix = {"o":[-89.9710055,34.6233071],"th":1.2,"box":[1.3,0.9,1.15]};
+/* <<< WF data */

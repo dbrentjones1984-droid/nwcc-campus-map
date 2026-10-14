@@ -2273,7 +2273,108 @@ window.NWCCLandmarks = function (THREE, toEN, onTexture) {
     return root;
   }
   // <<< B25 build
-  root.add(buildSign()); root.add(buildPlaza()); if (L.nwdr) root.add(buildNwdr()); if (L.mainEntrance && L.mainEntrance.size) root.add(buildMainEntrance()); if (L.baseball) root.add(buildBaseball()); if (L.football) root.add(buildFootball()); if (L.softball) root.add(buildSoftball()); if (L.practice) root.add(buildPractice()); if (L.lamar) root.add(buildLamar()); if (L.rab31) root.add(buildRab31()); if (L.benton) root.add(buildBenton()); if (L.heindl) root.add(buildHeindl()); if (L.lafayette) root.add(buildLafayette()); if (L.yalobusha) root.add(buildYalobusha()); if (L.mccormick) root.add(buildMcCormick()); if (L.tate) root.add(buildTate()); if (L.lib53) root.add(buildLib53()); if (L.conn56) root.add(buildConn56()); if (L.w58) root.add(buildW58()); if (L.n22) root.add(buildN22()); if (L.b21) root.add(buildB21()); if (L.b23) root.add(buildB23()); if (L.b24) root.add(buildB24()); if (L.b27) root.add(buildB27()); if (L.b25) root.add(buildB25());
+  // B31W build >>>
+  // #31 Marilyn R. Spears Building (2026-10-14, from Brent's top-down + oblique Google satellite and 3 street views): single story,
+  // red-brown brick with cream trim, white-shuttered windows, red doors, gray-tan shingle hip roofs (one full hip per wing, 45.8 deg plan)
+  // with small vents, white columned porte-cochere over the one-way drive at the SW wing end with a sign plaque by the doors, hedges.
+  // NE of it: fenced playground with a curved concrete walk, play equipment and the small gray building 107.
+  // Frame: u = a (NE), v = b (NW) metres, rotated B.th deg CCW from east about local (0,0).
+  function buildB31W() {
+    const B = L.b31w, root = new THREE.Group(); root.name = 'b31w';
+    const M = (k, o) => lam('b31w-' + k, Object.assign({ side: THREE.DoubleSide }, o));
+    const cvs = (w, h) => { const c = document.createElement('canvas'); c.width = Math.max(4, Math.round(w)); c.height = Math.max(4, Math.round(h)); return c; };
+    const texOf = c => { const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; };
+    const wht = M('white', { color: '#f3efe4', emissive: '#3b3a36' }), dark = M('dark', { color: '#3a3430' }), shing = M('shingle', { color: '#9c958a', emissive: '#211f1c' });
+    const gray = M('gray', { color: '#8d9196', emissive: '#1d1f21' }), fenceM = M('fence', { color: '#2a2b2d' }), red = M('reddoor', { color: '#9b2f25', emissive: '#1f0907' });
+    const hedge = M('hedge', { color: '#3f6b33', emissive: '#0c160a' }), vent = M('vent', { color: '#5a5a58' });
+    const playR = M('playr', { color: '#c8442f', emissive: '#2a0e09' }), playY = M('playy', { color: '#e3b23c', emissive: '#2d2410' }), playB = M('playb', { color: '#3f78b5', emissive: '#0c1824' });
+    const RED = ['#94523e', '#8a4a37', '#9e5a44', '#844634'], PX = 14, FM = {};
+    function facade(len, H, doors) {
+      const key = Math.round(len * 4) + ':' + H + ':' + (doors || []).join(','); if (FM[key]) return FM[key];
+      const c = cvs(len * PX, H * PX), x = c.getContext('2d'), Y = h => (H - h) * PX, U = u => u * PX;
+      let s = 7 + Math.round(len * 13); const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+      x.fillStyle = RED[0]; x.fillRect(0, 0, c.width, c.height);
+      for (let r = 0, hh = 0; hh < H; r++, hh += 0.25) for (let u = (r % 2) * 0.25; u < len; u += 0.5) { x.fillStyle = RED[1 + Math.floor(rnd() * 3)]; x.fillRect(U(u), Y(hh + 0.25) + 1, 0.48 * PX, 0.25 * PX - 1); }
+      x.fillStyle = '#ece6d6'; x.fillRect(0, 0, c.width, 0.45 * PX); x.fillStyle = '#7b6f62'; x.fillRect(0, Y(0.35), c.width, 0.35 * PX);
+      const D = doors || [];
+      for (const d of D) { x.fillStyle = '#ece6d6'; x.fillRect(U(d - 0.75), Y(2.6), 1.5 * PX, 2.6 * PX); x.fillStyle = '#9b2f25'; x.fillRect(U(d - 0.6), Y(2.4), 1.2 * PX, 2.4 * PX); x.fillStyle = '#5a1b16'; x.fillRect(U(d - 0.02), Y(2.4), 0.04 * PX, 2.4 * PX); }
+      const n = Math.floor((len - 1.6) / 3.4);
+      for (let k = 0; k < n; k++) { const u = (len - (n - 1) * 3.4) / 2 + k * 3.4; if (D.some(d => Math.abs(d - u) < 1.9)) continue;
+        x.fillStyle = '#f4f1e8'; x.fillRect(U(u - 1.25), Y(2.75), 0.42 * PX, 1.85 * PX); x.fillRect(U(u + 0.83), Y(2.75), 0.42 * PX, 1.85 * PX);   // white shutters
+        x.fillStyle = '#efece4'; x.fillRect(U(u - 0.8), Y(2.8), 1.6 * PX, 1.95 * PX); x.fillStyle = '#3c4a57'; x.fillRect(U(u - 0.68), Y(2.68), 1.36 * PX, 1.7 * PX);
+        x.fillStyle = '#efece4'; x.fillRect(U(u - 0.68), Y(1.85), 1.36 * PX, 0.06 * PX); x.fillRect(U(u - 0.03), Y(2.68), 0.06 * PX, 1.7 * PX); }
+      return (FM[key] = M('fac' + key, { map: texOf(c), emissive: '#1b130e' }));
+    }
+    function frame(o, th) { const g = new THREE.Group(), c = toEN(o[0], o[1]); g.position.set(c[0], 0, -c[1]); g.rotation.y = th * Math.PI / 180; root.add(g); return g; }
+    function tris(g, arr, m) { const ge = new THREE.BufferGeometry(); ge.setAttribute('position', new THREE.Float32BufferAttribute(arr, 3)); ge.computeVertexNormals(); g.add(new THREE.Mesh(ge, m)); }
+    const Q = (A, a, b, c, d) => A.push(...a, ...b, ...c, ...a, ...c, ...d), P = (u, v, y) => [u, y, -v];
+    function hip(g, r, y, pitch, ov, m) {           // full hip; ridge along the long side
+      const x0 = r[0] - ov, x1 = r[2] + ov, y0 = r[1] - ov, y1 = r[3] + ov, t = Math.tan(pitch * Math.PI / 180), A = [];
+      if (x1 - x0 >= y1 - y0) { const h = (y1 - y0) / 2, Y = y + h * t, ym = (y0 + y1) / 2;
+        Q(A, P(x0, y0, y), P(x1, y0, y), P(x1 - h, ym, Y), P(x0 + h, ym, Y)); Q(A, P(x1, y1, y), P(x0, y1, y), P(x0 + h, ym, Y), P(x1 - h, ym, Y));
+        A.push(...P(x0, y1, y), ...P(x0, y0, y), ...P(x0 + h, ym, Y), ...P(x1, y0, y), ...P(x1, y1, y), ...P(x1 - h, ym, Y)); tris(g, A, m); return Y; }
+      const h = (x1 - x0) / 2, Y = y + h * t, xm = (x0 + x1) / 2;
+      Q(A, P(x1, y0, y), P(x1, y1, y), P(xm, y1 - h, Y), P(xm, y0 + h, Y)); Q(A, P(x0, y1, y), P(x0, y0, y), P(xm, y0 + h, Y), P(xm, y1 - h, Y));
+      A.push(...P(x0, y0, y), ...P(x1, y0, y), ...P(xm, y0 + h, Y), ...P(x1, y1, y), ...P(x0, y1, y), ...P(xm, y1 - h, Y)); tris(g, A, m); return Y;
+    }
+    function sign(g, txt, w, h, u, v, y, ry) {
+      const c = cvs(512, 512 * h / w), x = c.getContext('2d'); x.fillStyle = '#efe9da'; x.fillRect(0, 0, c.width, c.height); x.strokeStyle = '#8a6d3b'; x.lineWidth = 8; x.strokeRect(6, 6, c.width - 12, c.height - 12);
+      x.fillStyle = '#5a1b16'; x.font = 'bold ' + Math.round(c.height * 0.24) + 'px "DejaVu Serif", Georgia, serif'; x.textAlign = 'center';
+      txt.split('|').forEach((t, i, a) => x.fillText(t, c.width / 2, c.height * (0.42 + i * 0.32 - (a.length - 1) * 0.08)));
+      const s = new THREE.Mesh(new THREE.PlaneGeometry(w, h), M('sign' + txt, { map: texOf(c), emissive: '#3a3a36' })); s.position.set(u, y, -v); s.rotation.y = ry; g.add(s); }
+    // ===== building
+    { const g = frame(B.o, B.th), H = B.h, R = B.ring, n = R.length - 1;
+      let area = 0; for (let i = 0; i < n; i++) area += R[i][0] * R[i + 1][1] - R[i + 1][0] * R[i][1];
+      const sgn = area > 0 ? 1 : -1;
+      for (let i = 0; i < n; i++) {
+        const a = R[i], b = R[i + 1], du = b[0] - a[0], dv = b[1] - a[1], len = Math.hypot(du, dv); if (len < 0.3) continue;
+        const ds = (B.doors[i] || []);
+        const w = new THREE.Mesh(new THREE.PlaneGeometry(len, H), facade(len, H, ds));
+        // outward normal (ring CCW in u,v -> right of the edge); plane faces +z -> rotate so it faces outward
+        const nu = sgn * dv / len, nv = -sgn * du / len;
+        w.position.set((a[0] + b[0]) / 2 + nu * 0.02, H / 2, -((a[1] + b[1]) / 2 + nv * 0.02));
+        w.rotation.y = Math.atan2(nu, -nv) ; w.rotation.y = Math.atan2(nu, nv * -1);
+        g.add(w);
+        if (ds.length) w.userData.doors = ds;
+      }
+      { const sh = new THREE.Shape(R.map(p => new THREE.Vector2(p[0], p[1])));
+        const cap = new THREE.Mesh(new THREE.ShapeGeometry(sh), dark); cap.rotation.x = -Math.PI / 2; cap.position.y = H - 0.05; g.add(cap); }
+      for (const r of B.parts) { hip(g, r, H, B.pitch, B.ov, shing); g.add(box(r[2] - r[0] + 2 * B.ov, 0.28, r[3] - r[1] + 2 * B.ov, (r[0] + r[2]) / 2, H - 0.28, -(r[1] + r[3]) / 2, wht)); }
+      for (const [u, v, y] of B.vents) g.add(box(0.5, 0.45, 0.5, u, H + y, -v, vent));
+      // porte-cochere over the drive at the SW wing end (u = a decreasing outward)
+      const [cu0, cu1, cv0, cv1, ch] = B.canopy, cvm = (cv0 + cv1) / 2;
+      g.add(box(cu1 - cu0, 0.55, cv1 - cv0, (cu0 + cu1) / 2, ch, -cvm, wht));
+      { const A = [], y = ch + 0.55, t = Math.tan(18 * Math.PI / 180), h = (cv1 - cv0) / 2, Y = y + h * t;
+        Q(A, P(cu0, cv0, y), P(cu1, cv0, y), P(cu1, cvm, Y), P(cu0 + h, cvm, Y)); Q(A, P(cu1, cv1, y), P(cu0, cv1, y), P(cu0 + h, cvm, Y), P(cu1, cvm, Y));
+        A.push(...P(cu0, cv1, y), ...P(cu0, cv0, y), ...P(cu0 + h, cvm, Y)); tris(g, A, shing); }
+      for (const v of B.cols) { g.add(box(0.45, ch, 0.45, cu0 + 0.4, 0, -v, wht)); g.add(box(0.7, 0.25, 0.7, cu0 + 0.4, 0, -v, wht)); }
+      g.add(box(cu1 - cu0 - 0.6, 0.18, cv1 - cv0 + 0.4, (cu0 + cu1) / 2 + 0.3, 0, -cvm, M('pad', { color: '#d9d5cb' })));
+      sign(g, 'MARILYN R. SPEARS|BUILDING', 1.9, 0.75, cu1 - 0.03, cvm, 1.75, -Math.PI / 2);
+      for (const [u0, v0, u1, v1] of B.hedges) { const len = Math.hypot(u1 - u0, v1 - v0), hd = new THREE.Mesh(new THREE.BoxGeometry(len, 0.9, 0.9), hedge);
+        hd.position.set((u0 + u1) / 2, 0.45, -(v0 + v1) / 2); hd.rotation.y = Math.atan2(v1 - v0, u1 - u0); g.add(hd); }
+    }
+    // ===== playground (EN frame) + building 107
+    { const g = frame(B.o0, 0), F = B.play;
+      for (const [x0, y0, x1, y1] of B.hedgeEN) g.add(box(x1 - x0, 1.0, 1.0, (x0 + x1) / 2, 0, -(y0 + y1) / 2, hedge));   // Thompson St hedge
+      for (let i = 0; i < F.length - 1; i++) { const a = F[i], b = F[i + 1], len = Math.hypot(b[0] - a[0], b[1] - a[1]), ang = Math.atan2(b[1] - a[1], b[0] - a[0]);
+        for (const hh of [0.15, 1.15]) { const r = new THREE.Mesh(new THREE.BoxGeometry(len, 0.05, 0.05), fenceM); r.position.set((a[0] + b[0]) / 2, hh, -(a[1] + b[1]) / 2); r.rotation.y = ang; g.add(r); }
+        for (let t = 0; t < len; t += 2.4) g.add(box(0.07, 1.25, 0.07, a[0] + (b[0] - a[0]) * t / len, 0, -(a[1] + (b[1] - a[1]) * t / len), fenceM)); }
+      const [ex, ey] = B.equip;                                                          // play structure
+      g.add(box(3.2, 0.12, 2.2, ex, 1.4, -ey, playY)); for (const [dx, dy] of [[-1.5, -1], [1.5, -1], [-1.5, 1], [1.5, 1]]) g.add(box(0.15, 2.6, 0.15, ex + dx, 0, -(ey + dy), playB));
+      { const s = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.08, 3.4), playR); s.position.set(ex + 2.1, 0.75, -(ey + 0.5)); s.rotation.x = 0.45; g.add(s); }
+      g.add(cyl(1.5, 0.3, 1.2, ex, 1.52, -ey, playR, 4));
+      const [sx, sy] = B.swing; for (const d of [-1.6, 1.6]) { const a = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.6, 0.1), playB); a.position.set(sx + d, 1.25, -sy); g.add(a); }
+      g.add(box(3.4, 0.12, 0.12, sx, 2.45, -sy, playB)); for (const d of [-0.7, 0.7]) g.add(box(0.5, 0.06, 0.25, sx + d, 0.5, -sy, dark));
+      const [bx, by, bw, bd, bth] = B.b107, gb = new THREE.Group(); gb.position.set(bx, 0, -by); gb.rotation.y = bth * Math.PI / 180; g.add(gb);
+      gb.add(box(bw, 2.9, bd, 0, 0, 0, M('b107w', { color: '#b9bcbf', emissive: '#262729' })));
+      hip(gb, [-bw / 2, -bd / 2, bw / 2, bd / 2], 2.9, 22, 0.35, gray);
+      gb.add(box(0.06, 2.1, 1.0, -bw / 2 - 0.03, 0, 0, red));
+      sign(gb, '107', 0.8, 0.4, -bw / 2 - 0.05, 1.2, 2.4, -Math.PI / 2);
+    }
+    return root;
+  }
+  // <<< B31W build
+  root.add(buildSign()); root.add(buildPlaza()); if (L.nwdr) root.add(buildNwdr()); if (L.mainEntrance && L.mainEntrance.size) root.add(buildMainEntrance()); if (L.baseball) root.add(buildBaseball()); if (L.football) root.add(buildFootball()); if (L.softball) root.add(buildSoftball()); if (L.practice) root.add(buildPractice()); if (L.lamar) root.add(buildLamar()); if (L.rab31) root.add(buildRab31()); if (L.benton) root.add(buildBenton()); if (L.heindl) root.add(buildHeindl()); if (L.lafayette) root.add(buildLafayette()); if (L.yalobusha) root.add(buildYalobusha()); if (L.mccormick) root.add(buildMcCormick()); if (L.tate) root.add(buildTate()); if (L.lib53) root.add(buildLib53()); if (L.conn56) root.add(buildConn56()); if (L.w58) root.add(buildW58()); if (L.n22) root.add(buildN22()); if (L.b21) root.add(buildB21()); if (L.b23) root.add(buildB23()); if (L.b24) root.add(buildB24()); if (L.b27) root.add(buildB27()); if (L.b25) root.add(buildB25()); if (L.b31w) root.add(buildB31W());
   root.traverse(o => { o.frustumCulled = false; });
   return root;
 };
@@ -2370,3 +2471,7 @@ window.NWCC_LANDMARKS.b27 = {"o":[-89.970589,34.625488],"th":-39.033,"ring":[[0.
 // #25A/#25B Physical Science Complex (2026-10-14). Per building: o=[lng,lat] origin, th=frame rotation deg, r=[u0,v0,u1,v1] m.
 window.NWCC_LANDMARKS.b25 = {"b":{"o":[-89.9715331,34.6263092],"th":52.0,"r":[0.0,-23.8,39.8,0.0],"h":11.0,"pitch":30,"clip":3.0,"tower":[39.8,-15.0,-8.8,12.6],"gh":[29.299999999999997,39.4,-30.6,-23.8],"awn":12.0,"wall":[42.4,-27.3,2.5]},"a":{"o":[-89.97158,34.626255],"th":90.0,"r":[0.0,0.0,30.74,25.28],"h":7.3,"pitch":18,"vents":[[6,6],[10,6.5],[20,7],[24,18],[12,19]],"bay":[12.4,18.4,1.4],"planters":[[8.0,11.6],[19.2,22.8]],"magnolia":[9.5,29.880000000000003],"fence":[2.0,6.5,26.880000000000003]},"c":{"o":[-89.9715,34.6245],"th":0.0,"r":[-7.53,202.0,9.67,220.0],"h":4.8,"poly":[[-7.4,194.5],[-10.13,194.5],[-3.03,200.04],[-7.4,207.5]]},"pre_area25":{"b":{"o":[-89.971553,34.6263027],"th":56.485,"r":[0.0,-26.99,44.96,0.0],"h":11.0,"pitch":30,"clip":3.0,"tower":[44.96,-16.6,-10.4,12.6],"gh":[37.96,44.36,-31.185671971273088,-26.98567197127309],"awn":14.0,"wall":[49.160000000000004,-30.48567197127309,3.0]},"a":{"o":[-89.97158,34.626255],"th":90.0,"r":[0.0,0.0,30.74,25.28],"h":7.3,"pitch":18,"vents":[[6,6],[10,6.5],[20,7],[24,18],[12,19]],"bay":[12.4,18.4,1.4],"planters":[[8.0,11.6],[19.2,22.8]],"magnolia":[9.5,29.880000000000003],"fence":[2.0,6.5,26.880000000000003]},"c":{"o":[-89.9715,34.6245],"th":0.0,"r":[-7.53,202.0,9.67,220.0],"h":4.8}}};
 /* <<< B25 data */
+/* B31W data >>> */
+// #31 Marilyn R. Spears Building (2026-10-14). o=[lng,lat] of local (0,0); th=frame deg; ring/parts/canopy in (a,b) m; play/b107 in local EN m.
+window.NWCC_LANDMARKS.b31w = {"o":[-89.9715,34.6245],"th":45.84,"o0":[-89.9715,34.6245],"ring":[[-47.72,-244.83],[-47.72,-225.6],[-62.71,-225.52],[-62.68,-228.28],[-80.64,-228.16],[-80.65,-238.76],[-89.35,-238.71],[-89.38,-250.16],[-81.24,-250.07],[-81.2,-261.32],[-63.59,-261.36],[-63.45,-266.24],[-53.62,-266.18],[-53.65,-254.08],[-60.66,-254.19],[-60.73,-244.78],[-47.72,-244.83]],"h":4.0,"pitch":24.0,"ov":0.6,"parts":[[-89.4,-250.1,-60.7,-238.7],[-62.7,-244.85,-47.7,-225.55],[-80.6,-238.7,-60.7,-228.25],[-81.2,-261.3,-60.7,-250.1],[-63.6,-266.2,-53.6,-254.15]],"vents":[[-81.36,-242.35,1.69],[-69.31,-246.68,1.59],[-58.5,-231.73,1.94],[-52.2,-239.06,2.07],[-75.03,-231.59,1.56],[-66.67,-235.56,1.46],[-75.46,-253.68,1.66],[-66.85,-257.94,1.56],[-60.8,-258.01,1.31],[-56.6,-262.59,1.4]],"doors":{"0":[9.62],"1":[7.5],"6":[3.73,7.73],"11":[4.92]},"canopy":[-95.95,-89.35,-248.44,-240.44,3.6],"cols":[-248.03,-245.63,-243.23,-240.84],"hedges":[[-81.74,-229.36,-81.75,-237.56],[-88.17,-251.25,-82.43,-251.18],[-82.34,-251.27,-82.3,-260.12],[-80.0,-262.42,-64.79,-262.46],[-62.24,-267.33,-54.81,-267.29],[-59.53,-245.88,-48.92,-245.93]],"play":[[155.0,-194.8],[147.0,-199.0],[146.0,-207.0],[150.0,-212.0],[156.0,-221.0],[155.08,-221.85],[156.04,-223.37],[155.83,-225.03],[151.08,-230.15],[152.0,-232.0],[159.0,-233.0],[166.0,-229.0],[168.0,-218.0],[167.5,-204.0],[163.0,-196.5],[155.0,-194.8]],"equip":[151.5,-203.0],"swing":[162.0,-224.5],"b107":[159.5,-209.5,6.0,9.0,-20.0],"hedgeEN":[[114.5,-251.7,149.0,-251.7],[161.8,-251.7,166.5,-251.7]]};
+/* <<< B31W data */

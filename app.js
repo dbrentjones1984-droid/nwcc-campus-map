@@ -114,7 +114,7 @@ function basemapLayers(sat) {
   }
   // <<< NWDR-ENTRANCE layers
   L.push({ id: 'bm-road', type: 'line', source: 'basemap', filter: lay('road'), layout: { 'line-cap': 'round', 'line-join': 'round' },
-    paint: { 'line-color': sat ? '#ffffff' : '#e6e7de', 'line-width': mw(-1, byCls({ minor: 1.6, service: 1, _: 0.6 })), 'line-opacity': sat ? 0.45 : 1 } });
+    paint: { 'line-color': sat ? '#ffffff' : ['match', ['get', 'surface'], 'asphalt', '#3d4148', '#e6e7de'], 'line-width': mw(-1, byCls({ minor: 1.6, service: 1, _: 0.6 })), 'line-opacity': sat ? 0.45 : 1 } });
   L.push({ id: 'bm-conn-case', type: 'line', source: 'basemap', filter: lay('connector'), layout: { 'line-cap': 'butt', 'line-join': 'round' },
     paint: { 'line-color': ['match', ['get', 'cls'], 'hwy51', '#b2852a', '#b8963e'], 'line-width': mw(0, byCls({ hwy51: 8, _: 7.5 })) } });   // floor raised (was 4.5/4.2 px) so the in-road name fits when zoomed out
   L.push({ id: 'bm-conn', type: 'line', source: 'basemap', filter: lay('connector'), layout: { 'line-cap': 'butt', 'line-join': 'round' },

@@ -2159,7 +2159,117 @@ window.NWCCLandmarks = function (THREE, toEN, onTexture) {
     return g;
   }
   // <<< B27 build
-  root.add(buildSign()); root.add(buildPlaza()); if (L.nwdr) root.add(buildNwdr()); if (L.mainEntrance && L.mainEntrance.size) root.add(buildMainEntrance()); if (L.baseball) root.add(buildBaseball()); if (L.football) root.add(buildFootball()); if (L.softball) root.add(buildSoftball()); if (L.practice) root.add(buildPractice()); if (L.lamar) root.add(buildLamar()); if (L.rab31) root.add(buildRab31()); if (L.benton) root.add(buildBenton()); if (L.heindl) root.add(buildHeindl()); if (L.lafayette) root.add(buildLafayette()); if (L.yalobusha) root.add(buildYalobusha()); if (L.mccormick) root.add(buildMcCormick()); if (L.tate) root.add(buildTate()); if (L.lib53) root.add(buildLib53()); if (L.conn56) root.add(buildConn56()); if (L.w58) root.add(buildW58()); if (L.n22) root.add(buildN22()); if (L.b21) root.add(buildB21()); if (L.b23) root.add(buildB23()); if (L.b24) root.add(buildB24()); if (L.b27) root.add(buildB27());
+  // B25 build >>>
+  // #25A Physical Science + #25B Math & Science (Physical Science Complex; 2026-10-14 from Brent's 4 Google 3D aerials, M&S street view,
+  // Physical Science entrance photo). 25B: tall 3-story red brick, big dark-gray shingle roof with wide eaves and clipped (steep hip) gable ends,
+  // glass curtain-wall stair tower with white bands + MATH & SCIENCE sign over glass doors on the NE end (Northwest Dr), glass greenhouse at the
+  // E corner, white retaining wall + white metal fence + stairs along Northwest Dr, small sloped metal awning. 25A: 2-story red brick, light
+  // blue standing-seam gable roof with vents, W entrance bay with PHYSICAL SCIENCE sign, brown metal awning over the upper window, steps,
+  // low brick planters, magnolia, wooden fence screen. Between them a lower flat white-roofed connector with a sloped dark metal canopy.
+  // Each building has its own local frame: u/v metres, origin B.x.o, rotated B.x.th deg CCW from east.
+  function buildB25() {
+    const B = L.b25, root = new THREE.Group(); root.name = 'b25';
+    const M = (k, o) => lam('b25-' + k, Object.assign({ side: THREE.DoubleSide }, o));
+    const cvs = (w, h) => { const c = document.createElement('canvas'); c.width = Math.max(4, Math.round(w)); c.height = Math.max(4, Math.round(h)); return c; };
+    const texOf = c => { const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; };
+    const wht = M('white', { color: '#f4f2ec', emissive: '#3d3c38' }), dark = M('dark', { color: '#2e3236' }), glass = M('glass', { color: '#3d5466', emissive: '#0e161d' });
+    const shing = M('shingle', { color: '#55595e', emissive: '#121416' }), blue = M('blue', { color: '#8fb4cf', emissive: '#1b2630' }), flat = M('flat', { color: '#e9e8e2', emissive: '#3a3a37' });
+    const conc = M('conc', { color: '#dedbd3', emissive: '#2c2b28' }), brown = M('brown', { color: '#5a3d2b', emissive: '#140d08' }), wood = M('wood', { color: '#8a6a4a', emissive: '#1a120b' });
+    const leafD = M('magn', { color: '#2f5226', emissive: '#0a1207' }), brickM = M('brick', { color: '#9e4f39', emissive: '#1d0e09' }), gls = M('gh', { color: '#bcd3dc', emissive: '#2a3337', transparent: true, opacity: 0.75 });
+    const RED = ['#a85a43', '#9c513c', '#b2634b', '#8f4a37'], PX = 12, FM = {};
+    function facade(len, H, floors, win) {
+      const key = Math.round(len * 4) + ':' + H + ':' + floors + ':' + win; if (FM[key]) return FM[key];
+      const c = cvs(len * PX, H * PX), x = c.getContext('2d'), Y = h => (H - h) * PX, U = u => u * PX;
+      let s = 5 + Math.round(len * 11); const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+      x.fillStyle = RED[0]; x.fillRect(0, 0, c.width, c.height);
+      for (let r = 0, hh = 0; hh < H; r++, hh += 0.3) for (let u = (r % 2) * 0.3; u < len; u += 0.6) { x.fillStyle = RED[1 + Math.floor(rnd() * 3)]; x.fillRect(U(u), Y(hh + 0.3) + 1, 0.58 * PX, 0.3 * PX - 1); }
+      const fh = H / floors;
+      if (win) for (let f = 0; f < floors; f++) for (let u = 1.8; u < len - 1.6; u += win) {
+        x.fillStyle = '#efece4'; x.fillRect(U(u - 0.1), Y(f * fh + fh - 0.8), 1.4 * PX, (fh - 1.9) * PX);
+        x.fillStyle = '#34465a'; x.fillRect(U(u), Y(f * fh + fh - 0.9), 1.2 * PX, (fh - 2.1) * PX); }
+      x.fillStyle = '#d9d2c4'; x.fillRect(0, Y(0.5), c.width, 0.5 * PX);
+      return (FM[key] = M('fac' + key, { map: texOf(c), emissive: '#1d1611' }));
+    }
+    function frame(F) { const g = new THREE.Group(), c = toEN(F.o[0], F.o[1]); g.position.set(c[0], 0, -c[1]); g.rotation.y = F.th * Math.PI / 180; root.add(g); return g; }
+    const add = (g, o) => { g.add(o); return o; };
+    function walls(g, r, H, floors, win) {
+      const [x0, y0, x1, y1] = r, S = [[[(x0 + x1) / 2, y0], x1 - x0, 0], [[x1, (y0 + y1) / 2], y1 - y0, Math.PI / 2], [[(x0 + x1) / 2, y1], x1 - x0, Math.PI], [[x0, (y0 + y1) / 2], y1 - y0, -Math.PI / 2]];
+      for (const [c, len, ry] of S) { const w = new THREE.Mesh(new THREE.PlaneGeometry(len, H), facade(len, H, floors, win)); w.position.set(c[0], H / 2, -c[1]); w.rotation.y = ry; g.add(w); }
+      g.add(box(x1 - x0 - 0.04, H - 0.05, y1 - y0 - 0.04, (x0 + x1) / 2, 0, -(y0 + y1) / 2, dark));
+    }
+    function tris(g, arr, m) { const ge = new THREE.BufferGeometry(); ge.setAttribute('position', new THREE.Float32BufferAttribute(arr, 3)); ge.computeVertexNormals(); g.add(new THREE.Mesh(ge, m)); }
+    const Q = (A, a, b, c, d) => A.push(...a, ...b, ...c, ...a, ...c, ...d), P = (u, v, y) => [u, y, -v];
+    // ridge along u; c = inset of the ridge ends (0 = gable with brick gable walls, small = clipped/steep hip ends)
+    function roof(g, r, y, pitch, c, m, ov) {
+      const x0 = r[0] - ov, x1 = r[2] + ov, n0 = r[1] - ov, n1 = r[3] + ov, nm = (n0 + n1) / 2, Y = y + (n1 - n0) / 2 * Math.tan(pitch * Math.PI / 180);
+      const A = []; Q(A, P(x0, n0, y), P(x1, n0, y), P(x1 - c, nm, Y), P(x0 + c, nm, Y)); Q(A, P(x1, n1, y), P(x0, n1, y), P(x0 + c, nm, Y), P(x1 - c, nm, Y));
+      if (c > 0) {                                                                                    // clipped (jerkinhead) gable ends: brick gable to 70% of the rise, small hip above
+        A.length = 0; const k = 0.7, nk0 = n0 + k * (nm - n0), nk1 = n1 - k * (n1 - nm), yk = y + k * (Y - y);
+        Q(A, P(x0, n0, y), P(x1, n0, y), P(x1, nk0, yk), P(x0, nk0, yk)); Q(A, P(x0, nk0, yk), P(x1, nk0, yk), P(x1 - c, nm, Y), P(x0 + c, nm, Y));
+        Q(A, P(x1, n1, y), P(x0, n1, y), P(x0, nk1, yk), P(x1, nk1, yk)); Q(A, P(x1, nk1, yk), P(x0, nk1, yk), P(x0 + c, nm, Y), P(x1 - c, nm, Y));
+        A.push(...P(x0, nk0, yk), ...P(x0 + c, nm, Y), ...P(x0, nk1, yk), ...P(x1, nk0, yk), ...P(x1, nk1, yk), ...P(x1 - c, nm, Y));
+        const T = [], wk0 = r[1] + k * ((r[1] + r[3]) / 2 - r[1]) * 1, wk1 = r[3] - k * (r[3] - (r[1] + r[3]) / 2), ykk = y + k * ((r[3] - r[1]) / 2) * Math.tan(pitch * Math.PI / 180);
+        for (const u of [r[0], r[2]]) Q(T, P(u, r[1], y), P(u, r[3], y), P(u, wk1, ykk), P(u, wk0, ykk));
+        tris(g, T, brickM);
+        for (const u of [r[0] - ov, r[2] + ov]) g.add(box(0.3, 0.3, nk1 - nk0, u, yk - 0.3, -nm, wht));
+      }
+      tris(g, A, m);
+      if (c === 0) { const T = []; for (const u of [r[0], r[2]]) T.push(...P(u, r[1], y), ...P(u, r[3], y), ...P(u, (r[1] + r[3]) / 2, y + (r[3] - r[1]) / 2 * Math.tan(pitch * Math.PI / 180))); tris(g, T, brickM); }
+      g.add(box(x1 - x0, 0.35, n1 - n0, (x0 + x1) / 2, y - 0.35, -nm, wht)); return Y;
+    }
+    function sign(g, txt, w, h, u, v, y, ry, bg, fg) {
+      const c = cvs(640, 640 * h / w), x = c.getContext('2d'); x.fillStyle = bg; x.fillRect(0, 0, c.width, c.height); x.fillStyle = fg;
+      x.font = 'bold ' + Math.round(c.height * 0.55) + 'px "DejaVu Sans", Arial, sans-serif'; x.textAlign = 'center'; x.fillText(txt, c.width / 2, c.height * 0.72);
+      const s = new THREE.Mesh(new THREE.PlaneGeometry(w, h), M('sign' + txt, { map: texOf(c), emissive: '#3a3a36' })); s.position.set(u, y, -v); s.rotation.y = ry; g.add(s); }
+    // ===== 25B Math & Science
+    { const F = B.b, g = frame(F), r = F.r, H = F.h;
+      walls(g, r, H, 3, 3.4); roof(g, r, H, F.pitch, F.clip, shing, 1.1);
+      const [tu0, tv0, tv1, th] = F.tower, tm = (tv0 + tv1) / 2, tw = tv1 - tv0, te = r[2] + 1.6;          // glass stair tower on the NE end
+      g.add(box(1.6, th, tw, r[2] + 0.8, 0, -tm, glass));
+      for (const hh of [0.25, 3.3, 4.3, 7.5, 8.4, th - 0.6]) g.add(box(1.7, hh < 1 ? 0.5 : 0.75, tw + 0.1, r[2] + 0.8, hh < 1 ? 0 : hh, -tm, wht));
+      for (let k = 0; k <= 4; k++) g.add(box(0.1, th, 0.1, te + 0.02, 0, -(tv0 + k * tw / 4), wht));
+      g.add(box(1.9, 0.4, tw + 0.4, r[2] + 0.9, th, -tm, dark));
+      sign(g, 'MATH & SCIENCE', 3.6, 0.5, te + 0.08, tm, 3.75, Math.PI / 2, '#2c2f33', '#f2f0ea');
+      g.add(box(0.1, 2.4, 2.4, te + 0.06, 0.2, -tm, dark));
+      const [gu0, gu1, gv0, gv1] = F.gh, gm = (gu0 + gu1) / 2;                                           // greenhouse at the E corner
+      g.add(box(gu1 - gu0, 2.8, gv1 - gv0, gm, 0, -(gv0 + gv1) / 2, gls));
+      for (let u = gu0; u <= gu1 + 0.01; u += (gu1 - gu0) / 5) g.add(box(0.08, 3.6, gv1 - gv0, u, 0, -(gv0 + gv1) / 2, wht));
+      { const A = [], yb = 2.8, yt = 3.9, vm = (gv0 + gv1) / 2; Q(A, P(gu0, gv0, yb), P(gu1, gv0, yb), P(gu1, vm, yt), P(gu0, vm, yt)); Q(A, P(gu1, gv1, yb), P(gu0, gv1, yb), P(gu0, vm, yt), P(gu1, vm, yt)); tris(g, A, gls); }
+      { const aw = new THREE.Mesh(new THREE.BoxGeometry(5.0, 0.08, 1.6), dark); aw.position.set(F.awn, 3.4, -(r[1] - 0.7)); aw.rotation.x = 0.28; g.add(aw); }   // small sloped metal awning
+      const [wu, wv0, wv1] = F.wall;                                                                    // white retaining wall + fence + stairs along Northwest Dr
+      g.add(box(0.35, 1.2, wv1 - wv0, wu, 0, -(wv0 + wv1) / 2, conc));
+      for (let v = wv0; v <= wv1 + 0.01; v += 1.8) g.add(box(0.06, 1.1, 0.06, wu, 1.2, -v, wht));
+      for (const hh of [1.3, 2.2]) g.add(box(0.05, 0.05, wv1 - wv0, wu, hh, -(wv0 + wv1) / 2, wht));
+      g.add(box(wu - r[2], 1.2, tw + 1, (wu + r[2]) / 2, 0, -tm, conc));                                  // landing in front of the tower
+      for (let k = 0; k < 5; k++) g.add(box(0.35, 1.2 - k * 0.24, 2.0, wu + 0.35 + k * 0.35, 0, -(tv1 + 1.4), conc));
+    }
+    // ===== 25A Physical Science (u north, v west)
+    { const F = B.a, g = frame(F), r = F.r, H = F.h;
+      walls(g, r, H, 2, 3.2); const top = roof(g, r, H, F.pitch, 0, blue, 0.7);
+      for (const [u, v] of F.vents) g.add(box(0.8, 0.6, 0.8, u, H + 1.2, -v, M('vent', { color: '#c9ccce', emissive: '#2a2b2c' })));
+      const [bu0, bu1, bd] = F.bay, bm = (bu0 + bu1) / 2, ve = r[3] + bd;                                  // W entrance bay
+      g.add(box(bu1 - bu0, H + 0.6, bd, bm, 0, -(r[3] + bd / 2), M('baybr', { color: '#a35540', emissive: '#1d0e09' })));
+      { const A = [], yb = H + 0.6, yt = yb + 1.6; A.push(...P(bu0, ve, yb), ...P(bu1, ve, yb), ...P(bm, ve, yt)); tris(g, A, brickM);
+        const R = []; Q(R, P(bu0 - 0.3, ve + 0.3, yb), P(bm, ve + 0.3, yt), P(bm, r[3], yt), P(bu0 - 0.3, r[3], yb)); Q(R, P(bu1 + 0.3, ve + 0.3, yb), P(bm, ve + 0.3, yt), P(bm, r[3], yt), P(bu1 + 0.3, r[3], yb)); tris(g, R, blue); }
+      { const aw = new THREE.Mesh(new THREE.BoxGeometry(bu1 - bu0 + 0.6, 0.1, 1.4), brown); aw.position.set(bm, 6.3, -(ve + 0.6)); aw.rotation.x = -0.25; g.add(aw); }
+      for (const [du, hh] of [[-1.0, 4.4], [1.0, 4.4]]) g.add(box(1.1, 1.4, 0.06, bm + du, hh, -(ve + 0.04), glass));
+      sign(g, 'PHYSICAL SCIENCE', 3.4, 0.4, bm, ve + 0.06, 3.1, -Math.PI / 2, '#a35540', '#f4efe2');
+      g.add(box(1.8, 2.3, 0.08, bm, 0.4, -(ve + 0.05), glass));
+      for (let k = 0; k < 3; k++) g.add(box(3.0, 0.4 - k * 0.13, 0.5, bm, 0, -(ve + 0.3 + k * 0.5), conc));
+      for (const [u0, u1] of F.planters) g.add(box(u1 - u0, 0.6, 1.2, (u0 + u1) / 2, 0, -(ve + 1.3), brickM));
+      { const [u, v] = F.magnolia; g.add(cyl(0.15, 0.15, 1.6, u, 0, -v, wood, 8)); const c = new THREE.Mesh(new THREE.ConeGeometry(2.4, 6.8, 9), leafD); c.position.set(u, 1.2 + 3.4, -v); g.add(c); }
+      { const [u0, u1, v] = F.fence; g.add(box(u1 - u0, 1.9, 0.12, (u0 + u1) / 2, 0, -v, wood)); }
+    }
+    // ===== connector (EN frame of 25A's origin, unrotated)
+    { const F = B.c, g = frame(F), [x0, y0, x1, y1] = F.r, H = F.h;
+      g.add(box(x1 - x0, H, y1 - y0, (x0 + x1) / 2, 0, -(y0 + y1) / 2, M('connbr', { color: '#a85a43', emissive: '#1d0e09' })));
+      g.add(box(x1 - x0 + 0.4, 0.3, y1 - y0 + 0.4, (x0 + x1) / 2, H, -(y0 + y1) / 2, flat));
+      const cn = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, 0.1, 2.6), dark); cn.position.set((x0 + x1) / 2, 3.2, -(y0 - 1.1)); cn.rotation.x = -0.3; g.add(cn);
+    }
+    return root;
+  }
+  // <<< B25 build
+  root.add(buildSign()); root.add(buildPlaza()); if (L.nwdr) root.add(buildNwdr()); if (L.mainEntrance && L.mainEntrance.size) root.add(buildMainEntrance()); if (L.baseball) root.add(buildBaseball()); if (L.football) root.add(buildFootball()); if (L.softball) root.add(buildSoftball()); if (L.practice) root.add(buildPractice()); if (L.lamar) root.add(buildLamar()); if (L.rab31) root.add(buildRab31()); if (L.benton) root.add(buildBenton()); if (L.heindl) root.add(buildHeindl()); if (L.lafayette) root.add(buildLafayette()); if (L.yalobusha) root.add(buildYalobusha()); if (L.mccormick) root.add(buildMcCormick()); if (L.tate) root.add(buildTate()); if (L.lib53) root.add(buildLib53()); if (L.conn56) root.add(buildConn56()); if (L.w58) root.add(buildW58()); if (L.n22) root.add(buildN22()); if (L.b21) root.add(buildB21()); if (L.b23) root.add(buildB23()); if (L.b24) root.add(buildB24()); if (L.b27) root.add(buildB27()); if (L.b25) root.add(buildB25());
   root.traverse(o => { o.frustumCulled = false; });
   return root;
 };
@@ -2252,3 +2362,7 @@ window.NWCC_LANDMARKS.b24 = {"o":[-89.9715,34.6245],"a":{"hall":[-13.4,-5.0,26.4
 // #27 McGhee Building (2026-10-13). o=[lng,lat] origin (OSM vertex 0); th=frame rotation deg; ring/rects in m along u/v.
 window.NWCC_LANDMARKS.b27 = {"o":[-89.970589,34.625488],"th":-39.033,"ring":[[0.0,0.0],[23.7,0.0],[23.6,-3.5],[28.74,-3.6],[28.94,15.21],[26.62,15.17],[26.74,26.95],[16.16,26.91],[16.2,30.5],[0.25,30.53]],"h":7.6,"fb":1.5,"pitch":16,"ov":0.9,"main":[0.0,0.0,26.7,26.9],"wings":[[0.0,20.0,16.1,30.5],[20.0,-3.7,28.9,15.2]],"doorEdge":9,"sideEdge":8,"chim":[9.0,15.5],"vents":[[6,8],[18,9],[11,21],[21,19],[24,4]]};
 /* <<< B27 data */
+/* B25 data >>> */
+// #25A/#25B Physical Science Complex (2026-10-14). Per building: o=[lng,lat] origin, th=frame rotation deg, r=[u0,v0,u1,v1] m.
+window.NWCC_LANDMARKS.b25 = {"b":{"o":[-89.971553,34.6263027],"th":56.485,"r":[0.0,-26.99,44.96,0.0],"h":11.0,"pitch":30,"clip":3.0,"tower":[44.96,-16.6,-10.4,12.6],"gh":[37.96,44.36,-31.185671971273088,-26.98567197127309],"awn":14.0,"wall":[49.160000000000004,-30.48567197127309,3.0]},"a":{"o":[-89.97158,34.626255],"th":90.0,"r":[0.0,0.0,30.74,25.28],"h":7.3,"pitch":18,"vents":[[6,6],[10,6.5],[20,7],[24,18],[12,19]],"bay":[12.4,18.4,1.4],"planters":[[8.0,11.6],[19.2,22.8]],"magnolia":[9.5,29.880000000000003],"fence":[2.0,6.5,26.880000000000003]},"c":{"o":[-89.9715,34.6245],"th":0.0,"r":[-7.53,202.0,9.67,220.0],"h":4.8}};
+/* <<< B25 data */

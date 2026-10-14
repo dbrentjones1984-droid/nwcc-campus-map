@@ -121,7 +121,7 @@ function basemapLayers(sat) {
     paint: { 'line-color': ['match', ['get', 'cls'], 'hwy51', '#f4c95d', '#f8db8a'], 'line-width': mw(-1.6, byCls({ hwy51: 6.6, _: 6 })) } });   // floor raised (was 3.2/3 px)
   if (!sat) {   // roundabout island + entrance islands (lawn) with the roundabout's mountable apron ring
     L.push({ id: 'bm-apron', type: 'fill', source: 'basemap', filter: lay('apron'), paint: { 'fill-color': '#d3d0c2', 'fill-outline-color': '#a7aa9b' } });
-    L.push({ id: 'bm-island', type: 'fill', source: 'basemap', filter: lay('island'), paint: { 'fill-color': ['match', ['get', 'kind'], 'planter', '#a65a42', 'brick', '#b5654c', 'hatch', '#d6d7cd', LAWN], 'fill-outline-color': '#a7aa9b' } });
+    L.push({ id: 'bm-island', type: 'fill', source: 'basemap', filter: lay('island'), paint: { 'fill-color': ['match', ['get', 'kind'], 'ada', '#2f6db5', 'planter', '#a65a42', 'brick', '#b5654c', 'hatch', '#d6d7cd', LAWN], 'fill-outline-color': '#a7aa9b' } });
   // NWDR-ENTRANCE2 >>>
     // raised curbs around medians / islands that carry `curb` (light concrete, true width w), and crosswalks (zebra = dashed bars)
     L.push({ id: 'bm-island-curb', type: 'line', source: 'basemap', filter: ['all', lay('island'), ['==', ['get', 'curb'], true]], layout: { 'line-join': 'round' },

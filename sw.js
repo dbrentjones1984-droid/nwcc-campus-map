@@ -3,7 +3,7 @@
    - Satellite tiles (Esri World Imagery): network only (never stored by the SW; needs internet).
    - CDN fallbacks (jsDelivr / unpkg / protomaps glyphs, only used if a local copy fails): network-first, cached copy offline.
    VERSION and PRECACHE are rewritten by tools/build_sw.py; bump them whenever app files change. */
-const VERSION = 'eb61d95997';
+const VERSION = '7bd8096c0a';
 const SHELL = 'nwcc-shell-' + VERSION;
 const RUNTIME = 'nwcc-runtime-' + VERSION;
 const PRECACHE = [
@@ -44,10 +44,14 @@ const PRECACHE = [
   "assets/photos/heindl-day-800.webp",
   "assets/photos/lafayette-480.webp",
   "assets/photos/lafayette-800.webp",
+  "assets/photos/math-science-480.webp",
+  "assets/photos/math-science-800.webp",
   "assets/photos/mccormick-480.webp",
   "assets/photos/mccormick-800.webp",
   "assets/photos/mcghee-480.webp",
   "assets/photos/mcghee-800.webp",
+  "assets/photos/physical-science-480.webp",
+  "assets/photos/physical-science-800.webp",
   "assets/photos/pugh-library-480.webp",
   "assets/photos/pugh-library-800.webp",
   "assets/photos/spears-22a-480.webp",

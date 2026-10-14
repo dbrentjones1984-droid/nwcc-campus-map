@@ -2261,7 +2261,11 @@ window.NWCCLandmarks = function (THREE, toEN, onTexture) {
       { const [u0, u1, v] = F.fence; g.add(box(u1 - u0, 1.9, 0.12, (u0 + u1) / 2, 0, -v, wood)); }
     }
     // ===== connector (EN frame of 25A's origin, unrotated)
-    { const F = B.c, g = frame(F), [x0, y0, x1, y1] = F.r, H = F.h;
+    if (B.c.poly) { const F = B.c, g = frame(F), H = F.h, sh = new THREE.Shape(F.poly.map(p => new THREE.Vector2(p[0], p[1])));
+      const ge = new THREE.ExtrudeGeometry(sh, { depth: H, bevelEnabled: false }); ge.rotateX(-Math.PI / 2); g.add(new THREE.Mesh(ge, M('connbr', { color: '#a85a43', emissive: '#1d0e09' })));
+      const gt = new THREE.ExtrudeGeometry(sh, { depth: 0.3, bevelEnabled: false }); gt.rotateX(-Math.PI / 2); gt.translate(0, H, 0); g.add(new THREE.Mesh(gt, flat));
+      const cn = new THREE.Mesh(new THREE.BoxGeometry(8.0, 0.1, 2.6), dark); cn.position.set(F.poly[0][0] + 5.2, 3.2, -(F.poly[0][1] - 1.1)); cn.rotation.x = -0.3; g.add(cn);
+    } else { const F = B.c, g = frame(F), [x0, y0, x1, y1] = F.r, H = F.h;
       g.add(box(x1 - x0, H, y1 - y0, (x0 + x1) / 2, 0, -(y0 + y1) / 2, M('connbr', { color: '#a85a43', emissive: '#1d0e09' })));
       g.add(box(x1 - x0 + 0.4, 0.3, y1 - y0 + 0.4, (x0 + x1) / 2, H, -(y0 + y1) / 2, flat));
       const cn = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, 0.1, 2.6), dark); cn.position.set((x0 + x1) / 2, 3.2, -(y0 - 1.1)); cn.rotation.x = -0.3; g.add(cn);
@@ -2364,5 +2368,5 @@ window.NWCC_LANDMARKS.b27 = {"o":[-89.970589,34.625488],"th":-39.033,"ring":[[0.
 /* <<< B27 data */
 /* B25 data >>> */
 // #25A/#25B Physical Science Complex (2026-10-14). Per building: o=[lng,lat] origin, th=frame rotation deg, r=[u0,v0,u1,v1] m.
-window.NWCC_LANDMARKS.b25 = {"b":{"o":[-89.971553,34.6263027],"th":56.485,"r":[0.0,-26.99,44.96,0.0],"h":11.0,"pitch":30,"clip":3.0,"tower":[44.96,-16.6,-10.4,12.6],"gh":[37.96,44.36,-31.185671971273088,-26.98567197127309],"awn":14.0,"wall":[49.160000000000004,-30.48567197127309,3.0]},"a":{"o":[-89.97158,34.626255],"th":90.0,"r":[0.0,0.0,30.74,25.28],"h":7.3,"pitch":18,"vents":[[6,6],[10,6.5],[20,7],[24,18],[12,19]],"bay":[12.4,18.4,1.4],"planters":[[8.0,11.6],[19.2,22.8]],"magnolia":[9.5,29.880000000000003],"fence":[2.0,6.5,26.880000000000003]},"c":{"o":[-89.9715,34.6245],"th":0.0,"r":[-7.53,202.0,9.67,220.0],"h":4.8}};
+window.NWCC_LANDMARKS.b25 = {"b":{"o":[-89.9715331,34.6263092],"th":52.0,"r":[0.0,-23.8,39.8,0.0],"h":11.0,"pitch":30,"clip":3.0,"tower":[39.8,-15.0,-8.8,12.6],"gh":[29.299999999999997,39.4,-30.6,-23.8],"awn":12.0,"wall":[42.4,-27.3,2.5]},"a":{"o":[-89.97158,34.626255],"th":90.0,"r":[0.0,0.0,30.74,25.28],"h":7.3,"pitch":18,"vents":[[6,6],[10,6.5],[20,7],[24,18],[12,19]],"bay":[12.4,18.4,1.4],"planters":[[8.0,11.6],[19.2,22.8]],"magnolia":[9.5,29.880000000000003],"fence":[2.0,6.5,26.880000000000003]},"c":{"o":[-89.9715,34.6245],"th":0.0,"r":[-7.53,202.0,9.67,220.0],"h":4.8,"poly":[[-7.4,194.5],[-10.13,194.5],[-3.03,200.04],[-7.4,207.5]]},"pre_area25":{"b":{"o":[-89.971553,34.6263027],"th":56.485,"r":[0.0,-26.99,44.96,0.0],"h":11.0,"pitch":30,"clip":3.0,"tower":[44.96,-16.6,-10.4,12.6],"gh":[37.96,44.36,-31.185671971273088,-26.98567197127309],"awn":14.0,"wall":[49.160000000000004,-30.48567197127309,3.0]},"a":{"o":[-89.97158,34.626255],"th":90.0,"r":[0.0,0.0,30.74,25.28],"h":7.3,"pitch":18,"vents":[[6,6],[10,6.5],[20,7],[24,18],[12,19]],"bay":[12.4,18.4,1.4],"planters":[[8.0,11.6],[19.2,22.8]],"magnolia":[9.5,29.880000000000003],"fence":[2.0,6.5,26.880000000000003]},"c":{"o":[-89.9715,34.6245],"th":0.0,"r":[-7.53,202.0,9.67,220.0],"h":4.8}}};
 /* <<< B25 data */
